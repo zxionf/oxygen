@@ -28,7 +28,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$HydrogenRepo = (Join-Path (Split-Path -Parent $PSScriptRoot) '..\hydrogen'),
+    [string]$HydrogenRepo = '',
     [string]$NdkVersion = '29.0.14206865',
     [switch]$SkipBuild
 )
@@ -49,6 +49,9 @@ $ExpectedMachine = @{
 $PageAlign = '0x4000'   # 16 KB
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $HydrogenRepo) {
+    $HydrogenRepo = Join-Path (Split-Path -Parent $RepoRoot) 'hydrogen'
+}
 $JniLibsRoot = Join-Path $RepoRoot 'app\src\main\jniLibs'
 
 function Write-Step([string]$Text) {
@@ -69,6 +72,18 @@ function Get-ReadelfPath([string]$NdkRoot) {
         throw "NDK 中缺少 llvm-readelf：$readelf"
     }
     return $readelf
+}
+
+# 不依赖 Get-FileHash：部分机器的 PSModulePath 被 PS7 模块污染，cmdlet 可能不可用。
+function Get-Sha256([string]$Path) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        return ([System.BitConverter]::ToString($sha.ComputeHash($stream)) -replace '-', '').ToLowerInvariant()
+    } finally {
+        $stream.Dispose()
+        $sha.Dispose()
+    }
 }
 
 # --- 0. 前置检查 -----------------------------------------------------------
@@ -159,7 +174,7 @@ foreach ($abi in $AbiMap.Keys) {
         }
     }
 
-    $hash = (Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash.ToLowerInvariant()
+    $hash = Get-Sha256 $dest
     $size = (Get-Item -LiteralPath $dest).Length
     "   机器=$($ExpectedMachine[$abi]) 对齐=$PageAlign 大小=$size sha256=$hash"
 }

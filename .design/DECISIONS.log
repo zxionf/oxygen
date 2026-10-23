@@ -34,3 +34,13 @@ Change: none
 Context: 首版 Demo 的记录形态与 JNI 暴露面需要确定，避免实现时反复扩接口。
 Decision: 记录内容使用单一文本字段（JSON 为 {text:...}）；JNI 一次性暴露 open/close/destroy/insert/put/get/delete/list/batch/stats/last_error，其中 batch 与 stats 即使界面不常用也纳入首版。
 Consequences: JNI 面按 C ABI 全量映射，Demo 界面只使用其中一部分；后续业务字段变化只需改载荷 JSON，不改 native 接口。
+## [8] 2026-10-23 06:43:59 UTC
+Change: 20261023-kernel-integration-demo
+Context: P1 脚手架要固定构建链版本；本机 Android 工具链有版本缺口（SDK 有 36/36.1，NDK 27 目录为空，可用 NDK 仅 r29）。
+Decision: 首版脚手架固定 Gradle 8.14.3（wrapper + sha256）、AGP 8.13.0、Kotlin 2.2.20（Kotlin Compose 插件同版本）、Compose BOM 2025.10.00、compileSdk/targetSdk 36、minSdk 29、ndkVersion 29.0.14206865；debug 构建 applicationId 加 .debug 后缀以便与发布版共存。
+Consequences: 版本组合经验证可构建（assembleDebug / lintDebug 通过）；后续升级需同时改 wrapper、libs.versions.toml 与 DECISIONS.log；NDK 版本绑定本机 r29，换机器需先安装同版本。
+## [9] 2026-10-23 06:44:17 UTC
+Change: 20261023-kernel-integration-demo
+Context: 决策 6 把内核二进制是否长期入库留作后续决定；P0 已复制两份 libshio_ffi.so 并校验 16 KB 对齐。
+Decision: jniLibs 下的两份 libshio_ffi.so 入库，来源固定 hydrogen 提交 50e073b3998c690811414aa9534393b4033cac35、NDK r29；scripts/sync-shio.ps1 负责重建与校验，HEAD 与固定提交不一致时直接失败。
+Consequences: 克隆即可构建，首次联调不依赖 Rust 工具链；APK 内 .so 会被 AGP strip，哈希与源产物不同，验收以导出符号与 LOAD 对齐为准；升级内核须提交新二进制并更新脚本常量。

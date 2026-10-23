@@ -2,17 +2,18 @@
 
 ## P0 产物与环境
 
-- [ ] 复制 hydrogen 提交 `50e073b` 的 `libshio_ffi.so` 到 `app/src/main/jniLibs/{arm64-v8a,x86_64}/`
-- [ ] 校验两份 `.so` 的 ABI、ELF 架构与 16 KB page 对齐
-- [ ] 记录 JDK、NDK、SDK 版本与构建命令到 `.agent/notes.md`
-- [ ] 编写 `scripts/sync-shio.ps1`：固定 hydrogen 提交、`cargo-ndk` 构建、复制产物
+- [x] 复制 hydrogen 提交 `50e073b` 的 `libshio_ffi.so` 到 `app/src/main/jniLibs/{arm64-v8a,x86_64}/`
+- [x] 校验两份 `.so` 的 ABI、ELF 架构与 16 KB page 对齐（三处 LOAD 均 `0x4000`）
+- [x] 记录 JDK、NDK、SDK 版本与构建命令到 `.agent/notes.md`
+- [x] 编写 `scripts/sync-shio.ps1`：固定 hydrogen 提交、`cargo-ndk` 构建、复制产物（已用 `-SkipBuild` 验证复制/校验路径；`cargo-ndk` 构建路径待安装后验证）
 
 ## P1 工程脚手架
 
-- [ ] 建立 Gradle Kotlin DSL 工程：`settings.gradle.kts`、根 `build.gradle.kts`、`gradle/libs.versions.toml`、wrapper
-- [ ] 建立 `app` 模块：manifest、主题、`MainActivity`、空 Compose 页面
-- [ ] 配置 `compileSdk 36` / `minSdk 29` / `targetSdk 36`、ABI 过滤、NDK 版本、CMake
-- [ ] 用 JBR 21 跑通 `assembleDebug`，并在模拟器安装启动
+- [x] 建立 Gradle Kotlin DSL 工程：`settings.gradle.kts`、根 `build.gradle.kts`、`gradle/libs.versions.toml`、wrapper
+- [x] 建立 `app` 模块：manifest、主题、`MainActivity`、空 Compose 页面
+- [x] 配置 `compileSdk 36` / `minSdk 29` / `targetSdk 36`、ABI 过滤、NDK 版本
+- [x] 用 JBR 21 跑通 `assembleDebug`，并在模拟器安装启动（AVD `shio_x86_64`，API 35）
+- [ ] CMake 配置随 P2 的 `CMakeLists.txt` 一起加入（当前 `app/build.gradle.kts` 无 `externalNativeBuild`，避免引用不存在的构建脚本）
 
 ## P2 JNI 薄层
 
