@@ -84,3 +84,28 @@ Change: none
 Context: 开发环境已切到 Arch Linux，现有 sync-shio.ps1 是 Windows 专用；JNI 编译还需要与 libshio_ffi.so 同提交的 shio.h。
 Decision: 新增 scripts/sync-shio.sh，行为对齐 PS1（固定 hydrogen 提交、cargo-ndk、NDK 29、两个 ABI、16 KB 对齐校验），并额外同步 app/src/main/cpp/include/shio.h；前置依赖为 cargo-ndk 与 hydrogen rust-toolchain 对应的 Android targets。
 Consequences: Linux 侧可用一条命令重建并校验内核产物；Windows 仍保留 PS1；首次使用需安装 Rust 1.95、两个 Android target 与 cargo-ndk；hydrogen HEAD 变化时脚本会直接失败。
+## [18] 2026-10-23 15:13:39 UTC
+Change: 20261023-password-vault
+Context: 密码库需要多页面与返回栈，现有 Demo 只有单页；项目此前为 Demo 刻意未引入导航库。
+Decision: 引入 androidx.navigation:navigation-compose，单 Activity，使用字符串路由（gate/create/unlock/vault/entry/editor/settings/appearance/demo），不引入 kotlinx-serialization 插件。
+Consequences: 返回栈与旋转恢复由导航库管理；路由参数用 URL 编码；升级 Compose 时 navigation 版本需与 BOM 一起验证。
+## [19] 2026-10-23 15:13:39 UTC
+Change: 20261023-password-vault
+Context: 密码库切后台后若长时间保持解锁会增加暴露风险；用户希望默认立即锁定，同时保留可配置。
+Decision: 默认自动锁定为切后台立即锁定；设置项提供立即/1/5/15 分钟；旋转屏幕通过 isChangingConfigurations 排除，不触发锁定。
+Consequences: 锁定时销毁 shio 句柄并清空内存条目与口令状态；外部 Activity 返回会锁定；未保存编辑内容会丢失，这是安全优先的取舍。
+## [20] 2026-10-23 15:13:39 UTC
+Change: 20261023-password-vault
+Context: 用户希望外观可配置，提出动态取色或类似 Gboard 的主题选择界面。
+Decision: 新增外观页：主题模式（跟随系统/浅色/深色）与色板（动态取色 + Shio 蓝/青/绿/紫/橙），布局参考 Gboard Theme；主题偏好写入 SharedPreferences，不引入 DataStore 或取色库。
+Consequences: API 31+ 使用系统动态色，API 29–30 回退 Shio 蓝；预设色板使用手写 ColorScheme；外观页只影响 UI，不涉及数据库。
+## [21] 2026-10-23 15:13:39 UTC
+Change: 20261023-password-vault
+Context: MVP 需要控制范围，避免首版同时做分类、标签与剪贴板定时器。
+Decision: MVP 不提供分类/标签/收藏，条目类型字段保留为 login；搜索覆盖标题、用户名、网址、备注；剪贴板只做复制与敏感标记，自动清除延后到下一阶段。
+Consequences: 数据模型预留 type 便于后续扩展；搜索与列表按单一集合处理；剪贴板内容在下一阶段前不会自动过期，属于已知限制。
+## [22] 2026-10-23 15:13:39 UTC
+Change: 20261023-password-vault
+Context: 用户要求先确定 UI 风格，再改数据库，并把实施拆成很小的阶段。
+Decision: 采用 UI-first：M1–M10 使用假数据搭导航、主题与全部页面，M11 起再接 ShioDatabase；每个 M 阶段只做一个小功能，结束必须构建并截图。原型 Demo 代码与数据保留，在设置中提供入口。
+Consequences: UI 阶段不写 vault.db；数据层与界面解耦，便于单独验收；阶段数量较多，但每步可回退、可截图确认。

@@ -1,6 +1,6 @@
 # Agent State
 
-Active Change: 无
-Phase: 20261023-kernel-integration-demo 已归档（P0–P4 完成）；Linux 同步脚本已完成
+Active Change: 20261023-password-vault
+Phase: M0 文档完成，等待 M1 导航骨架
 Blocked: 无
-Next: 维护 —— 内核升级时运行 scripts/sync-shio.sh
+Next: M1 —— 引入 navigation-compose、Routes/NavHost 与占位页
