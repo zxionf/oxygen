@@ -57,7 +57,7 @@ powershell -ExecutionPolicy Bypass -File scripts\sync-shio.ps1 -SkipBuild
 - JDK：系统默认 `java` 21.0.13；Android Studio JBR 21.0.10（`/opt/android-studio/jbr`）。两者均可构建，未设置 `JAVA_HOME` 时也可用。
 - SDK：`/home/zxionf/Android/Sdk`（`local.properties` 已指向）；platforms `android-36`、`android-36.1`；build-tools `36.1.0`。
 - NDK：`29.0.14206865`（与 `ndkVersion` 一致，已用 sdkmanager 安装）；另有 `30.0.14904198-beta1`，勿选用。
-- CMake：SDK 内 `3.22.1`（已安装，AGP 使用）；系统另有 cmake 4.4.4，不参与 Android 构建。
+- CMake：使用系统 `cmake 4.4.4`（`/usr/bin/cmake`）；`externalNativeBuild.cmake.version = "3.22.1+"`，SDK 无 cmake 包时 AGP 从 PATH 解析。SDK 内不再安装 cmake（曾装过 3.22.1，已卸载）。
 - 模拟器：AVD `Medium_Phone`，API 37（Android 17）、x86_64、16 KB page size（`getconf PAGE_SIZE` = 16384）。headless 启动：
   `~/Android/Sdk/emulator/emulator -avd Medium_Phone -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect`
 - sele 0.2.1：`/home/zxionf/.local/bin/sele`。
@@ -82,7 +82,7 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 ## 踩坑（Linux / P2）
 
 - 从 Windows 迁入后 `gradlew` 丢失可执行位，需 `chmod +x`。
-- 新机没有 SDK 内 CMake；AGP 不会回退到系统 cmake，必须先 `sdkmanager "cmake;3.22.1"`。
+- AGP 默认要求精确的 CMake 版本；写成 `3.22.1+` 才会接受系统里的更高版本。若 PATH 中没有 `>= 3.22.1` 的 CMake，则仍需安装 SDK 包，或在 `local.properties` 配置 `cmake.dir`。
 - `libshio_ffi.so` 没有 SONAME：用 `IMPORTED_LOCATION` 直接链接会把构建机绝对路径写进 `DT_NEEDED`，设备上加载失败。必须用 `IMPORTED_NO_SONAME TRUE` + `target_link_directories`，让链接器记录 `libshio_ffi.so`。
 - AGP 的 CMake 配置缓存在 `app/.cxx`；改完链接属性后要删掉 `app/.cxx` 或执行 `:app:clean` 才会重新生成链接行。
 - `sdkmanager` 的 “SDK XML version 4” 与 AGP CMake 的 CXX5304 都是无害警告。

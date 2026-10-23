@@ -59,3 +59,8 @@ Change: 20261023-kernel-integration-demo
 Context: P2 需要一次脚本化的设备冒烟，但不希望为单个用例引入 androidx.test instrumentation 依赖。
 Decision: 在 app/src/debug 提供 SmokeActivity，固定在 filesDir/smoke 下建临时库，把 open/insert/get/list/stats/close/重开结果写入 logcat（ShioSmoke），由 scripts/smoke.sh 负责构建、安装与采集。
 Consequences: 冒烟入口不进入 release APK；覆盖关闭后写入返回 SHIO_CLOSED、重复 close、重新打开后数据仍在；P4 若需要更细粒度用例再评估引入 androidx.test。
+## [13] 2026-10-23 12:38:09 UTC
+Change: 20261023-kernel-integration-demo
+Context: 用户要求删除 SDK 内下载的 CMake，统一使用系统包；AGP 默认要求精确版本，系统 CMake 为 4.4.4。
+Decision: 卸载 cmake;3.22.1 并删除空目录；externalNativeBuild.cmake.version 改为 "3.22.1+"；SDK 无 cmake 包时 AGP 从 PATH 解析到 /usr/bin/cmake 4.4.4。
+Consequences: 节省约 61 MB；构建依赖系统 CMake 版本，AGP 接受 >= 3.22.1；已在 4.4.4 下完成 assembleDebug、16 KB 对齐、lint 与模拟器冒烟；换机器需保证 PATH 中 CMake >= 3.22.1。

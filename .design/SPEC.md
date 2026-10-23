@@ -13,7 +13,7 @@
 - Kotlin 2.2.20、Jetpack Compose（BOM 2025.10.00）、Material 3；单 Activity、单 `app` 模块。
 - Gradle 8.14.3（wrapper + sha256）、AGP 8.13.0、JDK 21。
 - `compileSdk` / `targetSdk` 36，`minSdk` 29，`applicationId` 为 `top.zxionf.shio`（debug 构建加 `.debug` 后缀）。
-- ABI 仅 `arm64-v8a`、`x86_64`；NDK `29.0.14206865`；CMake `3.22.1`。
+- ABI 仅 `arm64-v8a`、`x86_64`；NDK `29.0.14206865`；CMake `3.22.1+`（使用系统 4.4.4）。
 - JNI 薄层使用 C++17，静态 C++ 运行时，关闭 C++ 异常与 RTTI。
 - 不引入 DI 框架、导航库与序列化库；JSON 使用系统 `org.json`。
 

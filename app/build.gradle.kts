@@ -33,7 +33,9 @@ android {
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
+            // 允许使用系统 PATH 中 >= 3.22.1 的 CMake（当前为 4.4.4），
+            // 不再依赖 SDK 内的 cmake 包。
+            version = "3.22.1+"
         }
     }
 

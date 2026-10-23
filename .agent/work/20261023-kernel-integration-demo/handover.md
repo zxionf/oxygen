@@ -6,7 +6,7 @@
 
 - `app/src/main/cpp/CMakeLists.txt`：`IMPORTED` 目标指向 `jniLibs/<abi>/libshio_ffi.so`，产出 `libshio_jni.so`；C++17、`-Wall -Wextra`、`-fno-exceptions -fno-rtti`、`ANDROID_STL=c++_static`。
 - `IMPORTED_NO_SONAME TRUE` + `target_link_directories`：源 `.so` 没有 SONAME，若直接按绝对路径链接，`DT_NEEDED` 会写入构建机路径，设备加载失败。现在两个 ABI 的 `libshio_jni.so` 依赖均为 `libshio_ffi.so`。
-- `app/build.gradle.kts` 增加 `externalNativeBuild`，CMake 版本 `3.22.1`。
+- `app/build.gradle.kts` 增加 `externalNativeBuild`，CMake 版本约束 `3.22.1+`（解析到系统 4.4.4）。
 - `app/src/main/cpp/include/shio.h`：hydrogen `50e073b` 的只读副本，sha256 `ba156f49…a119846`。
 
 ### JNI 实现
@@ -43,7 +43,7 @@ SMOKE OK abi=1 id=01a168ba-327b-7202-a239-e10c138df11a format=1 db_bytes=1056768
 
 ## 环境（Arch Linux）
 
-- 通过 `sdkmanager` 安装 NDK `29.0.14206865` 与 CMake `3.22.1`，与 `ndkVersion` / 决策 8 保持一致。
+- NDK `29.0.14206865` 通过 `sdkmanager` 安装；SDK 内 CMake 已卸载，改用系统 CMake `4.4.4`（`3.22.1+` 约束，`CMAKE_COMMAND=/usr/bin/cmake`）。
 - 细节与踩坑见 `.agent/notes.md` 的 Linux 段。
 - `scripts/sync-shio.ps1` 仍是 Windows 专用；Linux 侧的同步脚本尚未补。
 
