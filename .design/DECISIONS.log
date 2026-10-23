@@ -44,3 +44,18 @@ Change: 20261023-kernel-integration-demo
 Context: 决策 6 把内核二进制是否长期入库留作后续决定；P0 已复制两份 libshio_ffi.so 并校验 16 KB 对齐。
 Decision: jniLibs 下的两份 libshio_ffi.so 入库，来源固定 hydrogen 提交 50e073b3998c690811414aa9534393b4033cac35、NDK r29；scripts/sync-shio.ps1 负责重建与校验，HEAD 与固定提交不一致时直接失败。
 Consequences: 克隆即可构建，首次联调不依赖 Rust 工具链；APK 内 .so 会被 AGP strip，哈希与源产物不同，验收以导出符号与 LOAD 对齐为准；升级内核须提交新二进制并更新脚本常量。
+## [10] 2026-10-23 12:28:12 UTC
+Change: 20261023-kernel-integration-demo
+Context: 开发环境从 Windows 切换到 Arch Linux；新机 Android SDK 只有 NDK 30.0.14904198-beta1，SDK 内没有安装 CMake。
+Decision: 保持决策 8 的版本基线，安装 NDK 29.0.14206865 与 CMake 3.22.1；构建使用 JDK 21（系统默认 java 或 Android Studio JBR 均可）；Gradle、AGP、Kotlin 版本不变。
+Consequences: 工具链与 P1 验证过的组合一致，ndkVersion 无需改动；新机器首次构建需先用 sdkmanager 安装这两个包；scripts/sync-shio.ps1 仍是 Windows 专用，Linux 侧暂用 scripts/smoke.sh。
+## [11] 2026-10-23 12:28:12 UTC
+Change: 20261023-kernel-integration-demo
+Context: JNI 薄层编译需要 shio.h，而 hydrogen 的 libshio_ffi.so 没有 SONAME；按绝对路径链接会把构建机路径写进 DT_NEEDED。
+Decision: 把 shio.h 以只读副本入库（固定 hydrogen 提交 50e073b，sha256 校验）；CMake 用 IMPORTED + IMPORTED_NO_SONAME，以 -lshio_ffi 链接；C++ 运行时静态链接（c++_static），JNI 层关闭 C++ 异常与 RTTI，错误只通过返回码映射为 ShioException。
+Consequences: libshio_jni.so 的 DT_NEEDED 为 libshio_ffi.so，APK 不需要外带 libc++_shared.so；升级内核时必须同时更新头文件与 .so；JNI 内部不使用 C++ 异常。
+## [12] 2026-10-23 12:28:16 UTC
+Change: 20261023-kernel-integration-demo
+Context: P2 需要一次脚本化的设备冒烟，但不希望为单个用例引入 androidx.test instrumentation 依赖。
+Decision: 在 app/src/debug 提供 SmokeActivity，固定在 filesDir/smoke 下建临时库，把 open/insert/get/list/stats/close/重开结果写入 logcat（ShioSmoke），由 scripts/smoke.sh 负责构建、安装与采集。
+Consequences: 冒烟入口不进入 release APK；覆盖关闭后写入返回 SHIO_CLOSED、重复 close、重新打开后数据仍在；P4 若需要更细粒度用例再评估引入 androidx.test。

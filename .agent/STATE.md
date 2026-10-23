@@ -1,6 +1,6 @@
 # Agent State
 
 Active Change: 20261023-kernel-integration-demo
-Phase: P0/P1 完成（产物已入库并校验，脚手架可构建、可安装、空 Compose 页面可运行）
+Phase: P0–P2 完成（脚手架可构建、JNI 薄层已接入，模拟器冒烟通过）
 Blocked: 无
-Next: P2 —— 加 `CMakeLists.txt`（IMPORTED 链接 libshio_ffi.so）与 `shio_jni.cpp`，接 `NativeShio.kt`/`ShioDatabase.kt`
+Next: P3 —— 演示界面（口令、列表、增删与批量、关闭/重开、统计、错误展示）
