@@ -64,3 +64,13 @@ Change: 20261023-kernel-integration-demo
 Context: 用户要求删除 SDK 内下载的 CMake，统一使用系统包；AGP 默认要求精确版本，系统 CMake 为 4.4.4。
 Decision: 卸载 cmake;3.22.1 并删除空目录；externalNativeBuild.cmake.version 改为 "3.22.1+"；SDK 无 cmake 包时 AGP 从 PATH 解析到 /usr/bin/cmake 4.4.4。
 Consequences: 节省约 61 MB；构建依赖系统 CMake 版本，AGP 接受 >= 3.22.1；已在 4.4.4 下完成 assembleDebug、16 KB 对齐、lint 与模拟器冒烟；换机器需保证 PATH 中 CMake >= 3.22.1。
+## [14] 2026-10-23 13:02:53 UTC
+Change: 20261023-kernel-integration-demo
+Context: P3 需要在 Activity 重建时保留数据库句柄与列表状态；设计已确定 DemoViewModel + StateFlow，但 Compose 获取 ViewModel 需要 lifecycle-viewmodel-compose，collectAsStateWithLifecycle 需要 lifecycle-runtime-compose。
+Decision: 引入 androidx.lifecycle:lifecycle-viewmodel-compose 与 lifecycle-runtime-compose 2.9.4（与现有 lifecycle 版本一致），并显式声明 compose.foundation（版本由 BOM 管理）；不引入 DI、导航或序列化库。
+Consequences: 依赖仍全部来自 AndroidX/Compose 生态；升级 lifecycle 时三处版本一起改；assembleDebug、lint 与模拟器验证均已通过。
+## [15] 2026-10-23 13:02:53 UTC
+Change: 20261023-kernel-integration-demo
+Context: shio_batch 的输入要求调用方提供 16 字节记录 ID，界面“批量写入 3 条”无法依赖 insert 返回的内核 UUIDv7。
+Decision: Demo 在客户端按 UUIDv7 布局生成 batch 的 ID（48 位毫秒时间戳 + version 7 + variant 10 + 随机位），保持与 insert 记录一致的排序语义。
+Consequences: batch 创建的记录也是 UUIDv7；随机位使用 ThreadLocalRandom，不作为安全随机源；需要严格单调或加密随机时另行替换。

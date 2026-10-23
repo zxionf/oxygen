@@ -88,3 +88,14 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - `sdkmanager` 的 “SDK XML version 4” 与 AGP CMake 的 CXX5304 都是无害警告。
 - 模拟器提示 “different renderer configured” 时会忽略旧快照全新启动，首次开机较慢。
 - 冒烟结果从 logcat 采集：`adb logcat -d -s ShioSmoke:I '*:S'`。
+
+## P3 UI 验证命令（Linux / AVD API 37）
+
+- 安装并启动：
+  `adb install -r app/build/outputs/apk/debug/app-debug.apk`
+  `adb shell am start -W -n top.zxionf.shio.debug/top.zxionf.shio.MainActivity`
+- UI 交互用 `adb shell input tap/text/keyevent`；坐标以 `adb shell wm size` 和截图为准（当前 1080x2400）。
+- 旋转：`adb shell settings put system accelerometer_rotation 0`，再 `adb shell settings put system user_rotation 1`（恢复用 `0`）。
+- `adb shell input keyevent 4` 在软键盘已收起时会直接退出 Activity；优先点界面按钮，不要用返回键收键盘。
+- 截图用 `adb shell screencap -p /sdcard/x.png` + `adb pull`，避免 `exec-out` 重定向。
+- 崩溃检查：`adb logcat -d -s AndroidRuntime:E '*:S'`。

@@ -24,6 +24,11 @@ class ShioDatabase {
     val isOpen: Boolean
         get() = handle.get() != 0L
 
+    /** 内核 ABI 版本；调用会切换 Dispatchers.IO，避免主线程加载 native 库。 */
+    suspend fun abiVersion(): Int = withContext(dispatcher) {
+        NativeShio.abiVersion()
+    }
+
     /**
      * 打开或创建数据库，返回不透明句柄。
      *

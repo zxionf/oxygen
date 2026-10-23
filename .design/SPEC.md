@@ -10,7 +10,7 @@
 
 ## 技术栈
 
-- Kotlin 2.2.20、Jetpack Compose（BOM 2025.10.00）、Material 3；单 Activity、单 `app` 模块。
+- Kotlin 2.2.20、Jetpack Compose（BOM 2025.10.00）、Material 3、Lifecycle 2.9.4；单 Activity、单 `app` 模块。
 - Gradle 8.14.3（wrapper + sha256）、AGP 8.13.0、JDK 21。
 - `compileSdk` / `targetSdk` 36，`minSdk` 29，`applicationId` 为 `top.zxionf.shio`（debug 构建加 `.debug` 后缀）。
 - ABI 仅 `arm64-v8a`、`x86_64`；NDK `29.0.14206865`；CMake `3.22.1+`（使用系统 4.4.4）。
@@ -37,7 +37,7 @@
 
 - Demo 命名空间固定 `demo`，集合固定 `notes`。
 - 记录值固定 `{"text":"<用户输入>"}`。
-- 记录 ID 使用内核生成的 UUIDv7；Kotlin 侧在 16 字节原始值与 36 字符标准 UUID 字符串之间转换。
+- 记录 ID 使用 UUIDv7：`insert` 由内核生成，`batch` 由客户端按相同布局生成；Kotlin 侧在 16 字节原始值与 36 字符标准 UUID 字符串之间转换。
 - `list` 只返回元信息，界面逐条 `get` 取正文，单次最多 50 条。
 - 数据库路径为应用私有目录 `filesDir/shio-demo.db`。
 
@@ -56,7 +56,9 @@ app/src/main/java/top/zxionf/shio/
 │   ├── NativeShio.kt        # external 声明与库加载
 │   ├── ShioDatabase.kt      # 句柄、线程与 UUID
 │   └── ShioException.kt     # code + message
-├── demo/DemoScreen.kt       # Compose 单页
+├── demo/
+│   ├── DemoScreen.kt        # Compose 单页
+│   └── DemoViewModel.kt     # 状态与操作编排
 └── ui/theme/
 app/src/main/cpp/
 ├── shio_jni.cpp             # JNI 薄层

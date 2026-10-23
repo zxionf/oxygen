@@ -1,64 +1,74 @@
 # 20261023-kernel-integration-demo 交接
 
-## 本轮完成（P2 JNI 薄层）
+## 当前进度
 
-### 构建与链接
+P0–P3 完成，进入 P4 设备验收。P2 的 JNI 薄层与 P3 的演示界面都已在模拟器验证；arm64 真机、文件锁与杀进程重开尚未验证。
 
-- `app/src/main/cpp/CMakeLists.txt`：`IMPORTED` 目标指向 `jniLibs/<abi>/libshio_ffi.so`，产出 `libshio_jni.so`；C++17、`-Wall -Wextra`、`-fno-exceptions -fno-rtti`、`ANDROID_STL=c++_static`。
-- `IMPORTED_NO_SONAME TRUE` + `target_link_directories`：源 `.so` 没有 SONAME，若直接按绝对路径链接，`DT_NEEDED` 会写入构建机路径，设备加载失败。现在两个 ABI 的 `libshio_jni.so` 依赖均为 `libshio_ffi.so`。
-- `app/build.gradle.kts` 增加 `externalNativeBuild`，CMake 版本约束 `3.22.1+`（解析到系统 4.4.4）。
-- `app/src/main/cpp/include/shio.h`：hydrogen `50e073b` 的只读副本，sha256 `ba156f49…a119846`。
+## P2 摘要（JNI 薄层）
 
-### JNI 实现
+- `app/src/main/cpp/CMakeLists.txt`：`IMPORTED_NO_SONAME` 链接 `jniLibs/<abi>/libshio_ffi.so`，产出 `libshio_jni.so`；C++17、静态 C++ 运行时、`-fno-exceptions -fno-rtti`。
+- `shio_jni.cpp`：`id -> Handle` 表、每句柄互斥量、`destroy` 摘表后等待在途调用；UTF-16→UTF-8；输出复制后 `shio_free`；口令清零；全部错误码映射为 `ShioException`。
+- `NativeShio.kt` 校验 `abiVersion == 1`；`ShioDatabase.kt` 单线程调度、UUID 转换、打开/关闭/重建语义。
+- `app/src/debug/.../SmokeActivity.kt` + `scripts/smoke.sh`：脚本化冒烟，不进入 release。
 
-- `shio_jni.cpp`：全局 `id -> shared_ptr<Handle>` 表；`Handle` 持有 `shio_kernel*`、`std::mutex`、`destroyed` 标记。
-- `destroy` 先摘表 → 取句柄锁等待在途调用 → 置销毁标记 → 调 `shio_kernel_destroy`；等待中的调用拿到锁后看到标记，返回 `SHIO_CLOSED`。
-- `close` 可重复；对已销毁句柄是空操作。写入已关闭但未销毁的库返回 `SHIO_CLOSED`。
-- UTF-16 → UTF-8 手写转换（拒绝内嵌 NUL 与孤立代理项）；字节数组显式带长度。
-- 所有输出先复制到 `jbyteArray` 再 `shio_free`；错误路径也检查并释放非空缓冲区。
-- 口令副本用 `volatile` 逐字节清零；`shio_last_error` 读取后映射到 `ShioException(code, message)`，覆盖 ABI 全部错误码。
-- `JNI_OnLoad` 缓存 `ShioException` 类与 `(I, String)` 构造器；类缺失时退化为 `RuntimeException`。
+## P3 实现（演示界面）
 
-### Kotlin 侧
+### 状态层
 
-- `NativeShio.kt`：`object` + external 声明；加载 `shio_ffi`、`shio_jni` 后校验 `abiVersion == 1`。
-- `ShioDatabase.kt`：`Dispatchers.IO.limitedParallelism(1)`；`open` 自动销毁旧句柄；`close` 保留句柄、`destroy` 释放；UUID 16 字节 ↔ 标准字符串；JSON 输出统一转 `String`。
-- `ShioException.kt`：`code + message`，附全部错误码常量。
-- `app/src/debug/.../SmokeActivity.kt`：仅 debug 的脚本化冒烟，结果写 logcat `ShioSmoke`；`scripts/smoke.sh` 负责构建、安装与采集。
+- `app/src/main/java/top/zxionf/shio/demo/DemoViewModel.kt`
+  - `AndroidViewModel` + `StateFlow<DemoUiState>`，包含口令、草稿、路径、ABI、统计、记录、选中项、busy、状态与错误。
+  - 打开/创建与重新打开共用 `openOrCreate()`；关闭后保留路径与口令，重开时 `ShioDatabase.open` 先销毁旧句柄。
+  - `refresh()`：`list` 限 50 条，逐条 `get` 取正文；`NOT_FOUND` 的条目跳过。
+  - `addNote()` / `deleteSelected()` / `batchWrite()` / `showStats()`。
+  - `batchWrite()` 用 `batch` 一次写 3 条，ID 由客户端按 UUIDv7 布局生成（时间戳 + version 7 + variant 10 + 随机位）。
+  - `onCleared()` 用独立 IO 作用域 `database.destroy()`，不阻塞主线程。
+  - 所有数据库调用都走 `ShioDatabase` 的 suspend API，内部切到单线程 IO；`NativeShio` 初始化也发生在 IO 线程。
+- `ShioDatabase.kt` 新增 `suspend fun abiVersion()`，避免主线程触发 native 库加载。
+
+### 界面
+
+- `app/src/main/java/top/zxionf/shio/demo/DemoScreen.kt`
+  - 单页 `LazyColumn`：口令 + 打开/创建/重新打开/关闭、路径与 ABI、统计、刷新、批量写入 3 条、添加、记录列表、删除选中、状态行、错误卡片。
+  - 错误展示为 `错误 INVALID_KEY (-3)` + 内核消息。
+  - 关闭后隐藏操作区，只保留“重新打开”和 `SHIO_CLOSED` 提示。
+  - `DemoActions` 回调集合让 `DemoContent` 可以零依赖预览。
+
+### 依赖
+
+- 新增 `lifecycle-viewmodel-compose`、`lifecycle-runtime-compose`（2.9.4）与显式 `compose.foundation`（BOM 管版本）。
+- 未引入 DI、导航或序列化库；JSON 仍用 `org.json`。
 
 ## 验证记录
 
-- `./gradlew :app:assembleDebug`：BUILD SUCCESSFUL；未设置 `JAVA_HOME` 也可用（系统 java 21.0.13）。
-- `./gradlew :app:lintDebug`：0 errors / 4 warnings（版本可升级提示 3 条 + `mipmap-anydpi-v26` 的 `ObsoleteSdkInt`）。
-- APK 内 `lib/{arm64-v8a,x86_64}/libshio_jni.so` 均存在；`readelf -lW` 的 3 个 LOAD 段对齐均为 `0x4000`。
-- `zipalign -c -P 16 -v 4 app-debug.apk`：Verification successful。
-- 设备：AVD `Medium_Phone`，Android 17（API 37），x86_64，`getconf PAGE_SIZE` = 16384。
-- `scripts/smoke.sh` 输出：
+- `./gradlew :app:assembleDebug`：BUILD SUCCESSFUL。
+- `./gradlew :app:lintDebug`：0 errors / 4 warnings（版本提示 3 条 + `mipmap-anydpi-v26` 的 `ObsoleteSdkInt`）。
+- `scripts/smoke.sh`：`SMOKE OK abi=1 ... format=1 db_bytes=1056768`。
+- 模拟器：AVD `Medium_Phone`，Android 17（API 37），x86_64，16 KB page（`PAGE_SIZE=16384`）。
+- 手工 UI 验证（截图为 `/sdcard/p3-*.png`）：
+  - 打开/创建后显示路径、`ABI 版本：1`、`format_version/key_id/db_bytes`。
+  - 添加 1 条、批量写入 3 条后共 4 条；删除选中后 3 条；刷新提示“共 3 条（最多 50 条）”。
+  - 统计按钮更新 `db_bytes`（关闭/重开后由 1056768 变为 61440/65536，属内核整理行为）。
+  - 关闭后显示“重新打开”；重开后 3 条记录仍在。
+  - 错误口令显示 `INVALID_KEY (-3)`，改回正确口令后可恢复。
+  - 横竖屏切换后打开状态、记录、统计与口令输入保留。
+  - 按返回退出后重新启动，再打开同一库成功（`onCleared` 释放句柄生效）。
+- 无 `AndroidRuntime` 崩溃记录。
 
-```
-SMOKE OK abi=1 id=01a168ba-327b-7202-a239-e10c138df11a format=1 db_bytes=1056768
-```
+## P4 注意事项
 
-冒烟覆盖：open → insert → get（meta id 校验）→ list（next 校验）→ stats（format_version/key_id/db_bytes）→ close → 关闭后写入得到 `SHIO_CLOSED` → 重复 close → 重新 open 后数据仍在 → destroy（含重复 destroy）。
-
-## 环境（Arch Linux）
-
-- NDK `29.0.14206865` 通过 `sdkmanager` 安装；SDK 内 CMake 已卸载，改用系统 CMake `4.4.4`（`3.22.1+` 约束，`CMAKE_COMMAND=/usr/bin/cmake`）。
-- 细节与踩坑见 `.agent/notes.md` 的 Linux 段。
-- `scripts/sync-shio.ps1` 仍是 Windows 专用；Linux 侧的同步脚本尚未补。
-
-## P3 注意事项
-
-1. `DemoViewModel.kt` 使用 `StateFlow` 暴露状态；所有数据库调用走 `ShioDatabase` 的 suspend API，主线程不触 native。
-2. `list` 返回的 `next` 是 UUID 字符串或 `null`；`items` 只有元信息，正文需逐条 `get`（限 50 条）。
-3. 打开失败（如错误口令）会抛 `ShioException`，按 `code` 展示；`INVALID_KEY` 的界面验证属于 P4。
-4. 旋转屏幕后状态恢复：ViewModel + `SavedStateHandle`，不要持有 `ShioDatabase` 的裸句柄到 UI。
-5. 关闭后重开：直接 `ShioDatabase.open` 会销毁旧句柄；界面上的“重新打开”无需手动 destroy。
-6. 数据库路径为 `filesDir/shio-demo.db`；冒烟使用的 `filesDir/smoke/` 与演示库互不影响。
+1. **arm64 真机**：安装同一个 debug APK，重复打开、增删、批量写、关闭/重开、旋转与杀进程重开。
+2. **杀进程重开**：`adb shell am force-stop top.zxionf.shio.debug` 后重新启动，确认数据仍在；进程内句柄随进程释放，不需要额外清理。
+3. **INVALID_KEY**：已在模拟器验证，真机复测即可。
+4. **CLOSED**：已由冒烟覆盖（关闭后 insert 返回 `CLOSED`，重复 close 不崩溃）；界面目前关闭后隐藏写入入口，如需界面可见，可临时保留操作按钮或走冒烟。
+5. **LOCKED**：尚未验证。建议给 `SmokeActivity` 增加一个 `--es path <path>` 或 debug-only probe，在 MainActivity 已打开 `filesDir/shio-demo.db` 时用第二个句柄打开同一路径，断言返回 `SHIO_LOCKED`。
+6. **stats 一致性**：记录操作前后的 `format_version`、`key_id`、`db_bytes`，确认与内核输出一致；`db_bytes` 在关闭/重开时可能变化，属正常整理。
+7. **UI 自动化**：参考 `.agent/notes.md` 的 P3 命令；截图为 1080x2400，坐标按截图换算。`input keyevent 4` 在键盘已收起时会退出 Activity，不要用它收键盘。
+8. 验收完成后把设备型号、系统版本、结果写入本文件，并更新 `tasks.md`、`STATE.md` 与 `SPEC.md`。
 
 ## 遗留风险
 
-- JNI 使用 `-fno-exceptions`，`std::vector`/`std::string` 分配失败会直接 abort；Demo 规模可接受。
-- `destroy` 与在途调用的互斥逻辑经过冒烟，但未做并发压力测试。
-- `lastError()` 依赖线程局部状态，调度器不保证同一线程，仅作排查用途。
-- 尚未在 arm64 真机验证；P4 进行。
+- JNI 使用 `-fno-exceptions`，内存分配失败会直接 abort；Demo 规模可接受。
+- `destroy` 与在途调用的互斥逻辑经过冒烟，未做并发压力测试。
+- `onCleared` 的清理是异步的：退出后立刻重开存在极小概率撞上旧句柄释放未完成；如出现 `LOCKED`，先确认是否为该场景。
+- 口令以 `String` 形式存在于 ViewModel 内存中，无法清零；不写日志、不落盘。
+- `batch` 的 UUIDv7 随机位使用 `ThreadLocalRandom`，不是加密随机源；记录 ID 不承担安全职责。
