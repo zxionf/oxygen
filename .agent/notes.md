@@ -108,3 +108,11 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - Compose 控件坐标用 `adb shell uiautomator dump /sdcard/ui.xml`，解析 `text=... bounds=...`，不要靠截图估算。
 - 旧演示库口令未知时，先 `adb shell pm clear top.zxionf.shio.debug` 再重来。
 - 真机中文输入法会把 `input text` 转成中文，内容不影响验收。
+
+## 内核产物同步（Linux，sync-shio.sh）
+
+- 前置：`cargo install cargo-ndk`（装到 `~/.cargo/bin`，脚本会自动回退查找）；hydrogen 的 `rust-toolchain.toml` 要求 Rust 1.95.0，并需执行 `(cd ../hydrogen && rustup target add aarch64-linux-android x86_64-linux-android)`。
+- 网络受限时给 rustup 设镜像：`export RUSTUP_DIST_SERVER=https://rsproxy.cn`、`export RUSTUP_UPDATE_ROOT=https://rsproxy.cn/rustup`。
+- 用法：`scripts/sync-shio.sh`；只复制 target 下已有产物用 `--skip-build`；可用 `--hydrogen` / `--ndk` 覆盖默认路径与版本。
+- 脚本会同时同步 `app/src/main/cpp/include/shio.h`，并校验两个 ABI 的 ELF 架构与 16 KB LOAD 对齐。
+- hydrogen HEAD 必须等于脚本固定的 `50e073b`，否则直接失败；升级内核时同步修改脚本常量与 `.design/DECISIONS.log`。

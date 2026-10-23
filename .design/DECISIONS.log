@@ -79,3 +79,8 @@ Change: 20261023-kernel-integration-demo
 Context: P4 需要验证 SHIO_LOCKED 与进程被杀后的持久化，但不引入 instrumentation 测试依赖。
 Decision: 在 app/src/debug 增加 AcceptanceActivity（mode=lock|persist-write|persist-verify）与 scripts/acceptance.sh；LOCKED 用同进程两个句柄打开同一路径验证，持久化用写标记 → force-stop → 重新打开验证。
 Consequences: 验收可重复且不进入 release；真机与模拟器共用同一脚本；探针库位于 filesDir 下的独立文件，不触碰演示库或用户数据。
+## [17] 2026-10-23 14:39:52 UTC
+Change: none
+Context: 开发环境已切到 Arch Linux，现有 sync-shio.ps1 是 Windows 专用；JNI 编译还需要与 libshio_ffi.so 同提交的 shio.h。
+Decision: 新增 scripts/sync-shio.sh，行为对齐 PS1（固定 hydrogen 提交、cargo-ndk、NDK 29、两个 ABI、16 KB 对齐校验），并额外同步 app/src/main/cpp/include/shio.h；前置依赖为 cargo-ndk 与 hydrogen rust-toolchain 对应的 Android targets。
+Consequences: Linux 侧可用一条命令重建并校验内核产物；Windows 仍保留 PS1；首次使用需安装 Rust 1.95、两个 Android target 与 cargo-ndk；hydrogen HEAD 变化时脚本会直接失败。

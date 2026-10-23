@@ -76,6 +76,7 @@ app/src/main/
 app/src/debug/                   # SmokeActivity / AcceptanceActivity，仅 debug 变体
 scripts/smoke.sh                 # 设备冒烟脚本
 scripts/acceptance.sh            # P4 验收入口（LOCKED、进程重启持久化）
+scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件 + 对齐校验）
 ```
 
 不引入 DI 框架，不拆多模块，不引入导航库。JSON 解析使用系统自带 `org.json`，避免为 Demo 增加序列化依赖。
@@ -116,5 +117,5 @@ scripts/acceptance.sh            # P4 验收入口（LOCKED、进程重启持久
 ## 构建与产物
 - `compileSdk 36`、`minSdk 29`、`targetSdk 36`，ABI 为 `arm64-v8a` 与 `x86_64`，NDK `29.0.14206865`，CMake `3.22.1+`（使用系统 4.4.4）。
 - 构建使用 JDK 21（系统 JDK 或 Android Studio JBR）；AGP 与 Gradle 版本在脚手架阶段选定并固定到 Version Catalog / wrapper。
-- 首版 `libshio_ffi.so` 直接取自 hydrogen 提交 `50e073b`；`scripts/sync-shio.ps1` 负责后续用 `cargo-ndk` 重建并复制，来源提交与 NDK 版本写入脚本常量；Linux 版同步脚本待补。
+- 首版 `libshio_ffi.so` 直接取自 hydrogen 提交 `50e073b`；Linux 用 `scripts/sync-shio.sh`、Windows 用 `scripts/sync-shio.ps1` 通过 `cargo-ndk` 重建并复制，来源提交与 NDK 版本写入脚本常量；Linux 脚本同时同步 `include/shio.h`。
 - Debug 构建即可，不做签名与混淆配置。
