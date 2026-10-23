@@ -39,17 +39,17 @@
 
 ## P4 验收
 
-- [ ] `x86_64` 模拟器：完整操作 + 杀进程后重开数据仍在
-- [ ] `arm64-v8a` 真机：完整操作 + 杀进程后重开数据仍在
-- [ ] 错误口令返回 `SHIO_INVALID_KEY`，界面可见
-- [ ] 关闭后写入返回 `SHIO_CLOSED`；重复关闭不崩溃
-- [ ] 文件锁场景：第二个实例打开同一库返回 `SHIO_LOCKED`（可用双进程或测试代码验证）
-- [ ] `stats` 的 `format_version`、`key_id`、`db_bytes` 与操作结果一致
-- [ ] 记录设备型号、系统版本与结果到 `.agent/work/20261023-kernel-integration-demo/handover.md`
+- [x] `x86_64` 模拟器：完整操作 + 杀进程后重开数据仍在
+- [x] `arm64-v8a` 真机：完整操作 + 杀进程后重开数据仍在
+- [x] 错误口令返回 `SHIO_INVALID_KEY`，界面可见
+- [x] 关闭后写入返回 `SHIO_CLOSED`；重复关闭不崩溃
+- [x] 文件锁场景：第二个实例打开同一库返回 `SHIO_LOCKED`（可用双进程或测试代码验证）
+- [x] `stats` 的 `format_version`、`key_id`、`db_bytes` 与操作结果一致
+- [x] 记录设备型号、系统版本与结果到 `.agent/work/20261023-kernel-integration-demo/handover.md`
 
 ## 完成定义
 
 - [x] `assembleDebug` 通过，两个 ABI 的 `.so` 都进入 APK
-- [ ] 两套设备上的验收项全部通过
-- [ ] JNI 层没有内核逻辑复制，所有缓冲区正确释放
-- [ ] `.design` 与 `.agent` 状态同步，`sele lint` 通过
+- [x] 两套设备上的验收项全部通过
+- [x] JNI 层没有内核逻辑复制，所有缓冲区正确释放
+- [x] `.design` 与 `.agent` 状态同步，`sele lint` 通过

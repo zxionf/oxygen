@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 仅 debug 变体：脚本化冒烟入口，不进入 release APK。 -->
+    <!-- 仅 debug 变体：脚本化冒烟与 P4 验收入口，不进入 release APK。 -->
     <application>
         <activity
             android:name=".debug.SmokeActivity"
             android:exported="true"
             android:label="shio smoke" />
+        <activity
+            android:name=".debug.AcceptanceActivity"
+            android:exported="true"
+            android:label="shio acceptance" />
     </application>
 
 </manifest>

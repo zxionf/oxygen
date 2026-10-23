@@ -19,18 +19,22 @@ app/src/main/
 ├── java/top/zxionf/shio/
 │   ├── MainActivity.kt
 │   ├── kernel/
-│   │   ├── NativeShio.kt        # external fun 声明与库加载
-│   │   ├── ShioDatabase.kt      # 句柄、线程与错误封装
+│   │   ├── NativeShio.kt        # external 声明与库加载
+│   │   ├── ShioDatabase.kt      # 句柄、线程与 UUID
 │   │   └── ShioException.kt     # code + message
-│   └── demo/
-│       ├── DemoScreen.kt        # Compose 单页
-│       └── DemoViewModel.kt     # 状态与操作
+│   ├── demo/
+│   │   ├── DemoScreen.kt        # Compose 单页
+│   │   └── DemoViewModel.kt     # 状态与操作编排
+│   └── ui/theme/
 ├── cpp/
 │   ├── shio_jni.cpp             # JNI 薄层
-│   └── CMakeLists.txt
-└── jniLibs/
-    ├── arm64-v8a/libshio_ffi.so
-    └── x86_64/libshio_ffi.so
+│   ├── CMakeLists.txt
+│   ├── include/shio.h           # hydrogen C ABI 只读副本
+│   └── README.md
+└── jniLibs/<abi>/libshio_ffi.so
+app/src/debug/                   # SmokeActivity / AcceptanceActivity，仅 debug 变体
+scripts/smoke.sh                 # 设备冒烟脚本
+scripts/acceptance.sh            # P4 验收入口（LOCKED、进程重启持久化）
 ```
 
 不引入 DI 框架，不拆多模块，不引入导航库。JSON 解析使用系统自带 `org.json`，避免为 Demo 增加序列化依赖。

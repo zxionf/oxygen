@@ -74,3 +74,8 @@ Change: 20261023-kernel-integration-demo
 Context: shio_batch 的输入要求调用方提供 16 字节记录 ID，界面“批量写入 3 条”无法依赖 insert 返回的内核 UUIDv7。
 Decision: Demo 在客户端按 UUIDv7 布局生成 batch 的 ID（48 位毫秒时间戳 + version 7 + variant 10 + 随机位），保持与 insert 记录一致的排序语义。
 Consequences: batch 创建的记录也是 UUIDv7；随机位使用 ThreadLocalRandom，不作为安全随机源；需要严格单调或加密随机时另行替换。
+## [16] 2026-10-23 13:39:37 UTC
+Change: 20261023-kernel-integration-demo
+Context: P4 需要验证 SHIO_LOCKED 与进程被杀后的持久化，但不引入 instrumentation 测试依赖。
+Decision: 在 app/src/debug 增加 AcceptanceActivity（mode=lock|persist-write|persist-verify）与 scripts/acceptance.sh；LOCKED 用同进程两个句柄打开同一路径验证，持久化用写标记 → force-stop → 重新打开验证。
+Consequences: 验收可重复且不进入 release；真机与模拟器共用同一脚本；探针库位于 filesDir 下的独立文件，不触碰演示库或用户数据。

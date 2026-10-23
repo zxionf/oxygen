@@ -60,6 +60,10 @@ class SmokeActivity : ComponentActivity() {
             val abi = NativeShio.abiVersion()
             check(abi == NativeShio.SUPPORTED_ABI_VERSION) { "unexpected ABI $abi" }
 
+            val statsOpen = JSONObject(database.stats())
+            check(statsOpen.getInt("format_version") == 1) { "unexpected format version: $statsOpen" }
+            check(statsOpen.optString("key_id").isNotEmpty()) { "stats missing key_id: $statsOpen" }
+
             val recordId = database.insert(namespace, collection, """{"text":"hello smoke"}""")
             check(recordId.length == 36) { "unexpected record id $recordId" }
 
@@ -73,10 +77,19 @@ class SmokeActivity : ComponentActivity() {
             val next = JSONObject(page).opt("next")
             check(next == null || next == JSONObject.NULL) { "unexpected next cursor $next" }
 
-            val stats = JSONObject(database.stats())
-            check(stats.has("format_version")) { "stats missing format_version: $stats" }
-            check(stats.has("key_id")) { "stats missing key_id: $stats" }
-            check(stats.getLong("db_bytes") > 0L) { "stats db_bytes should be positive: $stats" }
+            val statsAfterInsert = JSONObject(database.stats())
+            check(statsAfterInsert.getInt("format_version") == statsOpen.getInt("format_version")) {
+                "format_version changed after insert: $statsOpen -> $statsAfterInsert"
+            }
+            check(statsAfterInsert.optString("key_id") == statsOpen.optString("key_id")) {
+                "key_id changed after insert: $statsOpen -> $statsAfterInsert"
+            }
+            check(statsAfterInsert.getLong("db_bytes") >= statsOpen.getLong("db_bytes")) {
+                "db_bytes shrank after insert: $statsOpen -> $statsAfterInsert"
+            }
+            check(statsAfterInsert.getLong("db_bytes") > 0L) {
+                "stats db_bytes should be positive: $statsAfterInsert"
+            }
 
             database.close()
 
@@ -89,13 +102,31 @@ class SmokeActivity : ComponentActivity() {
             // 重复关闭必须是空操作。
             database.close()
 
+            val wrongPassword = runCatching {
+                database.open(path, "wrong-password")
+            }.exceptionOrNull()
+            check(wrongPassword is ShioException && wrongPassword.code == ShioException.INVALID_KEY) {
+                "wrong password should fail with INVALID_KEY, got $wrongPassword"
+            }
+
             database.open(path, password)
             val reopened = database.get(namespace, collection, recordId)
             check(reopened.contains("hello smoke")) { "record lost after reopen: $reopened" }
+
+            val statsReopened = JSONObject(database.stats())
+            check(statsReopened.getInt("format_version") == statsOpen.getInt("format_version")) {
+                "format_version changed after reopen: $statsOpen -> $statsReopened"
+            }
+            check(statsReopened.optString("key_id") == statsOpen.optString("key_id")) {
+                "key_id changed after reopen: $statsOpen -> $statsReopened"
+            }
+            check(statsReopened.getLong("db_bytes") > 0L) {
+                "db_bytes should be positive after reopen: $statsReopened"
+            }
             database.destroy()
 
-            return "abi=$abi id=$recordId format=${stats.getInt("format_version")} " +
-                "db_bytes=${stats.getLong("db_bytes")}"
+            return "abi=$abi id=$recordId format=${statsReopened.getInt("format_version")} " +
+                "db_bytes=${statsReopened.getLong("db_bytes")}"
         } finally {
             database.destroy()
         }

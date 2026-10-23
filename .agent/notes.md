@@ -99,3 +99,12 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - `adb shell input keyevent 4` 在软键盘已收起时会直接退出 Activity；优先点界面按钮，不要用返回键收键盘。
 - 截图用 `adb shell screencap -p /sdcard/x.png` + `adb pull`，避免 `exec-out` 重定向。
 - 崩溃检查：`adb logcat -d -s AndroidRuntime:E '*:S'`。
+
+## P4 设备验收命令（Linux）
+
+- 多设备时所有 adb 命令加 `-s <serial>`，可用 `adb devices -l` 查 serial。
+- 一键验收：`scripts/acceptance.sh <serial>`，包含构建、安装、SMOKE、LOCKED、杀进程持久化。
+- 真机保持亮屏：`adb -s <serial> shell svc power stayon usb`；唤醒用 `input keyevent 224`。
+- Compose 控件坐标用 `adb shell uiautomator dump /sdcard/ui.xml`，解析 `text=... bounds=...`，不要靠截图估算。
+- 旧演示库口令未知时，先 `adb shell pm clear top.zxionf.shio.debug` 再重来。
+- 真机中文输入法会把 `input text` 转成中文，内容不影响验收。
