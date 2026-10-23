@@ -1,0 +1,36 @@
+# Decisions
+## [1] 2026-10-22 10:23:30 UTC
+Change: none
+Context: Android 端仓库缺少统一的 agent 约束与设计分层，参考实现位于 hydrogen（shio 内核）。
+Decision: 沿用 hydrogen 的 .agent/.design 工作区框架：CONTRACT/STATE/notes 管执行，SPEC/DECISIONS/changes 管设计，并用 sele 维护最小闭环。
+Consequences: 两仓库的协作方式一致，agent 冷启动成本低；后续需求与设计增量按 change 记录，结论折叠进 SPEC。
+## [2] 2026-10-22 10:41:49 UTC
+Change: none
+Context: 用户确认 Android 端的应用标识。
+Decision: 应用包名使用 top.zxionf.shio，作为 applicationId 与 Kotlin namespace。
+Consequences: 目录、JNI 命名与商店登记均以该 ID 为准；发布后变更会被视为另一个应用，debug 构建可用 .debug 后缀区分。
+## [3] 2026-10-23 03:34:17 UTC
+Change: none
+Context: 用户在首版范围上选择先打通内核链路，而不是先做完整业务功能。
+Decision: 首版为最小内核集成 Demo：提供打开、增删改查、关闭的最小界面，验证 JNI/FFI 与真机行为。
+Consequences: 首个变更只覆盖内核集成与设备基线；笔记、剪贴板、密码库等业务功能后置，待 Demo 验证通过后再立变更。
+## [4] 2026-10-23 03:44:06 UTC
+Change: none
+Context: hydrogen 已提供 C ABI（shio.h），需要决定 JNI 层的归属与实现语言。
+Decision: JNI 薄层放在 oxygen，用 C/C++ 实现，CMake 构建 libshio_jni.so 并链接 hydrogen 产出的 libshio.so；Kotlin 通过 external fun 调用。
+Consequences: 本仓库不引入 Rust 构建链；JNI 层只做类型转换、错误码映射和线程附着，不复制内核逻辑；libshio.so 的构建、版本与 ABI 由 hydrogen 负责，本仓库需要固定其 ABI 版本。
+## [5] 2026-10-23 03:47:28 UTC
+Change: none
+Context: 首版技术基线需要固定，避免脚手架期反复调整。
+Decision: 首版采用 Kotlin + Jetpack Compose + Material 3、单 Activity、单 app 模块；minSdk 29、targetSdk 36；ABI 仅 arm64-v8a 与 x86_64，不做 armeabi-v7a；暂不引入 DI 与多模块。
+Consequences: 放弃 Android 8/9 设备；构建矩阵缩小到 64 位；后续若需要 32 位或模块化，另立变更评估。
+## [6] 2026-10-23 03:50:10 UTC
+Change: none
+Context: hydrogen 已有 arm64/x86_64 的 libshio_ffi.so 产物，CI 不上传 artifact，本机缺少 cargo-ndk 且未配置 NDK 环境变量。
+Decision: 首版先用 hydrogen 现有产物复制到 app/src/main/jniLibs 跑通 Demo，同时编写本地构建脚本（cargo-ndk + 已安装 NDK）作为后续默认路径；二进制是否长期入库暂不决定。
+Consequences: 首次联调不依赖 cargo-ndk；构建脚本需固定 hydrogen 提交与 NDK 版本；产物来源与重建步骤写入构建说明。
+## [7] 2026-10-23 03:54:25 UTC
+Change: none
+Context: 首版 Demo 的记录形态与 JNI 暴露面需要确定，避免实现时反复扩接口。
+Decision: 记录内容使用单一文本字段（JSON 为 {text:...}）；JNI 一次性暴露 open/close/destroy/insert/put/get/delete/list/batch/stats/last_error，其中 batch 与 stats 即使界面不常用也纳入首版。
+Consequences: JNI 面按 C ABI 全量映射，Demo 界面只使用其中一部分；后续业务字段变化只需改载荷 JSON，不改 native 接口。
