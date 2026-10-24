@@ -189,3 +189,8 @@ Change: 20261024-m3e-alignment
 Context: 编辑器字段 sheet 与创建/解锁页原本各写一套 TextField，样式容易漂移；用户要求解锁页输入框与编辑器保持一致。
 Decision: 把线框式输入框提取为 ui/components/AppTextField.kt：OutlinedTextField + 透明容器 + 12dp 圆角 + 1dp outline / 2dp primary 描边 + 浮动标签压在描边线上 + 框外 bodySmall 辅助文本（有错误时变 error 色并替换辅助文本）+ trailingContent 插槽；编辑器字段 sheet 与 LockScreen（主口令、确认主口令）统一改用该组件。
 Consequences: 后续任何表单输入只改一个组件即可统一样式；错误文案改为通过 errorText 传入，行内错误由组件渲染；AppTextField 不内置前置图标，需要时由调用方通过 trailingContent/外层布局补充。
+## [39] 2026-10-24 10:49:52 UTC
+Change: 20261024-m3e-alignment
+Context: 用户要求把 M3E 定为这款软件的设计风格并写进文档，作为长期约束而不是一次性的改版结果。
+Decision: 在 SPEC 的「项目定位」与「约束」中把 Material 3 Expressive 定为全应用固定设计风格，并明确落到可检查的条目：MaterialExpressiveTheme 根主题、Expressive 形状阶梯、Roboto + emphasized 字体、MotionScheme 动效、material-icons-extended 图标、仅用 scheme role 配色、可点元素 ripple + 按下缩放、输入统一 AppTextField、列表分组统一 StackedList/FieldItem；违反基线的改动视为未完成。同步更新 SPEC 的技术栈/验证基线（Kotlin 2.4.21、Gradle 9.8.2、AGP 9.4.1、compileSdk 37、material3 1.5、仅真机验证、release 开 R8）与阶段计划（M1–M6 完成、M3E 已归档、M7 起按 M3E 实现）。
+Consequences: 后续任何界面工作先对照 SPEC 的 M3E 基线自查；阶段计划与 SPEC 中的旧版本号已同步为当前工具链；若将来要更换设计风格，必须先改 SPEC 与决策日志，不能在实现里悄悄偏离。

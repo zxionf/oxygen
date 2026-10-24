@@ -5,17 +5,21 @@
 ## 项目定位
 - shio-android：shio 内核的 Android 应用端，仓库位于 `oxygen`。
 - 内核（加密持久化、同步）由 `hydrogen` 仓库提供；本仓库负责 Android 应用层、内核集成与交互。
-- 当前范围是最小内核集成 Demo：打开/创建、增删、列表、批量写、统计、关闭与重开。
+- **设计风格固定为 Material 3 Expressive（M3E）**，细节见 `## M3E 设计基线`；任何新页面与界面改动都必须先满足该基线，不再回到默认 M3。
 
 ## 技术栈
-- Kotlin 2.2.20、Jetpack Compose（BOM 2025.10.00）、Material 3、Lifecycle 2.9.4；单 Activity、单 `app` 模块。
-- Gradle 8.14.3（wrapper + sha256）、AGP 8.13.0、JDK 21。
-- `compileSdk` / `targetSdk` 36，`minSdk` 29，`applicationId` 为 `top.zxionf.shio`（debug 构建加 `.debug` 后缀）。
+- Kotlin 2.4.21、Jetpack Compose（BOM 2026.09.00，material3 1.5.0-beta02）、Material 3 Expressive、Lifecycle 2.11.0、Navigation Compose 2.10.2；单 Activity、单 `app` 模块。
+- Gradle 9.8.2（wrapper + sha256）、AGP 9.4.1（内置 Kotlin 支持，不应用 `org.jetbrains.kotlin.android`）、JDK 21。
+- `compileSdk` / `targetSdk` 37，`minSdk` 29，`applicationId` 为 `top.zxionf.shio`（debug 构建加 `.debug` 后缀）。
 - ABI 仅 `arm64-v8a`、`x86_64`；NDK `29.0.14206865`；CMake `3.22.1+`（使用系统 4.4.4）。
 - JNI 薄层使用 C++17，静态 C++ 运行时，关闭 C++ 异常与 RTTI。
-- 不引入 DI 框架、导航库与序列化库；JSON 使用系统 `org.json`。
+- 图标使用 `androidx.compose.material:material-icons-extended`（BOM 管版本），经 `ui/components/Icons.kt` 的 `AppIcons`/`AppIcon` 统一取用；不使用字体图标与自绘路径。
+- 不引入 DI 框架与序列化库；JSON 使用系统 `org.json`；内存/偏好层不引入 Room/DataStore（数据走内核 `vault.db`）。
+- 构建注意：Gradle 9 + JDK 21 需在 `gradle.properties` 的 `org.gradle.jvmargs` 加 `-Djdk.lang.Process.launchMechanism=fork`，否则 CMake 配置阶段报 spawn helper 错误。
 
 ## 约束
+- **设计风格：全应用固定 Material 3 Expressive**。所有界面必须满足 `## M3E 设计基线`：`MaterialExpressiveTheme` 根主题、Expressive 形状阶梯、Roboto + emphasized 字体、`MotionScheme` 动效、`material-icons-extended` 图标、仅用 scheme role 配色、可点元素 ripple + 按下缩放。新增页面或改动若违反基线，视为未完成。
+- 输入类控件统一使用 `ui/components/AppTextField`；列表分组统一使用 `StackedList`/`FieldItem`。
 - 内核以 hydrogen C ABI v1（`crates/shio-ffi/include/shio.h`）为准，JNI 启动时校验 `shio_abi_version == 1`。
 - `jniLibs` 下的 `libshio_ffi.so` 入库，来源固定 hydrogen 提交 `50e073b3998c690811414aa9534393b4033cac35`；两份产物均满足 16 KB LOAD 对齐。
 - 所有 native 调用在 `Dispatchers.IO.limitedParallelism(1)` 上串行执行，主线程不调用 native。
@@ -23,9 +27,10 @@
 - 无权限声明；`allowBackup=false`；release 构建不包含冒烟入口。
 
 ## 验证基线
-- `x86_64` 模拟器：Android 17（API 37），16 KB page。
-- `arm64-v8a` 真机：vivo V2359A（PD2309M），Android 16（API 36），4 KB page。
-- 两端均通过 `SmokeActivity`、`AcceptanceActivity`（LOCKED、杀进程持久化）与 UI 全流程。
+- 日常验证只用真机：vivo V2359A（PD2309M），Android 16（API 36），`arm64-v8a`；`scripts/acceptance.sh` 仍可用于历史回归。
+- 模拟器（Android 17 / API 37、16 KB page）仅保留为历史记录，不作为当前验收手段。
+- 每个界面阶段至少通过 `:app:assembleDebug` + `:app:lintDebug`；涉及内核的改动另跑 Demo 冒烟。
+- release 构建开启 R8（`isMinifyEnabled` + `isShrinkResources`），JNI 入口靠 `proguard-rules.pro` 的 keep 规则保留。
 
 ## 内核集成
 - 内核以 hydrogen 的 C ABI v1 为准，头文件为 `crates/shio-ffi/include/shio.h`，产物为 `libshio_ffi.so`。
