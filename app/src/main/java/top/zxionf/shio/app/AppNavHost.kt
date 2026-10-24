@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
+import top.zxionf.shio.ui.vault.EntryDetailScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
 
 /**
@@ -73,15 +74,10 @@ fun AppNavHost(
             arguments = listOf(navArgument(Routes.EntryIdArg) { type = NavType.StringType }),
         ) { backStackEntry ->
             val entryId = backStackEntry.arguments?.getString(Routes.EntryIdArg).orEmpty()
-            PlaceholderScreen(
-                title = "条目详情",
-                route = Routes.entry(entryId),
-                description = "字段行（用户名/密码/网址/备注）、复制、编辑、删除确认。",
-                actions = listOf(
-                    PlaceholderAction("编辑此条目（editor?entryId）") {
-                        navController.navigate(Routes.editor(entryId))
-                    },
-                ),
+            EntryDetailScreen(
+                entryId = entryId,
+                onBack = { navController.popBackStack() },
+                onEdit = { id -> navController.navigate(Routes.editor(id)) },
             )
         }
 
