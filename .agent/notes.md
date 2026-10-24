@@ -116,3 +116,11 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 用法：`scripts/sync-shio.sh`；只复制 target 下已有产物用 `--skip-build`；可用 `--hydrogen` / `--ndk` 覆盖默认路径与版本。
 - 脚本会同时同步 `app/src/main/cpp/include/shio.h`，并校验两个 ABI 的 ELF 架构与 16 KB LOAD 对齐。
 - hydrogen HEAD 必须等于脚本固定的 `50e073b`，否则直接失败；升级内核时同步修改脚本常量与 `.design/DECISIONS.log`。
+
+## P5 密码库 UI（Linux / Compose）
+
+- `androidx.compose.material3:material3` 1.4.0 不再传递 `material-icons-core`；用 `Icons.Filled.*` / `Icons.AutoMirrored.Filled.*` 必须显式声明 `androidx.compose.material:material-icons-core`（BOM 管版本 1.7.8），不要引 `material-icons-extended`。
+- `dynamicLightColorScheme` / `dynamicDarkColorScheme` 需要 API 31：`SDK_INT` 判断要么写在调用点，要么包进 `@RequiresApi(31)` 的私有 helper 再由调用点做版本判断；仅靠自定义 `isSupported()` 函数会让 lint `NewApi` 报错。
+- `AppearancePreferences` 用 `private set` 的属性时，setter 的 JVM 签名与自定义 `setXxx` 冲突（`Platform declaration clash`），写入方法要另起名（当前为 `updateThemeMode` / `updatePalette`）。
+- 外观偏好可用 adb 直接注入验证持久化：`adb push` 到 `/data/local/tmp` 后 `adb shell run-as <pkg> cp ... shared_prefs/appearance.xml`，再 force-stop 重启。
+- 模拟器验证动态取色：`adb shell cmd uimode night yes|no` 切换系统深浅色；AVD `Medium_Phone`（API 37）系统动态色为低饱和蓝紫。

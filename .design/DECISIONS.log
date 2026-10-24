@@ -109,3 +109,18 @@ Change: 20261023-password-vault
 Context: 用户要求先确定 UI 风格，再改数据库，并把实施拆成很小的阶段。
 Decision: 采用 UI-first：M1–M10 使用假数据搭导航、主题与全部页面，M11 起再接 ShioDatabase；每个 M 阶段只做一个小功能，结束必须构建并截图。原型 Demo 代码与数据保留，在设置中提供入口。
 Consequences: UI 阶段不写 vault.db；数据层与界面解耦，便于单独验收；阶段数量较多，但每步可回退、可截图确认。
+## [23] 2026-10-24 03:33:35 UTC
+Change: 20261023-password-vault
+Context: M1 搭导航骨架时要确定 navigation-compose 版本，并决定 demo 路由与 gate 的形态：启动入口从 Demo 改为 gate 后，若 demo 也做占位页，Demo 在 M1–M9 期间将完全打不开，与「原型 Demo 每次阶段验收都能打开」冲突。
+Decision: navigation-compose 固定 2.9.8（其 compose 依赖为 1.7.2，低于 BOM 2025.10.00；2.10.x 要求 compose 1.10.5，会越过 BOM 拉高整套 compose 版本）；demo 路由自 M1 起直接渲染现有 DemoScreen；gate 启动后自动跳转 vault 并以 popUpTo(gate, inclusive) 把自身移出回退栈；vault 占位页放临时跳转按钮用于验证全部占位页。
+Consequences: 升级 navigation 必须与 compose BOM 一起验证，不能单独升到 2.10.x；M1–M9 期间 Demo 从 vault/settings 均可进入；PlaceholderScreen.kt 与临时跳转按钮是脚手架，M2–M4 逐页替换后删除；DemoScreen 暂无返回箭头，依赖系统返回，M10 接导航时补齐。
+## [24] 2026-10-24 03:40:50 UTC
+Change: 20261023-password-vault
+Context: M2 要把「动态取色」与 5 个预设色板做成互斥的单选状态，并给出浅色/深色两套 scheme；动态取色只在 API 31+ 可用，而偏好需要跨版本持久化。
+Decision: Dynamic 作为 Palette 枚举成员（DYNAMIC/SHIO_BLUE/TEAL/GREEN/PURPLE/ORANGE）而非独立布尔字段，API<31 读到 DYNAMIC 时不做迁移、直接回退 Shio 蓝渲染；5 套色板共用同一组中性色（surface/onSurface/surfaceVariant/outline），仅手写品牌相关的 12 个槽位；ShioTheme 暴露 themeMode 与 palette 两个参数，动态取色不可用时静默回退。
+Consequences: 外观页（M3）只需一个单选组即可表达全部 6 个选项；换设备或降级到 API 29–30 时 UI 显示为 Shio 蓝但不改写已保存的偏好，升级回 API 31+ 自动恢复动态取色；色板差异集中在 primary/secondary/tertiary 三组，调色时只改 Color.kt；API 29–30 的实际渲染尚未在设备上验证，留给 M19。
+## [25] 2026-10-24 04:01:46 UTC
+Change: 20261023-password-vault
+Context: 外观页需要 Check/Add/返回箭头等图标，但 material3 1.4.0 已不再传递 material-icons-core，编译报 Unresolved reference 'icons'；同时动态取色若只按 SDK_INT 判断，在缺少 monet 系统资源的 ROM 上会异常或拿到兜底色，而用户要求「能动态取色时才可用，且不能不显示」。
+Decision: 显式依赖 androidx.compose.material:material-icons-core（BOM 管版本 1.7.8），仍不引入 material-icons-extended；动态取色可用性改为能力探测 DynamicColorSupport.isAvailable(context)：API 31+ 且 android.R.color.system_accent1_100 / system_neutral1_100 可解析，结果按 Context 缓存；不可用时该项照常显示但置灰不可点并给出说明，已保存的 DYNAMIC 选择保留（不清空、不迁移），渲染回退 Shio 蓝；删除 Palette.isSupported(sdkInt) 避免两个真相源。
+Consequences: 图标只来自核心集合，体积增加有限；新增设备能力判断后，API 29–30 与缺资源的 ROM 走同一回退路径；外观页在不可用状态下仍能展示动态取色项，升级/换机后已保存的选择自动生效；dynamic*ColorScheme 的调用必须留在带 SDK_INT 判断的位置或 @RequiresApi 私有 helper 内，否则 lint NewApi 会失败。

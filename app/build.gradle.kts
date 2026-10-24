@@ -92,6 +92,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
+    // 只用 Material 核心图标（ArrowBack/Check/Add 等），不引入 material-icons-extended。
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.navigation.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

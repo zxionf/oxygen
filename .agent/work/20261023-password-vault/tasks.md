@@ -12,31 +12,31 @@
 
 ## M1 导航依赖与骨架
 
-- [ ] `gradle/libs.versions.toml` 增加 `navigation-compose` 版本与 library
-- [ ] `app/build.gradle.kts` 增加依赖
-- [ ] 新增 `app/` 包：`Routes` 常量与 `AppNavHost`
-- [ ] 为 `gate/create/unlock/vault/entry/editor/settings/appearance/demo` 建占位页
-- [ ] 启动入口改为 `gate`，暂时固定进入 `vault` 占位页
-- [ ] 构建通过并截图占位页
+- [x] `gradle/libs.versions.toml` 增加 `navigation-compose` 版本与 library
+- [x] `app/build.gradle.kts` 增加依赖
+- [x] 新增 `app/` 包：`Routes` 常量与 `AppNavHost`
+- [x] 为 `gate/create/unlock/vault/entry/editor/settings/appearance/demo` 建占位页（demo 直接复用 `DemoScreen`，见决策 #23）
+- [x] 启动入口改为 `gate`，暂时固定进入 `vault` 占位页
+- [x] 构建通过并截图占位页
 
 ## M2 主题状态与配色方案
 
-- [ ] 新增 `AppearancePreferences`：`ThemeMode`（SYSTEM/LIGHT/DARK）与 `Palette`
-- [ ] 用 `SharedPreferences` 读写，默认跟随系统 + Shio 蓝
-- [ ] `ShioTheme` 支持 mode/palette，补齐浅色与深色 `ColorScheme`
-- [ ] 预设色板：Shio 蓝、青、绿、紫、橙
-- [ ] API 31+ 支持动态取色，29–30 回退 Shio 蓝
-- [ ] 状态栏/导航栏图标颜色跟随深浅色
-- [ ] 构建并在浅色、深色下截图
+- [x] 新增 `AppearancePreferences`：`ThemeMode`（SYSTEM/LIGHT/DARK）与 `Palette`
+- [x] 用 `SharedPreferences` 读写，默认跟随系统 + Shio 蓝
+- [x] `ShioTheme` 支持 mode/palette，补齐浅色与深色 `ColorScheme`
+- [x] 预设色板：Shio 蓝、青、绿、紫、橙
+- [x] API 31+ 支持动态取色，29–30 回退 Shio 蓝
+- [x] 状态栏/导航栏图标颜色跟随深浅色
+- [x] 构建并在浅色、深色下截图
 
 ## M3 外观页 UI
 
-- [ ] 顶部迷你列表预览卡
-- [ ] “主题”区：跟随系统 / 浅色 / 深色 三张预览卡
-- [ ] “颜色”区：动态取色 + 5 个预设色板
-- [ ] 动态取色在 API < 31 上显示不可用提示
-- [ ] 选择后立即生效并持久化
-- [ ] 截图：浅色、深色、动态取色
+- [x] 顶部迷你列表预览卡
+- [x] “主题”区：跟随系统 / 浅色 / 深色 三张预览卡
+- [x] “颜色”区：动态取色 + 5 个预设色板
+- [x] 动态取色在 API < 31 上显示不可用提示（改为能力探测：API 31+ 且系统资源可解析；不可用时仍显示并置灰，见决策 #25）
+- [x] 选择后立即生效并持久化
+- [x] 截图：浅色、深色、动态取色
 
 ## M4 密码库列表 UI（假数据）
 
@@ -93,7 +93,7 @@
 - [ ] 锁定清空回退栈并进入 `unlock`
 - [ ] 编辑器未保存返回确认
 - [ ] 旋转屏幕后表单与选中项保留
-- [ ] “原型 Demo”接到现有 `DemoScreen`
+- [ ] “原型 Demo”接到现有 `DemoScreen`（M1 已提前接好，见决策 #23）
 - [ ] 构建并验证 Demo 可打开
 
 ## M11 数据模型与仓库
