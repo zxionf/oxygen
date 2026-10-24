@@ -11,9 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
-
-/** 骨架阶段用于演示的假条目 ID；M11 起由内核返回。 */
-private const val PLACEHOLDER_ENTRY_ID = "01a168ba-327b-7202-a239-e10c138df11a"
+import top.zxionf.shio.ui.vault.VaultListScreen
 
 /**
  * 应用的唯一导航图。
@@ -62,27 +60,11 @@ fun AppNavHost(
         }
 
         composable(Routes.Vault) {
-            PlaceholderScreen(
-                title = "密码库",
-                route = Routes.Vault,
-                description = "条目列表、搜索、新建 FAB、锁定与设置入口。",
-                actions = listOf(
-                    PlaceholderAction("新建条目（editor）") {
-                        navController.navigate(Routes.editor())
-                    },
-                    PlaceholderAction("演示条目详情（entry）") {
-                        navController.navigate(Routes.entry(PLACEHOLDER_ENTRY_ID))
-                    },
-                    PlaceholderAction("设置（settings）") {
-                        navController.navigate(Routes.Settings)
-                    },
-                    PlaceholderAction("外观（appearance）") {
-                        navController.navigate(Routes.Appearance)
-                    },
-                    PlaceholderAction("原型 Demo（demo）") {
-                        navController.navigate(Routes.Demo)
-                    },
-                ),
+            VaultListScreen(
+                onLock = { navController.navigate(Routes.Unlock) },
+                onSettings = { navController.navigate(Routes.Settings) },
+                onCreateEntry = { navController.navigate(Routes.editor()) },
+                onOpenEntry = { entryId -> navController.navigate(Routes.entry(entryId)) },
             )
         }
 

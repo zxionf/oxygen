@@ -1,6 +1,6 @@
 # Agent State
 
 Active Change: 20261023-password-vault
-Phase: M3 完成（外观页预览卡、主题三选、动态取色能力探测与持久化，已截图确认），等待 M4
+Phase: M4 完成（密码库列表：假数据、搜索、两种空状态、FAB 与顶栏动作，已截图确认），等待 M5
 Blocked: 无
-Next: M4 —— 密码库列表 UI（假数据）：VaultViewModel、TopAppBar、搜索框、FAB、列表项与空状态
+Next: M5 —— 条目详情 UI（假数据）：字段行、密码显示切换、复制 Snackbar、删除确认

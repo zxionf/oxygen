@@ -124,3 +124,5 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - `AppearancePreferences` 用 `private set` 的属性时，setter 的 JVM 签名与自定义 `setXxx` 冲突（`Platform declaration clash`），写入方法要另起名（当前为 `updateThemeMode` / `updatePalette`）。
 - 外观偏好可用 adb 直接注入验证持久化：`adb push` 到 `/data/local/tmp` 后 `adb shell run-as <pkg> cp ... shared_prefs/appearance.xml`，再 force-stop 重启。
 - 模拟器验证动态取色：`adb shell cmd uimode night yes|no` 切换系统深浅色；AVD `Medium_Phone`（API 37）系统动态色为低饱和蓝紫。
+- 模拟器上 `adb shell input text` 只能输入 ASCII，无法验证中文关键词搜索；需要中文搜索用例时在假数据里留一个 ASCII 标记（如备注里的 `recovery-codes.txt`）。
+- `adb shell input keyevent 111`（ESC）不会清空 Compose 输入框；清空要点界面上的 X，或 force-stop 后重进页面。

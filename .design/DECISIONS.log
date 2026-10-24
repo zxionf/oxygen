@@ -124,3 +124,8 @@ Change: 20261023-password-vault
 Context: 外观页需要 Check/Add/返回箭头等图标，但 material3 1.4.0 已不再传递 material-icons-core，编译报 Unresolved reference 'icons'；同时动态取色若只按 SDK_INT 判断，在缺少 monet 系统资源的 ROM 上会异常或拿到兜底色，而用户要求「能动态取色时才可用，且不能不显示」。
 Decision: 显式依赖 androidx.compose.material:material-icons-core（BOM 管版本 1.7.8），仍不引入 material-icons-extended；动态取色可用性改为能力探测 DynamicColorSupport.isAvailable(context)：API 31+ 且 android.R.color.system_accent1_100 / system_neutral1_100 可解析，结果按 Context 缓存；不可用时该项照常显示但置灰不可点并给出说明，已保存的 DYNAMIC 选择保留（不清空、不迁移），渲染回退 Shio 蓝；删除 Palette.isSupported(sdkInt) 避免两个真相源。
 Consequences: 图标只来自核心集合，体积增加有限；新增设备能力判断后，API 29–30 与缺资源的 ROM 走同一回退路径；外观页在不可用状态下仍能展示动态取色项，升级/换机后已保存的选择自动生效；dynamic*ColorScheme 的调用必须留在带 SDK_INT 判断的位置或 @RequiresApi 私有 helper 内，否则 lint NewApi 会失败。
+## [26] 2026-10-24 04:19:02 UTC
+Change: 20261023-password-vault
+Context: M4 首次把列表接到数据：需要在「搜索/排序放哪、界面吃什么状态、假数据怎么放、锁定按钮怎么走」上定基调，且不能提前引入真实仓库。
+Decision: 界面只消费 VaultUiState(query/entries/totalCount)，搜索匹配与排序（按 title.lowercase()）放在 VaultEntry.matches 与 VaultViewModel 内，均在内存完成；假数据以 VaultViewModel 构造参数默认值 SampleEntries 提供，M13 改为注入仓库数据；副标题（用户名→网址）为空时整行不渲染，避免出现空白副标题；M4 的锁定按钮只 navigate(Unlock)、不清回退栈，清栈语义留到 M10。
+Consequences: M13 只需替换 ViewModel 的数据来源，UI 不动；搜索行为可被 M13 的真实列表复用；空标题/空副标题的渲染规则固定为「有则显示」；M4–M9 期间锁定后仍可按系统返回回到列表，这是临时行为，M10 必须改成清栈并改为真正的销毁句柄。
