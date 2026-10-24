@@ -1,5 +1,7 @@
 # 20261023-kernel-integration-demo 任务清单
 
+> 历史记录：本变更归档时的 Gradle 8.14.3 / AGP 8.13.0 / compileSdk 36 已在 `20261024-m3e-alignment` 升级为 Gradle 9.8.2 / AGP 9.4.1 / compileSdk 37；当前基线见 `.design/SPEC.md`。
+
 ## P0 产物与环境
 
 - [x] 复制 hydrogen 提交 `50e073b` 的 `libshio_ffi.so` 到 `app/src/main/jniLibs/{arm64-v8a,x86_64}/`

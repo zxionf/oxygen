@@ -1,5 +1,7 @@
 # 20261023-kernel-integration-demo 交接
 
+> 历史记录：本交接中的 Gradle 8.14.3 / AGP 8.13.0 / Kotlin 2.2.20 与 compileSdk 36 已在 `20261024-m3e-alignment` 升级；当前基线见 `.design/SPEC.md`。
+
 ## 当前进度
 
 P0–P4 全部完成并已归档：脚手架、JNI 薄层、演示界面、双设备验收均通过，`sele close` 已把 design 折叠进 SPEC。Linux 同步脚本已完成；软件仅个人使用，不做发布，后续只做维护。

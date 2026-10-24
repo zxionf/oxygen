@@ -2,6 +2,8 @@
 
 <!-- 为什么改、边界与不属于本次的范围 -->
 
+> 历史记录：本文件写于内核集成 Demo 初期，Gradle 8.14.3 / AGP 8.13.0 / compileSdk 36 已在 `20261024-m3e-alignment` 升级；原型 Demo 不使用导航库，密码库 MVP 另行使用 Navigation Compose。当前基线以 `.design/SPEC.md` 为准。
+
 ## 目标与范围
 
 首个变更只验证一件事：Android 应用能通过 C ABI 与 JNI 薄层完整驱动 shio 内核。

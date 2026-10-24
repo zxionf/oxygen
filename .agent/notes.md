@@ -17,7 +17,7 @@
 - 内核仓库：`D:\zxionf\pros\hydrogen`（shio）。
 - PowerShell 下不要使用 `ls -la`；判断命令成败优先看 `$LASTEXITCODE` 或输出末行。
 
-## Android 工具链（2026-10-23 实测）
+## Android 工具链（2026-10-23 实测，历史）
 
 - JDK：`C:\Program Files\Android\Android Studio\jbr`（21.0.10）。系统默认 `JAVA_HOME` 指向 `C:\Program Files\Java\jdk-23`，构建前必须覆盖为 JBR。
 - Gradle：wrapper 8.14.3（services.gradle.org，带 sha256 校验）；AGP 8.13.0；Kotlin 2.2.20。
@@ -98,6 +98,14 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 旋转：`adb shell settings put system accelerometer_rotation 0`，再 `adb shell settings put system user_rotation 1`（恢复用 `0`）。
 - `adb shell input keyevent 4` 在软键盘已收起时会直接退出 Activity；优先点界面按钮，不要用返回键收键盘。
 - 截图用 `adb shell screencap -p /sdcard/x.png` + `adb pull`，避免 `exec-out` 重定向。
+
+## 当前工具链（2026-10-24 M3E 后）
+
+- Gradle 9.8.2、AGP 9.4.1、Kotlin 2.4.21（AGP 内置 Kotlin 支持）、JDK 21。
+- `compileSdk` / `targetSdk` 37，`minSdk` 29；Compose BOM 2026.09.00，material3 1.5.0-beta02，navigation 2.10.2，activity 1.13.0，lifecycle 2.11.0，core-ktx 1.19.1。
+- NDK `29.0.14206865`；CMake `3.22.1+`（使用系统 4.4.4）。
+- 图标为 `material-icons-extended`（`AppIcons` / `AppIcon`），不再使用 Material Symbols Rounded 字体；release 开启 R8，JNI 入口由 `proguard-rules.pro` 保留。
+- 密码库当前仍是 `FakeVaultStore`；M11 起接入 `vault.db`。
 - 崩溃检查：`adb logcat -d -s AndroidRuntime:E '*:S'`。
 
 ## P4 设备验收命令（Linux）

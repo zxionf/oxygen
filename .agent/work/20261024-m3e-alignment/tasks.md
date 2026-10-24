@@ -1,5 +1,7 @@
 # 20261024-m3e-alignment 任务清单
 
+> 历史记录：N2 的 Material Symbols Rounded 字体方案已在 N11 被 `material-icons-extended` 矢量图标取代（见决策 #34）；本文件保留当时的执行记录，当前基线见 `.design/SPEC.md`。
+
 原则：先升级工具链拿到公开的 Expressive API，再建统一设计系统，最后逐页改造；每个阶段结束 `assembleDebug` + `lintDebug` 必须通过。
 
 ## N1 工具链与依赖升级

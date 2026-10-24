@@ -1,7 +1,7 @@
 # Agent State
 
-Active Change: 无（20261024-m3e-alignment 已归档，结论折叠进 SPEC.md）
-Phase: M3E 已定为全应用固定设计风格并写入 SPEC；M3E 对齐变更完成；密码库停在 M6
+Active Change: 20261023-password-vault
+Phase: 密码库 UI-first 到 M6；M3E 对齐已归档；M8/M9 的 UI 已随 M3E 提前完成，M10 部分完成；M7 未开始
 Blocked: 无
-Next: 在 `20261023-password-vault` 上继续 M7（密码生成器），按 SPEC 的「M3E 设计基线」实现
+Next: 继续 M7（密码生成器）；随后 M11–M15 接入真实 `vault.db`
 Note: 只使用真机 10AE4N38SA000LK 验证；所有界面改动先对照 SPEC 的 M3E 基线自查

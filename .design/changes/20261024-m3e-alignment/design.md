@@ -1,5 +1,7 @@
 # 20261024-m3e-alignment
 
+> 后续修正：本文件写于 M3E 初期。N11–N13 已将图标改为 `material-icons-extended`（决策 #34），编辑器保存移到顶栏，输入框统一为 `AppTextField`，外观页保留色卡 + 圆形色板。以下涉及 Material Symbols Rounded、`ButtonGroup`、filled `TextField` 的描述属于历史方案，当前基线以 `.design/SPEC.md` 为准。
+
 ## M3E 目标与原则
 
 把整个应用对齐 Material 3 Expressive（下称 M3E），并把 M3E 作为长期约束：后续任何界面改动都必须满足本文件定义的基线。范围包含工具链、依赖、设计系统（形状/字体/动效/图标/组件）与全部现有界面。
