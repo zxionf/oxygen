@@ -1,9 +1,12 @@
 package top.zxionf.shio.vault
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 /** 密码库列表的界面状态。 */
 data class VaultUiState(
@@ -21,34 +24,34 @@ data class VaultUiState(
 /**
  * 密码库列表状态。
  *
- * M4 只在内存里放假数据；M13 起改为「解锁后 list + 逐条 get」填充 [allEntries]，
- * 搜索仍在内存里做。界面只依赖 [VaultUiState]，换数据源不改 UI。
+ * 数据来自 [source]（M6 为 [FakeVaultStore]，M13 换成解锁后的内核列表）；
+ * 界面只依赖 [VaultUiState]，换数据源不改 UI。搜索与排序都在内存里做。
  */
 class VaultViewModel(
-    private val source: List<VaultEntry> = SampleVaultEntries,
+    private val source: StateFlow<List<VaultEntry>> = FakeVaultStore.entries,
 ) : ViewModel() {
-    private val allEntries: List<VaultEntry> = source
+    private val query = MutableStateFlow("")
 
-    private val _state = MutableStateFlow(buildState(query = ""))
-    val state: StateFlow<VaultUiState> = _state.asStateFlow()
+    val state: StateFlow<VaultUiState> = combine(source, query) { entries, keyword ->
+        buildState(entries, keyword)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = buildState(source.value, ""),
+    )
 
-    fun onQueryChange(query: String) {
-        if (query == _state.value.query) return
-        _state.value = buildState(query)
+    fun onQueryChange(keyword: String) {
+        query.value = keyword
     }
 
     fun onClearQuery() = onQueryChange("")
 
-    private fun buildState(query: String): VaultUiState {
-        val filtered = if (query.isBlank()) {
-            allEntries
-        } else {
-            allEntries.filter { it.matches(query) }
-        }
+    private fun buildState(entries: List<VaultEntry>, keyword: String): VaultUiState {
+        val filtered = if (keyword.isBlank()) entries else entries.filter { it.matches(keyword) }
         return VaultUiState(
-            query = query,
+            query = keyword,
             entries = filtered.sortedBy { it.title.lowercase() },
-            totalCount = allEntries.size,
+            totalCount = entries.size,
         )
     }
 }

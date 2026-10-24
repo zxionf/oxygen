@@ -1,6 +1,6 @@
 # Agent State
 
 Active Change: 20261023-password-vault
-Phase: M4 完成（密码库列表：假数据、搜索、两种空状态、FAB 与顶栏动作，已截图确认），等待 M5
+Phase: M6 完成（M5 详情页与 M6 编辑器已按 M3 / M3 Expressive 重做；交付签名 release APK，未做设备验证）
 Blocked: 无
-Next: M5 —— 条目详情 UI（假数据）：字段行、密码显示切换、复制 Snackbar、删除确认
+Next: 插入新的计划（原 M7 密码生成器等待新计划确认后再排期）

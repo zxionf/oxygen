@@ -60,6 +60,8 @@ android {
 
     buildFeatures {
         compose = true
+        // FakeVaultStore 用 BuildConfig.DEBUG 区分演示数据：release 不携带样例条目。
+        buildConfig = true
     }
 
     packaging {

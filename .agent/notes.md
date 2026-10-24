@@ -126,3 +126,23 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 模拟器验证动态取色：`adb shell cmd uimode night yes|no` 切换系统深浅色；AVD `Medium_Phone`（API 37）系统动态色为低饱和蓝紫。
 - 模拟器上 `adb shell input text` 只能输入 ASCII，无法验证中文关键词搜索；需要中文搜索用例时在假数据里留一个 ASCII 标记（如备注里的 `recovery-codes.txt`）。
 - `adb shell input keyevent 111`（ESC）不会清空 Compose 输入框；清空要点界面上的 X，或 force-stop 后重进页面。
+
+## P6 密码库 UI 二期（M5/M6，Linux / Compose 1.4.0）
+
+- 多设备时所有 adb 命令必须加 `-s <serial>`（`emulator-5554` 与真机同时在线时，裸 `adb install` 会报 `more than one device/emulator`）。
+- `input keyevent 4` 第一次只收键盘，第二次才进 `BackHandler`；截图/断言前先确认键盘已收，否则会误判「返回没弹确认框」。
+- 在 `@Composable` 里读 `StateFlow.value`（如预览里 `store.entries.value`）会被 lint 判 `StateFlowValueCalledInComposition` 并中断构建；预览改用静态样本，界面用 `collectAsStateWithLifecycle`。
+- `material3 1.4.0` 的 `MaterialExpressiveTheme`、`MotionScheme.standard()/expressive()`、`MaterialTheme.motionScheme`、`Typography.*Emphasized` 都是 internal，应用层取不到；只能按同样参数本地复刻动效，形状/字重用显式值对齐。
+- `material-icons-core` 只有 40 余个图标（无 Copy/Visibility/Link/Key/Title/Description）；用 `ImageVector.Builder` + `addPathNodes(路径)` 本地构建，避免 `material-icons-extended`。
+- `IconButton` / `Surface(onClick)` 都接受 `interactionSource`，配合 `collectIsPressedAsState()` + `animateFloatAsState()` 可做「ripple + 按下缩放」。
+- 签名 release APK（无正式 keystore 时）：
+  ```bash
+  ./gradlew :app:assembleRelease
+  BT=~/Android/Sdk/build-tools/36.1.0
+  $BT/zipalign -P 16 -f 4 app/build/outputs/apk/release/app-release-unsigned.apk /tmp/aligned.apk
+  $BT/apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --key-pass pass:android \
+      --ks-key-alias androiddebugkey --out app/build/outputs/apk/release/app-release-signed.apk /tmp/aligned.apk
+  $BT/apksigner verify app/build/outputs/apk/release/app-release-signed.apk
+  $BT/zipalign -c -P 16 4 app/build/outputs/apk/release/app-release-signed.apk
+  ```
+- `BuildConfig` 默认关闭，AGP 8 需在 `buildFeatures { buildConfig = true }` 才能区分 debug/release 行为。

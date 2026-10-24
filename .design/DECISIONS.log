@@ -129,3 +129,18 @@ Change: 20261023-password-vault
 Context: M4 首次把列表接到数据：需要在「搜索/排序放哪、界面吃什么状态、假数据怎么放、锁定按钮怎么走」上定基调，且不能提前引入真实仓库。
 Decision: 界面只消费 VaultUiState(query/entries/totalCount)，搜索匹配与排序（按 title.lowercase()）放在 VaultEntry.matches 与 VaultViewModel 内，均在内存完成；假数据以 VaultViewModel 构造参数默认值 SampleEntries 提供，M13 改为注入仓库数据；副标题（用户名→网址）为空时整行不渲染，避免出现空白副标题；M4 的锁定按钮只 navigate(Unlock)、不清回退栈，清栈语义留到 M10。
 Consequences: M13 只需替换 ViewModel 的数据来源，UI 不动；搜索行为可被 M13 的真实列表复用；空标题/空副标题的渲染规则固定为「有则显示」；M4–M9 期间锁定后仍可按系统返回回到列表，这是临时行为，M10 必须改成清栈并改为真正的销毁句柄。
+## [27] 2026-10-24 06:27:02 UTC
+Change: 20261023-password-vault
+Context: M5 详情页的初版是「标签+值+文本按钮+分隔线」的表单式排版，与当前 M3 的分组列表差异较大；同时 material3 1.4.0 只带 40 余个核心图标，缺少复制、显隐、链接、备注等常用图标，而设计禁止引入 material-icons-extended。
+Decision: 详情页改为 M3 分组列表：字段放进 surfaceContainerLow 圆角容器，行用 ListItem（overline=字段名、headline=值、trailing=图标按钮），备注独立区块，空值统一显示「未设置」；图标改为在 ui/icons/ShioIcons.kt 用 Material Icons 的 24dp 路径数据本地构建 ImageVector（Copy/Visibility/VisibilityOff/Link/Notes/Title/Key），零依赖、零体积增量。
+Consequences: 详情页与编辑器共用同一套图标与行样式，视觉一致；图标语义与 Material Icons 对齐但不是 Material Symbols Rounded 字体；后续若引入 Symbols Rounded 字体，ShioIcons 可作为回退实现保留。
+## [28] 2026-10-24 06:27:12 UTC
+Change: 20261023-password-vault
+Context: M6 需要让「保存后回退并刷新来源页面」可验证，而按计划真实数据层要到 M11 才接内核；此时若只做纯 UI，保存后列表/详情不会变化，无法验收。
+Decision: 新增 FakeVaultStore：MutableStateFlow<List<VaultEntry>> 的进程内仓库，提供 find/upsert/newId；VaultViewModel 改为 combine(store, query) + stateIn，详情页 collectAsStateWithLifecycle 读取同一 store，因此保存后列表与详情都自动刷新。编辑器表单用 rememberSaveable(entryId)，校验只在点保存时触发，✕ 与系统返回共用「放弃修改？」确认。示例数据仅在 debug 构建作为种子（BuildConfig.DEBUG），release APK 不携带样例条目。
+Consequences: M13 只需把 FakeVaultStore 换成解锁后的内核仓库，UI 与 ViewModel 结构不变；release 构建首次进入为空态，但条目只存在内存里、重启丢失，这是 M11 之前已知限制；新增 buildFeatures.buildConfig = true。
+## [29] 2026-10-24 06:27:25 UTC
+Change: 20261023-password-vault
+Context: 编辑器前两版仍偏传统表单（描边输入框堆叠、顶栏保存）。用户要求按 Material 3 Expressive 重做，并要求产出签名 release APK 作为交付物，同时不要在设备上验证。
+Decision: 编辑器按 M3 Expressive 实现：64dp 顶栏（左关闭/右保存）；「标题」为独立 28dp 圆角字段项；用户名/密码/连接/备注为 3dp 间距的堆叠列表（外角 28dp、内角 8dp）；每项 72dp、40dp primaryContainer 圆形图标位、bodyLarge + bodyMedium；点项弹 ModalBottomSheet 单字段编辑；保存校验失败弹 Snackbar 并在行内标红「必填」；可点元素统一 ripple + 按下缩放，动效采用无回弹弹簧（MaterialTheme 的 MotionScheme 在 1.4.0 为 internal，按 standard 参数本地复刻）。紫色 light scheme 常量只作用于编辑器（EditorTheme），不改变全局主题系统；编辑器固定浅色。release APK 用 zipalign -P 16 + apksigner 以 Android debug keystore 签名后交付。
+Consequences: 编辑器视觉与其他页面暂不一致（全局仍是 M2/M3 的可配置色板），统一与否待用户决定；Material Symbols Rounded 字体未内置，图标沿用自建 ImageVector；release APK 的签名密钥为 debug keystore，正式分发需替换为用户 keystore；本次按用户要求未做设备验证，仅 assembleDebug/assembleRelease/lintDebug 与 APK 签名、16 KB 对齐校验。

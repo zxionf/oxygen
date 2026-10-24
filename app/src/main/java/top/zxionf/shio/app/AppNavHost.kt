@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
+import top.zxionf.shio.ui.vault.EntryEditorScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
 
 /**
@@ -92,14 +93,10 @@ fun AppNavHost(
             ),
         ) { backStackEntry ->
             val entryId = backStackEntry.arguments?.getString(Routes.EditorEntryIdArg)
-            PlaceholderScreen(
-                title = if (entryId == null) "新建条目" else "编辑条目",
-                route = Routes.editor(entryId),
-                description = if (entryId == null) {
-                    "新建：标题与密码必填，返回时若有未保存修改需确认。"
-                } else {
-                    "编辑 ID：$entryId；保存后回退并刷新来源页面。"
-                },
+            EntryEditorScreen(
+                entryId = entryId,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() },
             )
         }
 
