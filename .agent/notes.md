@@ -146,3 +146,32 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
   $BT/zipalign -c -P 16 4 app/build/outputs/apk/release/app-release-signed.apk
   ```
 - `BuildConfig` 默认关闭，AGP 8 需在 `buildFeatures { buildConfig = true }` 才能区分 debug/release 行为。
+
+## P7 M3E 对齐（工具链大升级）
+
+- Gradle 9 + JDK 21 在部分环境下 `configureCMake*` 会报 `Failed to exec spawn helper`；在 `gradle.properties` 的 `org.gradle.jvmargs` 里加 `-Djdk.lang.Process.launchMechanism=fork` 即可。
+- AGP 9 起 Kotlin 支持内置：必须移除 `org.jetbrains.kotlin.android` 插件，否则报「no longer required」；`kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }` 也随之删除（`JvmTarget` 不再在 buildscript 类路径，jvmTarget 跟 `compileOptions` 对齐，产物仍是 Java 17）。
+- material3 1.5.0-beta02 要求 `compileSdk 37` 且 `minAndroidGradlePluginVersion=9.1.0`；`platforms;android-37.0` + `build-tools;37.0.0` 需用 sdkmanager 安装。
+- material3 1.5.0 里 `MaterialExpressiveTheme`、`MaterialTheme.motionScheme`、`ShapeDefaults.LargeIncreased`、`Shapes(...)` 构造器、`Typography.*Emphasized` 全部公开；`rememberModalBottomSheetState` 已废弃，改用 `rememberBottomSheetState(initialValue = SheetValue.Hidden)`（`ModalBottomSheet` 会在组合后自动 `show()`）。
+- 图标不再用 `material-icons-*`：用 Google Fonts CSS 的 `text=` 子集接口（`User-Agent: Mozilla/4.0` 会返回 TTF）生成只含所需码位的字体：
+  ```bash
+  CP="e5cd e668 ..."; TEXT=""; for c in $CP; do TEXT="$TEXT$(printf "\\u$c")"; done
+  curl -sG "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" \
+    --data-urlencode "text=$TEXT" -H "User-Agent: Mozilla/4.0" -o m3e.css
+  URL=$(grep -oE 'https://fonts\.gstatic\.com/[^)]+' m3e.css); curl -sL -o app/src/main/res/font/material_symbols_rounded.ttf "$URL"
+  fc-scan --format "%{charset}\n" app/src/main/res/font/material_symbols_rounded.ttf   # 校验覆盖
+  ```
+  32 个字形约 7.4 KB；FILL 轴用 `FontVariation.Setting("FILL", 0/1)` 切换描边/实心。
+- 字体图标用 `Text` 渲染（`Icon` 只吃 `ImageVector`/`Painter`），需手动补/清语义。
+
+## P8 M3E 细节修正
+
+- 字体图标（Material Symbols）用 `Text` 渲染时默认行高会把图标压低几像素；`SymbolIcon` 里必须设 `PlatformTextStyle(includeFontPadding = false)` + `LineHeightStyle(Alignment.Center, Trim.Both)`，否则 48dp 图标按钮与 40dp 图标位里的图标看起来「偏下」。
+- `ToggleButton` 即使只给 `icon`（`content = {}`）也带默认水平内边距，塞进输入框 trailing 会显得很宽；密码显隐这类 48dp 开关应用 `IconToggleButton`（有 checked 语义、宽度正常）。
+- M3E 的分组列表要「堆叠」：同组条目用 `StackedList`（3dp 间距、外 28dp / 内 8dp），不要用一张大 Surface + 分隔线。
+
+## P9 图标与构建
+
+- 字体图标（Material Symbols）在圆形图标按钮里始终有几像素下移，改用 `material-icons-extended`（BOM 1.7.8）的矢量图标后消失；业务名统一走 `ui/components/Icons.kt` 的 `AppIcons` 枚举 + `AppIcon`。
+- 代价：未开 R8 时 debug APK 约 69 MB、release 约 52 MB（原 34 / 27 MB）。要瘦身需在 release 打开 `isMinifyEnabled` + `isShrinkResources`，或换回核心图标集。
+- 用户要求：不启动模拟器，所有验证直接在真机 `10AE4N38SA000LK`（vivo V2359A / Android 16）上做。

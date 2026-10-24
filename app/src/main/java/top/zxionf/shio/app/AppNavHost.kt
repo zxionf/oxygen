@@ -11,6 +11,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
+import top.zxionf.shio.ui.settings.SettingsScreen
+import top.zxionf.shio.ui.unlock.LockMode
+import top.zxionf.shio.ui.unlock.LockScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
 import top.zxionf.shio.ui.vault.EntryEditorScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
@@ -46,18 +49,26 @@ fun AppNavHost(
         }
 
         composable(Routes.Create) {
-            PlaceholderScreen(
-                title = "创建密码库",
-                route = Routes.Create,
-                description = "主口令 + 确认主口令；提示忘记主口令将无法恢复数据。",
+            LockScreen(
+                mode = LockMode.Create,
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.navigate(Routes.Vault) {
+                        popUpTo(Routes.Create) { inclusive = true }
+                    }
+                },
             )
         }
 
         composable(Routes.Unlock) {
-            PlaceholderScreen(
-                title = "解锁",
-                route = Routes.Unlock,
-                description = "输入主口令解锁，错误显示在内联错误区（如 INVALID_KEY (-3)）。",
+            LockScreen(
+                mode = LockMode.Unlock,
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.navigate(Routes.Vault) {
+                        popUpTo(Routes.Unlock) { inclusive = true }
+                    }
+                },
             )
         }
 
@@ -101,18 +112,10 @@ fun AppNavHost(
         }
 
         composable(Routes.Settings) {
-            PlaceholderScreen(
-                title = "设置",
-                route = Routes.Settings,
-                description = "自动锁定、外观入口、原型 Demo 入口、关于（版本/数据库路径/ABI）。",
-                actions = listOf(
-                    PlaceholderAction("外观（appearance）") {
-                        navController.navigate(Routes.Appearance)
-                    },
-                    PlaceholderAction("原型 Demo（demo）") {
-                        navController.navigate(Routes.Demo)
-                    },
-                ),
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onAppearance = { navController.navigate(Routes.Appearance) },
+                onDemo = { navController.navigate(Routes.Demo) },
             )
         }
 
@@ -122,7 +125,7 @@ fun AppNavHost(
 
         composable(Routes.Demo) {
             // 原型 Demo 必须始终可打开，这里直接复用现有实现。
-            DemoScreen()
+            DemoScreen(onBack = { navController.popBackStack() })
         }
     }
 }

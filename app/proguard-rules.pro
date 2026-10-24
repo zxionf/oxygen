@@ -1,1 +1,5 @@
-# 首版不做混淆与裁剪，保留默认规则占位。
+# JNI 通过 Java_<包>_<类>_<方法> 的名字查找入口，R8 不能改名。
+-keep class top.zxionf.shio.kernel.NativeShio { *; }
+-keepclasseswithmembernames,includedescriptorclasses class * {
+    native <methods>;
+}

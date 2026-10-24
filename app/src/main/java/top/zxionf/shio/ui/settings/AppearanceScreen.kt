@@ -24,10 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
@@ -55,6 +51,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import top.zxionf.shio.ui.components.AppIcons
+import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.AppearancePreferences
 import top.zxionf.shio.ui.theme.DynamicColorSupport
 import top.zxionf.shio.ui.theme.DynamicColorSwatch
@@ -128,10 +126,7 @@ private fun AppearanceContent(
                 title = { Text("外观") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回",
-                        )
+                        AppIcon(AppIcons.ArrowBack, contentDescription = "返回")
                     }
                 },
             )
@@ -234,11 +229,11 @@ private fun VaultPreviewCard(modifier: Modifier = Modifier) {
                     color = colors.primary,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
+                        AppIcon(
+                            icon = AppIcons.Add,
                             contentDescription = null,
                             tint = colors.onPrimary,
-                            modifier = Modifier.size(18.dp),
+                            size = 18.dp,
                         )
                     }
                 }
@@ -332,11 +327,11 @@ private fun ThemeModeCard(
                     modifier = Modifier.weight(1f),
                 )
                 if (selected) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
+                    AppIcon(
+                        icon = AppIcons.Check,
                         contentDescription = "已选择",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp),
+                        size = 16.dp,
                     )
                 }
             }
@@ -458,11 +453,11 @@ private fun PaletteOption(
             contentAlignment = Alignment.Center,
         ) {
             if (selected) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
+                AppIcon(
+                    icon = AppIcons.Check,
                     contentDescription = "已选择",
                     tint = checkTint,
-                    modifier = Modifier.size(20.dp),
+                    size = 20.dp,
                 )
             }
         }

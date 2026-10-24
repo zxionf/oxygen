@@ -7,7 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -18,12 +18,13 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 /**
- * 应用主题。
+ * 应用主题：Material 3 Expressive。
  *
  * - [themeMode] 决定深浅色：`SYSTEM` 跟随系统，`LIGHT`/`DARK` 强制指定。
- * - [palette] 决定配色；[Palette.DYNAMIC] 只在系统确实提供动态色时生效，
- *   否则（API < 31 或资源缺失）回退 Shio 蓝。
- * - 状态栏与导航栏图标颜色跟随最终深浅色，edge-to-edge 下不再由系统默认值决定。
+ * - [palette] 决定配色；[Palette.DYNAMIC] 只在系统确实提供动态色时生效，否则回退 Shio 蓝。
+ * - 形状走 [ShioShapes]、排版走 [ShioTypography]、动效走 Expressive 的 MotionScheme，
+ *   页面不再各自定义形状与弹簧参数。
+ * - 状态栏/导航栏图标颜色跟随最终深浅色。
  */
 @Composable
 fun ShioTheme(
@@ -42,9 +43,9 @@ fun ShioTheme(
     val useDynamic = palette == Palette.DYNAMIC && dynamicAvailable
 
     val colorScheme = when {
-        !useDynamic -> shioColorScheme(palette, darkTheme)
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicScheme(context, darkTheme)
-        else -> shioColorScheme(Palette.SHIO_BLUE, darkTheme)
+        useDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            dynamicScheme(context, darkTheme)
+        else -> shioColorScheme(palette, darkTheme)
     }
 
     val view = LocalView.current
@@ -58,8 +59,10 @@ fun ShioTheme(
         }
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
+        shapes = ShioShapes,
+        typography = ShioTypography,
         content = content,
     )
 }

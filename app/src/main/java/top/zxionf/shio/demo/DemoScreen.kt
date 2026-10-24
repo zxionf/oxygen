@@ -24,6 +24,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -40,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import top.zxionf.shio.kernel.ShioException
+import top.zxionf.shio.ui.components.AppIcons
+import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ShioTheme
 
 /** 界面回调集合，便于 `DemoContent` 在预览中零依赖渲染。 */
@@ -60,6 +64,7 @@ class DemoActions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DemoScreen(
+    onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: DemoViewModel = viewModel(),
 ) {
@@ -78,7 +83,7 @@ fun DemoScreen(
             onSelect = viewModel::selectNote,
         )
     }
-    DemoContent(state = state, actions = actions, modifier = modifier)
+    DemoContent(state = state, actions = actions, onBack = onBack, modifier = modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,11 +92,27 @@ private fun DemoContent(
     state: DemoUiState,
     actions: DemoActions,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     val error = state.error
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("shio 内核 Demo") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("shio 内核 Demo") },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            AppIcon(AppIcons.ArrowBack, contentDescription = "返回")
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+            )
+        },
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier

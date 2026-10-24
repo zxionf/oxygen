@@ -1,55 +1,57 @@
 package top.zxionf.shio.ui.vault
 
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import top.zxionf.shio.ui.components.EmptyState
+import top.zxionf.shio.ui.components.AppIcons
+import top.zxionf.shio.ui.components.AppIcon
+import top.zxionf.shio.ui.components.StackedList
+import top.zxionf.shio.ui.components.rememberPressScale
 import top.zxionf.shio.ui.theme.ShioTheme
 import top.zxionf.shio.vault.VaultEntry
 import top.zxionf.shio.vault.VaultUiState
@@ -86,11 +88,7 @@ fun VaultListScreen(
             onOpenEntry = onOpenEntry,
         )
     }
-    VaultListContent(
-        state = state,
-        actions = actions,
-        modifier = modifier,
-    )
+    VaultListContent(state = state, actions = actions, modifier = modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,30 +99,52 @@ private fun VaultListContent(
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+    val listState = rememberLazyListState()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val fabCollapsed by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 120
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("密码库") },
+                title = {
+                    Text("密码库", style = MaterialTheme.typography.titleLarge)
+                },
                 actions = {
                     IconButton(onClick = actions.onLock) {
-                        Icon(
-                            imageVector = Icons.Filled.Lock,
-                            contentDescription = "锁定",
-                        )
+                        AppIcon(AppIcons.Lock, contentDescription = "锁定")
                     }
                     IconButton(onClick = actions.onSettings) {
-                        Icon(
-                            imageVector = Icons.Filled.Settings,
-                            contentDescription = "设置",
-                        )
+                        AppIcon(AppIcons.Settings, contentDescription = "设置")
                     }
                 },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = actions.onCreateEntry) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = "新建条目")
+            AnimatedContent(
+                targetState = fabCollapsed,
+                label = "fabCollapse",
+            ) { collapsed ->
+                if (collapsed) {
+                    FloatingActionButton(onClick = actions.onCreateEntry) {
+                        AppIcon(AppIcons.Add, contentDescription = "新建条目")
+                    }
+                } else {
+                    ExtendedFloatingActionButton(
+                        onClick = actions.onCreateEntry,
+                        icon = { AppIcon(AppIcons.Add, contentDescription = null) },
+                        text = { Text("新建条目") },
+                    )
+                }
             }
         },
     ) { innerPadding ->
@@ -133,48 +153,92 @@ private fun VaultListContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = actions.onQueryChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("搜索标题、用户名、网址、备注") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Filled.Search, contentDescription = null)
-                },
-                trailingIcon = {
-                    if (state.query.isNotEmpty()) {
-                        IconButton(onClick = actions.onClearQuery) {
-                            Icon(
-                                imageVector = Icons.Filled.Clear,
-                                contentDescription = "清空搜索",
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+            SearchField(
+                query = state.query,
+                onQueryChange = actions.onQueryChange,
+                onClear = actions.onClearQuery,
+                onSearch = { focusManager.clearFocus() },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
             when {
                 state.isEmptyLibrary -> EmptyState(
-                    icon = Icons.Filled.Lock,
+                    icon = AppIcons.Shield.icon,
                     title = "密码库还是空的",
-                    description = "点右下角的加号，新建第一个条目。",
+                    description = "新建第一个条目，数据只保存在本机。",
+                    actionLabel = "新建条目",
+                    onAction = actions.onCreateEntry,
                 )
 
                 state.isEmptySearch -> EmptyState(
-                    icon = Icons.Filled.Search,
+                    icon = AppIcons.Search.icon,
                     title = "没有匹配的条目",
                     description = "换个关键词试试，或清空搜索。",
                     actionLabel = "清空搜索",
                     onAction = actions.onClearQuery,
                 )
 
-                else -> EntryList(state = state, actions = actions)
+                else -> EntryList(
+                    state = state,
+                    actions = actions,
+                    listState = listState,
+                )
+            }
+        }
+    }
+}
+
+/** M3E 搜索栏：56dp 胶囊、`surfaceContainerHigh` 底、前置搜索图标、有输入时显示清空。 */
+@Composable
+private fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClear: () -> Unit,
+    onSearch: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AppIcon(
+                icon = AppIcons.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.width(12.dp))
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                if (query.isEmpty()) {
+                    Text(
+                        text = "搜索标题、用户名、连接、备注",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                )
+            }
+            if (query.isNotEmpty()) {
+                IconButton(onClick = onClear) {
+                    AppIcon(AppIcons.Close, contentDescription = "清空搜索")
+                }
             }
         }
     }
@@ -184,111 +248,96 @@ private fun VaultListContent(
 private fun EntryList(
     state: VaultUiState,
     actions: VaultListActions,
+    listState: androidx.compose.foundation.lazy.LazyListState,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 88.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        state = listState,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         items(state.entries, key = { it.id }) { entry ->
-            EntryRow(entry = entry, onClick = { actions.onOpenEntry(entry.id) })
+            val index = state.entries.indexOf(entry)
+            val shape = when {
+                state.entries.size == 1 -> top.zxionf.shio.ui.theme.ListStackShapes.single
+                index == 0 -> top.zxionf.shio.ui.theme.ListStackShapes.first
+                index == state.entries.lastIndex -> top.zxionf.shio.ui.theme.ListStackShapes.last
+                else -> top.zxionf.shio.ui.theme.ListStackShapes.middle
+            }
+            EntryRow(
+                entry = entry,
+                shape = shape,
+                onClick = { actions.onOpenEntry(entry.id) },
+            )
         }
     }
 }
 
+/** 72dp 列表项：40dp 圆形首字母、`bodyLarge` 标题、`bodyMedium` 副标题、trailing 箭头。 */
 @Composable
 private fun EntryRow(
     entry: VaultEntry,
+    shape: androidx.compose.ui.graphics.Shape,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    val interactionSource = remember { MutableInteractionSource() }
+    val scale = rememberPressScale(interactionSource)
+
+    Surface(
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(72.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .then(Modifier.scale(scale)),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        interactionSource = interactionSource,
     ) {
-        Surface(
-            modifier = Modifier.size(40.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = entry.initial,
-                    style = MaterialTheme.typography.titleMedium,
-                )
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = entry.initial,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
             }
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = entry.title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (entry.subtitle.isNotEmpty()) {
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = entry.subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = entry.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (entry.subtitle.isNotEmpty()) {
+                    Text(
+                        text = entry.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun EmptyState(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    modifier: Modifier = Modifier,
-    actionLabel: String? = null,
-    onAction: (() -> Unit)? = null,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp)
-            .padding(bottom = 64.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = 12.dp),
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
-            textAlign = TextAlign.Center,
-        )
-        if (actionLabel != null && onAction != null) {
-            TextButton(onClick = onAction, modifier = Modifier.padding(top = 8.dp)) {
-                Text(actionLabel)
-            }
+            AppIcon(
+                icon = AppIcons.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+            )
         }
     }
 }
@@ -317,10 +366,7 @@ private val PreviewEntries = listOf(
 private fun VaultListPreview() {
     ShioTheme {
         VaultListContent(
-            state = VaultUiState(
-                entries = PreviewEntries,
-                totalCount = PreviewEntries.size,
-            ),
+            state = VaultUiState(entries = PreviewEntries, totalCount = PreviewEntries.size),
             actions = VaultListActions(),
         )
     }
@@ -330,9 +376,6 @@ private fun VaultListPreview() {
 @Composable
 private fun VaultEmptyPreview() {
     ShioTheme {
-        VaultListContent(
-            state = VaultUiState(),
-            actions = VaultListActions(),
-        )
+        VaultListContent(state = VaultUiState(), actions = VaultListActions())
     }
 }

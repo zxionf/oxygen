@@ -144,3 +144,48 @@ Change: 20261023-password-vault
 Context: 编辑器前两版仍偏传统表单（描边输入框堆叠、顶栏保存）。用户要求按 Material 3 Expressive 重做，并要求产出签名 release APK 作为交付物，同时不要在设备上验证。
 Decision: 编辑器按 M3 Expressive 实现：64dp 顶栏（左关闭/右保存）；「标题」为独立 28dp 圆角字段项；用户名/密码/连接/备注为 3dp 间距的堆叠列表（外角 28dp、内角 8dp）；每项 72dp、40dp primaryContainer 圆形图标位、bodyLarge + bodyMedium；点项弹 ModalBottomSheet 单字段编辑；保存校验失败弹 Snackbar 并在行内标红「必填」；可点元素统一 ripple + 按下缩放，动效采用无回弹弹簧（MaterialTheme 的 MotionScheme 在 1.4.0 为 internal，按 standard 参数本地复刻）。紫色 light scheme 常量只作用于编辑器（EditorTheme），不改变全局主题系统；编辑器固定浅色。release APK 用 zipalign -P 16 + apksigner 以 Android debug keystore 签名后交付。
 Consequences: 编辑器视觉与其他页面暂不一致（全局仍是 M2/M3 的可配置色板），统一与否待用户决定；Material Symbols Rounded 字体未内置，图标沿用自建 ImageVector；release APK 的签名密钥为 debug keystore，正式分发需替换为用户 keystore；本次按用户要求未做设备验证，仅 assembleDebug/assembleRelease/lintDebug 与 APK 签名、16 KB 对齐校验。
+## [30] 2026-10-24 06:40:51 UTC
+Change: 20261024-m3e-alignment
+Context: 要把全应用对齐 M3E 并长期保持，必须拿到公开的 Expressive API；当前 material3 1.4.0 的 MaterialExpressiveTheme、MotionScheme.expressive()、Typography.*Emphasized 均为 internal，只能靠手写参数近似。用户设备 Android 16、模拟器 Android 17，且明确要求该用新版本就用。
+Decision: 升级到 material3 1.5.0-beta02（显式版本覆盖 Compose BOM 2026.09.00 的 1.4.0），并同步升级 compileSdk/targetSdk 37、AGP 9.4.x、Gradle 9.8.x、Kotlin 2.4.x；根主题改用 MaterialExpressiveTheme + MotionScheme.expressive()；标题使用 Typography.*Emphasized；图标统一用 Material Symbols Rounded 可变字体（本地 res/font + SymbolIcon 包装），不再使用 material-icons-extended 或自绘路径；minSdk 保持 29。
+Consequences: 构建基线变成 compileSdk 37 + AGP 9.4 + Gradle 9.8，需要同步安装 platforms/build-tools 37；material3 1.5 仍是 beta，升级前每次都要跑 assembleDebug + lintDebug + 双设备冒烟；Symbols Rounded 字体增加约数百 KB 体积但省掉图标库依赖；旧的自绘图标与 material-icons-core 调用点全部移除。
+## [31] 2026-10-24 06:41:19 UTC
+Change: 20261024-m3e-alignment
+Context: M6 编辑器曾用一份只在编辑器内生效的紫色 light scheme，导致同一应用里两套视觉；同时列表/详情/设置/外观/创建解锁页仍各有自己的排版习惯。
+Decision: 取消编辑器专属紫色主题，改为全局 M3E 主题 + 现有色板系统（默认 Shio 蓝）：形状走 Expressive 阶梯（8/12/16/20/28，列表堆叠外 28 / 内 8），类型走 Roboto + emphasized 变体，动效走全局 MotionScheme.expressive()；页面内禁止 hex 颜色与手写弹簧，统一用 ui/theme 与 ui/components 提供的形状、动效与 SymbolIcon。
+Consequences: 外观页的色板选择继续影响全局（含编辑器），视觉一致性与可配置性同时保留；页面代码不再各自定义动效，改主题即可整体调整；后续新增页面必须复用 StackedList/FieldItem/PressScale 等组件。
+## [32] 2026-10-24 07:56:26 UTC
+Change: 20261024-m3e-alignment
+Context: M3E 需要在所有页面统一图标、动效与形状；同时 Material3 的 Compose Surface 内容槽是 Box（不堆叠子项），设置页把多个 ListItem 直接放进 Surface 导致重叠。
+Decision: 图标统一为 Material Symbols Rounded 的子集字体（res/font，32 字形 7.4 KB）+ SymbolIcon 包装，FILL 轴切换描边/实心，不再引入 material-icons-*；可点元素用 rememberPressScale（取 MaterialTheme.motionScheme）实现 ripple + 按下缩放；多行分组容器一律显式包 Column；编辑器底部主操作使用两枚 56dp 胶囊按钮（取消/保存）而不是 ButtonGroup（ButtonGroup 需要 overflowIndicator，两个固定动作用不上溢出菜单）；外观页的色板选择保留「色卡 + 圆形色板」，因为 ToggleButton 只能承载图标/文字，无法展示颜色本身。
+Consequences: 新增页面直接复用 SymbolIcon/StackedList/FieldItem/PressScale/EmptyState；Surface 里放多行内容必须包 Column（已写入 notes）；ButtonGroup 留到后续出现 3 个以上互斥动作时再引入；外观页与设置页的交互模型不完全一致，属于有意的取舍。
+## [33] 2026-10-24 08:22:00 UTC
+Change: 20261024-m3e-alignment
+Context: 字体图标的字形上下留白不对称，直接用 Text 渲染时在 48dp 圆形按钮、40dp 图标位里会整体偏低几像素；同时 ToggleButton 的默认宽度让密码显隐按钮显得过宽，详情页与设置页的单一大卡片也不符合 M3E 的堆叠列表语义。
+Decision: SymbolIcon 改为 includeFontPadding=false + LineHeightStyle(Center, Trim.Both)，从字体度量层面修正图标光学居中；密码显隐统一改用 IconToggleButton（48dp 图标开关，带 checked 语义）；详情页字段与设置页分组全部改为 StackedList（3dp 间距、外 28dp / 内 8dp），不再用单一大卡片 + 分隔线。
+Consequences: 所有页面的图标居中由 SymbolIcon 统一保证，不需要逐页 offset；密码显隐的点击目标仍是 48dp（可无障碍识别），但视觉宽度恢复正常；详情/设置的列表节奏与密码库列表一致；后续新增分组列表直接用 StackedList。
+## [34] 2026-10-24 08:42:51 UTC
+Change: 20261024-m3e-alignment
+Context: Material Symbols Rounded 字体图标在 48dp 图标按钮、40dp 图标位里始终略有垂直偏移（字体上下留白不对称），用户要求改成正常矢量图标并直接添加图标依赖，不再自绘路径；同时编辑器底部两颗按钮改为右上角保存。
+Decision: 移除 Symbols Rounded 字体与字体图标包装，改依赖 androidx.compose.material:material-icons-extended（BOM 1.7.8），用 AppIcons 枚举把业务名映射到官方 ImageVector，AppIcon 统一渲染；编辑器删除底部取消/保存按钮，保存放回顶栏右上角的勾选图标；验证只在用户真机（vivo V2359A / Android 16）进行，不再启动模拟器。
+Consequences: 图标不再有垂直偏移，也不再需要字体子集脚本；debug APK 从约 34 MB 涨到 69 MB、release（未开 R8）从 27 MB 涨到 52 MB，后续需通过 release 开启 minify/shrink 或按需裁剪；AppIcons 枚举可继续作为统一换图标的入口。
+## [35] 2026-10-24 09:07:21 UTC
+Change: 20261024-m3e-alignment
+Context: release 需要压体积；同时编辑器 sheet 在键盘弹出约一两秒后会被键盘挡住（先正常，随后窗口尺寸变化把 sheet 压到底部）。JNI 入口是 Java_<pkg>_<class>_<method> 的名字查找，R8 默认混淆会让 native 方法找不到。
+Decision: release 打开 isMinifyEnabled + isShrinkResources，并在 proguard-rules.pro 保留 NativeShio 与所有 native 方法名；sheet 的 IME 处理改为把 Modifier.imePadding() 加在 ModalBottomSheet 的 modifier 上、内容 Column 用 verticalScroll，不再在内容里加 imePadding。
+Consequences: release APK 从 52 MB 降到 7.8 MB（debug 仍 69 MB），真机验证图标、Compose 界面与内核 JNI（打开数据库、统计）均正常；后续新增 JNI 类或改包名需同步更新 keep 规则；sheet 内长表单可滚动，键盘弹出后不再被遮挡。
+## [36] 2026-10-24 09:26:02 UTC
+Change: 20261024-m3e-alignment
+Context: 编辑器 sheet 里的输入框用默认 TextField，视觉上仍是普通灰块 + 细下划线，与 M3E 的填充式输入框规范不一致。
+Decision: 字段 sheet 的输入框统一改为：surfaceContainerHighest/High 填充容器、16dp 顶部圆角、primary 聚焦指示线、前置字段图标（标题/人像/密钥/链接/备注）、字段专属占位文案、bodyLarge 文本；schema 上每个 EditorField 增加 placeholder 与 icon 两个属性。
+Consequences: 所有字段输入的表单形态一致且可识别；后续若有新的可编辑字段，只需在 EditorField 里补 placeholder/icon；M9/M12 接入真实创建/解锁时复用同一占位与图标约定。
+## [37] 2026-10-24 10:30:20 UTC
+Change: 20261024-m3e-alignment
+Context: 混合形态（外框 + 填充 + 下划线 + 前置图标）在真机上看不出「标签在描边线上」的 M3 特征，且输入框背景与 sheet 容器不一致显得像一块深色补丁。
+Decision: 字段输入框改为标准 M3 线框式 OutlinedTextField：容器透明（与 sheet 的 surfaceContainerLow 一致）、未聚焦 1dp outline / 聚焦 2dp primary 描边、浮动标签抬到描边线上并带缺口、去掉前置字段图标、辅助文本仍在框外用 bodySmall、密码仅保留尾部 IconToggleButton；同时删除自绘 fieldBorder 与重复的 sheet 内标题。
+Consequences: 输入框回到 M3 原生行为，视觉与容器的 tonal 层级一致；不再需要 drawWithContent 描边技巧；EditorField 的 icon 目前只用于字段行（编辑器行内仍显示图标），若后续完全不用可再清理。
+## [38] 2026-10-24 10:43:00 UTC
+Change: 20261024-m3e-alignment
+Context: 编辑器字段 sheet 与创建/解锁页原本各写一套 TextField，样式容易漂移；用户要求解锁页输入框与编辑器保持一致。
+Decision: 把线框式输入框提取为 ui/components/AppTextField.kt：OutlinedTextField + 透明容器 + 12dp 圆角 + 1dp outline / 2dp primary 描边 + 浮动标签压在描边线上 + 框外 bodySmall 辅助文本（有错误时变 error 色并替换辅助文本）+ trailingContent 插槽；编辑器字段 sheet 与 LockScreen（主口令、确认主口令）统一改用该组件。
+Consequences: 后续任何表单输入只改一个组件即可统一样式；错误文案改为通过 errorText 传入，行内错误由组件渲染；AppTextField 不内置前置图标，需要时由调用方通过 trailingContent/外层布局补充。
