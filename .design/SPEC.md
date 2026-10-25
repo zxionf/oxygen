@@ -197,7 +197,7 @@ ui/components/
 
 ## 页面改造清单
 1. **密码库列表**：`TopAppBar`（可滚动转 `surfaceContainer`）+ 搜索栏 56dp + 堆叠列表 + `ExtendedFloatingActionButton`（滚动收起为 FAB）；空态与无结果用 M3E 空态（图标 + 标题 + 说明 + 动作按钮）。
-2. **条目详情**：堆叠列表（`ListItem` 行、外 28dp）+ 复制/显隐用 `IconButton` / `IconToggleButton` + 删除走 `DropdownMenu`（error 色）。
+2. **条目详情**：堆叠列表（`ListItem` 行、外 28dp）+ 复制/显隐用 `IconButton` / `IconToggleButton` + `http/https` 网址提供「在浏览器打开」+ 删除走 `DropdownMenu`（error 色）并二次确认。
 3. **编辑器**：堆叠字段列表 + 字段 sheet，使用全局主题、`IconToggleButton`（密码显隐），保存放顶栏右上角勾选图标。
 4. **创建/解锁**：M3E 大标题 + `AppTextField`（线框式）+ 全宽主按钮 + 内联错误区；解锁错误码仍显示 `INVALID_KEY (-3)`。
 5. **设置**：`StackedList` 分组 + 自动锁定单选对话框 + 外观 / 原型 Demo 入口 + 关于（应用版本、内核版本、ABI 版本、内核提交、设备架构、系统、数据库路径）。
@@ -300,3 +300,10 @@ ui/components/
 - 刷新时机：列表页 `LifecycleResumeEffect` 每次重新可见都 `refresh()`，覆盖「保存/删除后返回」「旋转」「从后台回前台」；不做增量合并。
 - 界面状态：`VaultUiState` 增加 `isLoading`/`errorMessage`。首次加载且无数据时整页 `LoadingIndicator`；出错用 `EmptyState`（图标 + 文案 + 「重试」）；空库与无搜索结果沿用两种空态。
 - debug 样例：解锁后若库为空且本进程未播种过，把 `SampleVaultEntries` 逐条 `insert` 进真实库（`VaultComponent.samplesSeeded` 保证只播一次）；release 不播种。
+
+### 详情页（真实数据）
+
+- `ui/vault/EntryDetailViewModel`：`bind(id)` 后按 ID 读单条（`VaultRepository.entry` → `get`），`NOT_FOUND` 视为「条目不存在」；`LifecycleResumeEffect` 在回到前台/旋转时重读，编辑保存返回即见新值。
+- 复制：`ClipData.newPlainText` 写入系统剪贴板，API 33+ 加 `ClipDescription.EXTRA_IS_SENSITIVE`，避免剪贴板浮层与输入法联想展示明文；复制成功用 Snackbar 提示。
+- 外链：`vault/VaultUrl.isHttpUrl` 只放行 `http`/`https` 且带主机名的地址（`javascript:`/`file:`/`intent:`/无 scheme 一律拒绝），通过 `ACTION_VIEW` 交给系统；无主机的条目直接不显示「在浏览器打开」按钮。
+- 删除：`AlertDialog` 确认 → `VaultRepository.delete`（内核 `delete`）→ 成功后 `onBack()`；列表靠 resume 刷新，不再手动同步内存。

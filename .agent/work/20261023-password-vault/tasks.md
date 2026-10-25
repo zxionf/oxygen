@@ -129,11 +129,11 @@
 
 ## M14 真实详情
 
-- [ ] 按 ID 读取详情
-- [ ] 复制用户名/密码（敏感标记）
-- [ ] 仅 `http/https` 网址可外部打开
-- [ ] 删除真实调用 `delete` 并确认
-- [ ] 验证删除后列表刷新
+- [x] 按 ID 读取详情（`VaultRepository.entry`，`get` 不存在返回 null → 「条目不存在」）
+- [x] 复制用户名/密码（`ClipData` + API 33+ `EXTRA_IS_SENSITIVE`）
+- [x] 仅 `http/https` 网址可外部打开（`vault/VaultUrl` + `VaultUrlTest` 3 例；真机弹系统跳转确认）
+- [x] 删除真实调用 `delete` 并确认（AlertDialog → `repository.delete` → 回退）
+- [x] 验证删除后列表刷新（真机删除「邮箱」后列表剩 7 条）
 
 ## M15 真实编辑器
 

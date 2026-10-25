@@ -118,6 +118,18 @@ class VaultRepository(
         return result
     }
 
+    /** 按 ID 读取单条；不存在（含墓碑）返回 null。 */
+    suspend fun entry(entryId: String): VaultEntry? {
+        requireUnlocked()
+        val raw = try {
+            database.get(NAMESPACE, COLLECTION, entryId)
+        } catch (missing: ShioException) {
+            if (missing.code == ShioException.NOT_FOUND) return null else throw missing
+        }
+        val value = JSONObject(raw).opt("value") ?: return null
+        return VaultEntryCodec.decode(entryId, value.toString())
+    }
+
     /** 新建条目，返回内核生成的记录 ID。 */
     suspend fun insert(entry: VaultEntry): String {
         requireUnlocked()

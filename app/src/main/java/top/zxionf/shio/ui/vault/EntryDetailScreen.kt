@@ -1,5 +1,14 @@
 package top.zxionf.shio.ui.vault
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.PersistableBundle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +25,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -31,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,19 +51,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import top.zxionf.shio.ui.components.AppIcons
 import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ShioTheme
-import top.zxionf.shio.vault.FakeVaultStore
 import top.zxionf.shio.vault.SampleVaultEntries
+import top.zxionf.shio.vault.VaultUrl
 
 /**
  * 条目详情（M3E）。
@@ -60,25 +75,57 @@ import top.zxionf.shio.vault.SampleVaultEntries
  * content=值、trailing=复制/显隐），备注作为独立区块。密码默认隐藏，显隐用 ToggleButton，
  * 状态用 `remember`：离开页面或旋转即复位为隐藏（安全优先）。
  *
- * 复制在 M5 只弹 Snackbar；M14 接真实剪贴板并加敏感标记。
+ * 数据：按 ID 从 [VaultComponent.repository] 读取（`vault/entries`）；复制到系统剪贴板时
+ * API 33+ 标记 `EXTRA_IS_SENSITIVE`；只有 `http/https` 的网址才能在外部打开；删除真实
+ * 调用内核 `delete`，成功后回退，列表靠 resume 刷新。
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EntryDetailScreen(
     entryId: String,
     onBack: () -> Unit,
     onEdit: (String) -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: EntryDetailViewModel = viewModel(),
 ) {
-    val allEntries by FakeVaultStore.entries.collectAsStateWithLifecycle()
-    val entry = remember(entryId, allEntries) { allEntries.firstOrNull { it.id == entryId } }
+    val context = LocalContext.current
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val entry = state.entry
     var passwordVisible by remember { mutableStateOf(false) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    fun notifyCopied(label: String) {
+    LaunchedEffect(entryId) { viewModel.bind(entryId) }
+    // 从编辑器返回、旋转、回前台都重读一次，保证看到最新值。
+    LifecycleResumeEffect(entryId) {
+        viewModel.refresh()
+        onPauseOrDispose {}
+    }
+    LaunchedEffect(state.deleted) {
+        if (state.deleted) onBack()
+    }
+    LaunchedEffect(state.errorMessage) {
+        val message = state.errorMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message)
+    }
+
+    fun copyToClipboard(label: String, value: String) {
+        if (value.isEmpty()) return
+        copySensitiveText(context, label, value)
         scope.launch { snackbarHostState.showSnackbar("已复制$label") }
+    }
+
+    fun openUrl(url: String) {
+        if (!VaultUrl.isHttpUrl(url)) {
+            scope.launch { snackbarHostState.showSnackbar("只支持 http/https 链接") }
+            return
+        }
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (_: ActivityNotFoundException) {
+            scope.launch { snackbarHostState.showSnackbar("没有可打开链接的应用") }
+        }
     }
 
     Scaffold(
@@ -115,10 +162,19 @@ fun EntryDetailScreen(
             )
         },
     ) { innerPadding ->
-        if (entry == null) {
-            NotFound(onBack = onBack, modifier = Modifier.padding(innerPadding))
-        } else {
-            Column(
+        when {
+            state.isLoading && entry == null -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                LoadingIndicator()
+            }
+
+            entry == null -> NotFound(onBack = onBack, modifier = Modifier.padding(innerPadding))
+
+            else -> Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -136,7 +192,7 @@ fun EntryDetailScreen(
                             0 -> DetailField(
                                 label = "用户名",
                                 value = entry.username,
-                                onCopy = { notifyCopied("用户名") },
+                                onCopy = { copyToClipboard("用户名", entry.username) },
                             )
 
                             1 -> DetailField(
@@ -144,7 +200,7 @@ fun EntryDetailScreen(
                                 value = if (passwordVisible) entry.password else PasswordMask,
                                 monospace = passwordVisible,
                                 dimmed = !passwordVisible,
-                                onCopy = { notifyCopied("密码") },
+                                onCopy = { copyToClipboard("密码", entry.password) },
                                 trailing = {
                                     IconToggleButton(
                                         checked = passwordVisible,
@@ -169,7 +225,20 @@ fun EntryDetailScreen(
                             else -> DetailField(
                                 label = "连接",
                                 value = entry.url,
-                                onCopy = { notifyCopied("连接") },
+                                onCopy = { copyToClipboard("连接", entry.url) },
+                                trailing = if (VaultUrl.isHttpUrl(entry.url)) {
+                                    {
+                                        IconButton(onClick = { openUrl(entry.url) }) {
+                                            AppIcon(
+                                                icon = AppIcons.OpenInNew,
+                                                contentDescription = "在浏览器打开",
+                                                size = 20.dp,
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    null
+                                },
                             )
                         }
                     }
@@ -177,7 +246,7 @@ fun EntryDetailScreen(
 
                 NotesSection(
                     notes = entry.notes,
-                    onCopy = { notifyCopied("备注") },
+                    onCopy = { copyToClipboard("备注", entry.notes) },
                 )
             }
         }
@@ -193,9 +262,9 @@ fun EntryDetailScreen(
                 TextButton(
                     onClick = {
                         deleteDialogVisible = false
-                        // M5 只是假数据，不做实际删除；M14 接内核 delete 后再真正移除。
-                        onBack()
+                        viewModel.delete()
                     },
+                    enabled = !state.isDeleting,
                 ) {
                     Text("删除", color = MaterialTheme.colorScheme.error)
                 }
@@ -205,6 +274,20 @@ fun EntryDetailScreen(
             },
         )
     }
+}
+
+/**
+ * 写入系统剪贴板；API 33+ 标记为敏感内容，避免在剪贴板浮层/输入法联想里明文显示。
+ */
+private fun copySensitiveText(context: Context, label: String, value: String) {
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
+    val clip = ClipData.newPlainText(label, value)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        clip.description.extras = PersistableBundle().apply {
+            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+        }
+    }
+    clipboard.setPrimaryClip(clip)
 }
 
 /** 固定 8 个点：不随真实密码长度变化，避免泄漏长度信息。 */

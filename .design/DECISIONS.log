@@ -249,3 +249,8 @@ Change: 20261023-password-vault
 Context: M13 要把列表从 FakeVaultStore 切到内核库，但写入路径（M15）还没做，真实库会是空的，列表与搜索无法验证；同时详情/编辑器仍读假数据，会与真实列表的条目 ID 对不上。
 Decision: 列表数据源换成 VaultRepository；debug 构建在解锁后若库为空且本进程未播种过，就把 SampleVaultEntries 逐条 insert 进真实库（VaultComponent.samplesSeeded 只播一次，release 不播种）；刷新用列表页 LifecycleResumeEffect 触发整库重读，不做增量合并；密码字段不参与搜索。
 Consequences: 列表/搜索/排序在 M15 之前就能用真实内核数据验证；样例条目成了真实记录（可被真实详情/编辑器读写），FakeVaultStore 只剩详情页与编辑器在用，随 M14/M15 删除；每次回到列表都会重读整库，条目多时会有一次全量读取代价（上限 2000 条）。
+## [51] 2026-10-25 04:36:13 UTC
+Change: 20261023-password-vault
+Context: 详情页要接真实数据、剪贴板敏感标记与外链，同时不能把校验规则埋进 Composable（不可单测）；另外原来详情从内存假仓库取数据，编辑返回后不会刷新。
+Decision: 新增 EntryDetailViewModel（按 ID 读 + resume 重读 + 删除）；剪贴板统一走 copySensitiveText（ClipData + API 33+ EXTRA_IS_SENSITIVE）；外链白名单抽成纯 Kotlin 的 vault/VaultUrl.isHttpUrl（java.net.URI，不用 android.net.Uri）并配单元测试；无合法网址时不显示「在浏览器打开」。
+Consequences: 详情页数据与列表同源（vault/entries），删除后返回列表自动刷新；URL 规则可被 VaultUrlTest 覆盖（3 组 11 个断言），不依赖设备；FakeVaultStore 只剩编辑器在用，M15 一并删除。
