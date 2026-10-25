@@ -11,3 +11,6 @@ captures/
 *.aab
 *.hprof
 .DS_Store
+
+.kotlin/
+app/release/
