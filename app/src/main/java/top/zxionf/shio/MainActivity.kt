@@ -10,6 +10,7 @@ import top.zxionf.shio.ui.theme.AppearancePreferences
 import top.zxionf.shio.ui.theme.ShioTheme
 import top.zxionf.shio.vault.AutoLockController
 import top.zxionf.shio.vault.AutoLockPreferences
+import top.zxionf.shio.vault.SensitiveClipboard
 
 class MainActivity : ComponentActivity() {
     private val appearance: AppearancePreferences by lazy { AppearancePreferences.get(this) }
@@ -37,7 +38,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        // 回到前台：后台时长超过偏好就锁定（旋转不会走到这里超时）。
+        // 回到前台：① 后台时长超过偏好就锁定；② 剪贴板若早已过期（进程被冻结时计时没跑）补一次清除。
+        SensitiveClipboard.clearIfExpired()
         AutoLockController.onActivityStarted(autoLock.timeout)
     }
 

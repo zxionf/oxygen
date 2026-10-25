@@ -20,6 +20,8 @@ import kotlinx.coroutines.launch
  *
  * 锁定成功后 [lockCount] 自增，界面（`AppNavHost`）据此清空回退栈并进入解锁页，
  * 保证「销毁句柄」与「导航到解锁页」只发生在一处。
+ *
+ * 锁定同时调用 [SensitiveClipboard.clearNow]，让剪贴板里的密码随会话一起消失。
  */
 object AutoLockController {
 
@@ -64,6 +66,8 @@ object AutoLockController {
     /** 立即锁定：销毁句柄、清空会话，然后通知界面。 */
     fun lockNow() {
         backgroundedAt = null
+        // 锁定即清剪贴板：不把刚复制的密码留到解锁之后。
+        SensitiveClipboard.clearNow()
         if (!VaultComponent.repository.isUnlocked) {
             // 已经没有会话（例如刚锁过），仍然发一次信号让界面回到解锁页。
             _lockCount.value += 1

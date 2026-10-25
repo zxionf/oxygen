@@ -1,6 +1,7 @@
 package top.zxionf.shio.ui.settings
 
 import android.os.Build
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,12 +39,15 @@ import androidx.compose.ui.unit.dp
 import top.zxionf.shio.BuildConfig
 import top.zxionf.shio.kernel.KernelInfo
 import top.zxionf.shio.vault.AutoLockPreferences
+import top.zxionf.shio.vault.SensitiveClipboard
 import top.zxionf.shio.vault.AutoLockTimeout
 import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultPaths
+import top.zxionf.shio.vault.VaultSession
 import top.zxionf.shio.ui.components.AppIcons
 import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppIcon
+import top.zxionf.shio.ui.theme.ListStackShapes
 import top.zxionf.shio.ui.theme.ShioTheme
 
 /** 自动锁定时长的选项见 [AutoLockTimeout]，默认「立即」。 */
@@ -59,9 +64,11 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onAppearance: () -> Unit,
     onDemo: () -> Unit,
+    onChangePassword: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var autoLockDialogVisible by remember { mutableStateOf(false) }
+    var diagnosticsVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
     // 自动锁定时长持久化在 SharedPreferences（"session"），冷启动自动恢复。
     val autoLockPreferences = remember(context) { AutoLockPreferences.get(context) }
@@ -135,18 +142,27 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SectionTitle("安全")
-            StackedList(itemCount = 1) { _, shape ->
+            StackedList(itemCount = 2) { index, shape ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = shape,
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
-                    SettingRow(
-                        icon = AppIcons.Lock,
-                        label = "自动锁定",
-                        value = autoLockTimeout.label,
-                        onClick = { autoLockDialogVisible = true },
-                    )
+                    if (index == 0) {
+                        SettingRow(
+                            icon = AppIcons.Lock,
+                            label = "自动锁定",
+                            value = autoLockTimeout.label,
+                            onClick = { autoLockDialogVisible = true },
+                        )
+                    } else {
+                        SettingRow(
+                            icon = AppIcons.Key,
+                            label = "修改主口令",
+                            value = "下次解锁使用新口令",
+                            onClick = onChangePassword,
+                        )
+                    }
                 }
             }
 
@@ -183,10 +199,30 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
                     val (label, value) = aboutItems[index]
-                    AboutRow(label = label, value = value)
+                    AboutRow(
+                        label = label,
+                        value = value,
+                        // 「版本」行长按进入诊断：release 也能看到库格式与同步身份，
+                        // 单击不变（诊断入口是隐藏的，不进普通可见界面）。
+                        modifier = if (index == 0) {
+                            Modifier.pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        if (session != null) diagnosticsVisible = true
+                                    },
+                                )
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
                 }
             }
         }
+    }
+
+    if (diagnosticsVisible && session != null) {
+        DiagnosticsDialog(session = session, onDismiss = { diagnosticsVisible = false })
     }
 
     if (autoLockDialogVisible) {
@@ -274,8 +310,9 @@ private fun SettingRow(
 }
 
 @Composable
-private fun AboutRow(label: String, value: String) {
+private fun AboutRow(label: String, value: String, modifier: Modifier = Modifier) {
     ListItem(
+        modifier = modifier,
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         content = {
             Text(
@@ -302,4 +339,79 @@ private fun SettingsPreview() {
     ShioTheme {
         SettingsScreen(onBack = {}, onAppearance = {}, onDemo = {})
     }
+}
+
+/**
+ * 诊断信息弹窗：展示库格式与会话身份，可通过「复制」一次性带走。
+ *
+ * 内容来自解锁后的 [VaultComponent.repository.session] 与 [KernelInfo]；
+ * 复制走与详情页一致的敏感标记，便于反馈问题时安全粘贴。
+ */
+@Composable
+private fun DiagnosticsDialog(
+    session: VaultSession,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val rows = remember(session) {
+        listOf(
+            "存储格式" to "format=${session.formatVersion}",
+            "同步身份" to session.dbId.ifEmpty { "未启用" },
+            "设备身份" to session.deviceId.ifEmpty { "未启用" },
+            "内核版本" to (KernelInfo.kernelVersion ?: "不可用"),
+            "ABI 版本" to (KernelInfo.abiVersion?.toString() ?: "不可用"),
+            "数据库" to session.databasePath,
+        )
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = MaterialTheme.shapes.extraLarge,
+        title = { Text("诊断信息") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(ListStackShapes.gap),
+            ) {
+                StackedList(itemCount = rows.size) { index, shape ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = shape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        ListItem(
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            content = {
+                                Text(
+                                    text = rows[index].first,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            },
+                            supportingContent = {
+                                Text(
+                                    text = rows[index].second,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("关闭") }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    val text = rows.joinToString(separator = "\n") { (k, v) -> "$k: $v" }
+                    // 与详情页共用同一入口：打敏感标记 + 30 秒后自动清除。
+                    SensitiveClipboard.copy(context, "诊断信息", text)
+                },
+            ) {
+                Text("复制")
+            }
+        },
+    )
 }

@@ -1,14 +1,9 @@
 package top.zxionf.shio.ui.vault
 
 import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipDescription
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.os.PersistableBundle
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,6 +61,7 @@ import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ShioTheme
 import top.zxionf.shio.vault.SampleVaultEntries
+import top.zxionf.shio.vault.SensitiveClipboard
 import top.zxionf.shio.vault.VaultUrl
 
 /**
@@ -93,6 +89,7 @@ fun EntryDetailScreen(
     val entry = state.entry
     var passwordVisible by remember { mutableStateOf(false) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
+    var imeClipboardNoticeVisible by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -112,8 +109,11 @@ fun EntryDetailScreen(
 
     fun copyToClipboard(label: String, value: String) {
         if (value.isEmpty()) return
-        copySensitiveText(context, label, value)
-        scope.launch { snackbarHostState.showSnackbar("已复制$label") }
+        // 统一走 SensitiveClipboard：打敏感标记，30 秒后自动清除（锁定时立即清）。
+        SensitiveClipboard.copy(context, label, value)
+        // 输入法的剪贴板历史不归应用管，首次复制时提醒一次。
+        if (SensitiveClipboard.consumeImeNotice(context)) imeClipboardNoticeVisible = true
+        scope.launch { snackbarHostState.showSnackbar("已复制$label，30 秒后自动清除") }
     }
 
     fun openUrl(url: String) {
@@ -252,6 +252,16 @@ fun EntryDetailScreen(
         }
     }
 
+    if (imeClipboardNoticeVisible) {
+        ImeClipboardNoticeDialog(
+            onDismiss = { imeClipboardNoticeVisible = false },
+            onOpenImeSettings = {
+                imeClipboardNoticeVisible = false
+                openInputMethodSettings(context)
+            },
+        )
+    }
+
     if (deleteDialogVisible && entry != null) {
         AlertDialog(
             onDismissRequest = { deleteDialogVisible = false },
@@ -277,17 +287,40 @@ fun EntryDetailScreen(
 }
 
 /**
- * 写入系统剪贴板；API 33+ 标记为敏感内容，避免在剪贴板浮层/输入法联想里明文显示。
+ * 首次复制后的提示：系统剪贴板已被我们定时清理，但输入法自带的「剪贴板历史」会另存一份，
+ * 应用拿不到也删不掉，只能提醒用户自己去输入法设置里关闭。
  */
-private fun copySensitiveText(context: Context, label: String, value: String) {
-    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
-    val clip = ClipData.newPlainText(label, value)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        clip.description.extras = PersistableBundle().apply {
-            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
-        }
-    }
-    clipboard.setPrimaryClip(clip)
+@Composable
+private fun ImeClipboardNoticeDialog(
+    onDismiss: () -> Unit,
+    onOpenImeSettings: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = MaterialTheme.shapes.extraLarge,
+        title = { Text("输入法可能保留一份副本") },
+        text = {
+            Text(
+                text = "系统剪贴板里的内容会在 30 秒后（或锁定时）自动清除。" +
+                    "但输入法自带的「剪贴板」功能会另存一份历史，应用无法删除。" +
+                    "如不放心，可以在输入法设置里关闭「剪贴板历史」并清空已有记录。",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("知道了") }
+        },
+        dismissButton = {
+            TextButton(onClick = onOpenImeSettings) { Text("打开输入法设置") }
+        },
+    )
+}
+
+/** 打开系统的输入法设置页；没有对应 Activity 时静默失败。 */
+private fun openInputMethodSettings(context: android.content.Context) {
+    val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { context.startActivity(intent) }
 }
 
 /** 固定 8 个点：不随真实密码长度变化，避免泄漏长度信息。 */

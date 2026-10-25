@@ -165,8 +165,23 @@ class ShioDatabase {
     }
 
     /**
-     * 启用多端同步并把库升级到 `format=2`（不可回退），返回 `sync_info` JSON。
+     * 修改主口令：内核重包裹密钥，条目内容原样保留，旧口令立即失效。
      *
+     * 口令在 JVM 上是不可擦除的 String，转成字节数组后在本方法返回前清零，
+     * 与 [open] 的处理一致。
+     */
+    suspend fun changePassword(newPassword: String) = withContext(dispatcher) {
+        require(newPassword.isNotEmpty()) { "new password must not be empty" }
+        val bytes = newPassword.toByteArray(Charsets.UTF_8)
+        try {
+            NativeShio.changePassword(requireHandle(), bytes)
+        } finally {
+            bytes.fill(0)
+        }
+    }
+
+    /**
+     * 启用多端同步并把库升级到 `format=2`（不可回退），返回 `sync_info` JSON。
      * 只用于**首次建库**：内核要求新库 open 后立即调用并校验结果，
      * 否则会留下 format=1 的半成品（见 `.design/api.md`）。
      */

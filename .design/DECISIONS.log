@@ -284,3 +284,38 @@ Change: 20261023-password-vault
 Context: 归档预览显示 4 节是 replaced 而非 appended：design.md 的「目标与范围」「导航」「数据模型」与 SPEC 里 Demo/现状同名小节冲突，直接归档会覆盖内核集成 Demo 的范围、demo/notes 数据模型与 M10 的返回栈规则。
 Decision: 归档前把 design.md 三个标题改成不会撞名的「密码库 MVP 范围」「密码库路由表」「密码库记录模型」（正文不动），复核 dry-run 九节全部 appended 后才执行 sele close；归档后再做一次去重：路由表并进「导航与返回栈」，记录模型并进「密码库数据层」，删除被取代的「实施原则」「页面与布局」「计划中的代码结构」「阶段拆分」「会话与安全」。
 Consequences: SPEC 保持「一个概念一节」且不残留与 M3E 冲突的旧描述（例如旧的『卡片圆角 16dp』『不引入 material-icons-extended』）；Demo 与内核集成的既有章节完整保留；过程性内容（实施原则、阶段拆分）只留在 tasks.md 与阶段计划.md。
+## [58] 2026-10-25 06:57:30 UTC
+Change: 20261025-diagnostics-entry
+Context: 决策 #49 把「存储格式/同步身份」限制在 debug，但 release 排障时最需要判断库是否 format=2、两端是否同一个库；直接把两行放出来又违背「普通界面不暴露内部标识」的初衷。
+Decision: 在「设置 → 关于 → 版本」行加长按手势，弹出「诊断信息」对话框（AlertDialog extraLarge + StackedList + surfaceContainerHigh），展示存储格式、同步身份、设备身份、内核版本、ABI 版本、数据库路径，并提供「复制」（带 EXTRA_IS_SENSITIVE）与「关闭」；debug 的「关于」两行保留不变。
+Consequences: release 也能拿到 format 与 db_id，但必须主动长按才知道有这个入口，普通界面依旧干净；诊断内容与 debug 两行同源（VaultSession + KernelInfo），不会出现两套数据；长按是既有行上的新手势，不影响单击与无障碍朗读。
+## [59] 2026-10-25 07:02:19 UTC
+Change: 20261025-diagnostics-entry
+Context: 密码库 MVP 归档后新增了诊断入口，属于用户可见的小功能增量；同时要在版本号上体现这次改动。
+Decision: 版本升到 0.1.1，versionCode 由 1 升到 2；SPEC 的「设置页『关于』信息」示例值同步改为 。
+Consequences: 安装包可凭 versionCode 覆盖升级；发布产物版本号与 SPEC 描述一致，不会出现文档写 0.1.0 而 APK 是 0.1.1 的错位。
+## [60] 2026-10-25 07:03:06 UTC
+Change: 20261025-diagnostics-entry
+Context: 上一条决策 #59 的命令里用了双引号包裹反引号，shell 把 `0.1.1-debug（2）` 当命令替换执行，导致记录里该处为空。
+Decision: 补记 #59 缺失内容：SPEC「设置页『关于』信息」的示例版本值同步改为 `0.1.1-debug（2）`，与 app/build.gradle.kts 的 versionName=0.1.1、versionCode=2 保持一致。
+Consequences: 此后写 sele append-decision 的长文本统一用单引号包裹，避免反引号被 shell 展开；决策日志保持 append-only，不改历史条目。
+## [61] 2026-10-25 07:29:05 UTC
+Change: 20261025-clipboard-auto-clear
+Context: M14/M18 的复制只加了 EXTRA_IS_SENSITIVE，明文会一直留在剪贴板；详情页与诊断弹窗各写了一份复制实现，容易继续分叉。
+Decision: 新增 vault/SensitiveClipboard 作为唯一复制入口：写入时打敏感标记并记录内容，30 秒后比对当前剪贴板，一致才 clearPrimaryClip()，读取失败时按「宁可多清」仍清除；锁定流程（AutoLockController.lockNow）立即调用 clearNow()；切后台不清除，保证「复制→切应用→粘贴」这一主用法在 30 秒内可用。
+Consequences: 剪贴板里的密码最多存活 30 秒或到锁定为止；用户中途复制的其它内容不会被误删；复制成功的 Snackbar 明确提示「30 秒后自动清除」；进程被杀时计时消失属平台限制，不引入 AlarmManager。
+## [62] 2026-10-25 08:06:19 UTC
+Change: 20261025-clipboard-auto-clear
+Context: 模拟器两条路径都正常，但真机反馈「自动清除没生效」；推测是进程被冻结导致计时协程没跑完，或 ROM 忽略 clearPrimaryClip。
+Decision: 加固三点：① 记录 elapsedRealtime，MainActivity.onStart 调 clearIfExpired() 按时间戳补清；② 清除失败时保留 pendingText 以便重试；③ clearPrimaryClip() 后复读校验，仍是我们写入的文本时用空文本 ClipData 覆盖兜底。
+Consequences: 回前台一定会清掉过期内容；ROM 忽略 clearPrimaryClip 时也能让系统剪贴板不再持有明文；ROM/输入法侧的剪贴板历史应用无法删除，验收需用系统长按粘贴判断，这一限制写进 design.md。
+## [63] 2026-10-25 08:28:20 UTC
+Change: 20261025-clipboard-auto-clear
+Context: 真机确认系统剪贴板已被清除，但输入法自带的剪贴板历史仍保留明文；这是输入法私有存储，应用无权清除。
+Decision: 接受该边界：首次复制弹一次提示（独立 clipboard 预置记录，只弹一次），说明系统剪贴板会在 30 秒/锁定时清除、输入法历史应用无法删除、可在输入法设置关闭，并提供「打开输入法设置」跳转；不尝试清除输入法私有数据，也不改用非文本 MIME（会让正常粘贴失效）。
+Consequences: 用户被告知风险与处置方式，责任边界清晰；系统剪贴板层面已保证不留明文；彻底避开剪贴板需要 Autofill 或应用内分享，留作后续独立变更。
+## [64] 2026-10-25 08:53:19 UTC
+Change: 20261025-change-password
+Context: 内核 change_password 只接受新口令，不校验旧口令；若界面要求输入旧口令，只能用「销毁句柄 → 用旧口令重开 → 改口令」的方式验证，中途失败会让用户被迫重新解锁。
+Decision: 修改主口令只要求新口令 + 确认（≥8 字符、两次一致），不要求输入当前口令；理由：会话已解锁即代表本次启动通过内核校验，且「别人拿到已解锁手机」场景下对方本就能读全部条目，收益低而流程破坏性大。
+Consequences: 流程简单且不破坏会话；代价是拿到已解锁设备的人可以改口令锁住原主（与多数同类应用的取舍一致）；该取舍写进 design.md 与决策日志，未来若要加旧口令校验需另开变更。

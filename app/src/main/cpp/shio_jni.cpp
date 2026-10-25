@@ -8,6 +8,7 @@
 
 #include <jni.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -723,6 +724,40 @@ Java_top_zxionf_shio_kernel_NativeShio_stats(JNIEnv* env, jobject /*self*/, jlon
         return nullptr;
     }
     return copy_and_free(env, output, output_length);
+}
+
+// 改主口令：内核只重包裹密钥，不重写记录；旧口令此后不再可用。
+extern "C" JNIEXPORT void JNICALL
+Java_top_zxionf_shio_kernel_NativeShio_changePassword(JNIEnv* env, jobject /*self*/, jlong id,
+                                                     jbyteArray new_password) {
+    auto handle = acquire(id);
+    if (handle == nullptr) {
+        throw_closed(env);
+        return;
+    }
+    if (new_password == nullptr) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "new password is null");
+        return;
+    }
+    std::vector<std::uint8_t> password_bytes;
+    if (!get_bytes(env, new_password, &password_bytes)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "new password is invalid");
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(handle->mutex);
+    if (handle->destroyed) {
+        throw_closed(env);
+        return;
+    }
+
+    const std::int32_t rc = shio_change_password(
+        handle->kernel, data_or_empty(password_bytes), password_bytes.size());
+    // 无论成功与否，先把口令副本从 C++ 堆上抹掉。
+    std::fill(password_bytes.begin(), password_bytes.end(), 0);
+    if (rc != SHIO_OK) {
+        throw_kernel_error(env, rc);
+    }
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL

@@ -90,6 +90,17 @@ class VaultRepository(
         session = null
     }
 
+    /**
+     * 修改主口令：内核重包裹密钥，条目内容不变，旧口令立即失效。
+     *
+     * 不要求输入旧口令：会话已解锁即代表本次启动已通过内核校验（参见变更设计）。
+     * 失败按 [ShioException] 上抛，由界面翻译成文案。
+     */
+    suspend fun changePassword(newPassword: String) {
+        requireUnlocked()
+        database.changePassword(newPassword)
+    }
+
     /** 读取全部条目；按 `next` 分页直到读完。需要已解锁。 */
     suspend fun entries(): List<VaultEntry> {
         requireUnlocked()

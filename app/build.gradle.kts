@@ -1,20 +1,44 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     // AGP 9 内置 Kotlin 支持；Compose 编译器插件仍单独应用。
     alias(libs.plugins.kotlin.compose)
 }
 
+// 发布签名：从仓库根的 keystore.properties 读取（该文件已 gitignore，不入库）。
+// 没配置的机器（如别人 clone 后构建 debug）不会因此失败，release 退回未签名产物。
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+val releaseKeystorePath = keystoreProperties.getProperty("storeFile")?.takeIf { it.isNotBlank() }
+val hasReleaseKeystore = releaseKeystorePath != null && rootProject.file(releaseKeystorePath).exists()
+
 android {
     namespace = "top.zxionf.shio"
     compileSdk = 37
     ndkVersion = "29.0.14206865"
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = rootProject.file(releaseKeystorePath!!)
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "top.zxionf.shio"
         minSdk = 29
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 3
+        versionName = "0.1.5"
 
         // 内核溯源信息：入库的 jniLibs/libshio_ffi.so 来自该提交，ABI 版本与 NativeShio 一致。
         // 由 scripts/sync-shio.sh 在同步产物时自动改写，不要手改。
@@ -52,6 +76,10 @@ android {
             versionNameSuffix = "-debug"
         }
         release {
+            // 配了 keystore.properties 就签名，否则保持未签名（产物名带 unsigned）。
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

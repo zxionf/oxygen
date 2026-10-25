@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
+import top.zxionf.shio.ui.settings.ChangePasswordScreen
 import top.zxionf.shio.ui.settings.SettingsScreen
 import top.zxionf.shio.ui.unlock.LockMode
 import top.zxionf.shio.ui.unlock.LockScreen
@@ -153,6 +154,7 @@ fun AppNavHost(
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
                     onAppearance = { navController.navigate(Routes.Appearance) },
+                    onChangePassword = { navController.navigate(Routes.ChangePassword) },
                     onDemo = { navController.navigate(Routes.Demo) },
                 )
             }
@@ -161,6 +163,15 @@ fun AppNavHost(
         composable(Routes.Appearance) {
             RequireUnlocked(navController) {
                 AppearanceScreen(onBack = { navController.popBackStack() })
+            }
+        }
+
+        composable(Routes.ChangePassword) {
+            RequireUnlocked(navController) {
+                ChangePasswordScreen(
+                    onBack = { navController.popBackStack() },
+                    onChanged = { navController.popBackStack() },
+                )
             }
         }
 

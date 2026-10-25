@@ -26,9 +26,7 @@ MVP 覆盖：
 
 - 多密码库
 - 分类、标签、收藏（下一阶段）
-- 剪贴板自动清除（下一阶段；MVP 只做复制与敏感标记）
 - 生物识别、Autofill、TOTP、导入导出
-- 改主口令（内核支持，JNI 未暴露）
 
 **多端同步：MVP 不做同步 UI、配对与网络传输，但首次建库按内核要求启用同步**
 
@@ -149,6 +147,9 @@ scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件
 | `list(h, ns, coll, after, limit, includeDeleted): ByteArray` | `shio_list` | 返回 `{"items":[...],"next":...}`，items 只有元信息 |
 | `batch(h, ns, coll, opsJson): ByteArray` | `shio_batch` | 输入 `[{"id":"uuid","value":...}]`，输出元信息数组 |
 | `stats(h): ByteArray` | `shio_stats` | `format_version`、`key_id`、`db_bytes` |
+| `changePassword(h, newPassword): Unit` | `shio_change_password` | 只重包裹密钥，不重写记录；旧口令立即失效 |
+| `syncEnable(h, deviceId): ByteArray` | `shio_sync_enable` | 首次建库启用同步，返回 `sync_info` |
+| `syncInfo(h): ByteArray` | `shio_sync_info` | 同步摘要；未启用返回 `SHIO_SYNC_DISABLED` |
 | `lastError(h): String` | `shio_last_error` | 异常消息已包含该内容，保留接口便于排查 |
 
 错误处理：任一调用返回非 `SHIO_OK` 时，JNI 读取 `shio_last_error` 并抛出 `ShioException(code, message)`；Kotlin 侧按 `code` 展示。所有由内核分配的输出缓冲区在 JNI 内复制后立即 `shio_free`。
@@ -261,9 +262,12 @@ ui/components/
 
 ## 设置页「关于」信息
 - 数据来源：内核版本与 ABI 版本来自**运行时**查询（`kernel/KernelInfo.kt` 调 `shio_version()` / `shio_abi_version()`）；应用版本与 `SHIO_KERNEL_COMMIT` / `SHIO_ABI_VERSION` 由 Gradle 写入 `BuildConfig`（`app/build.gradle.kts` 的 `defaultConfig`）；设备架构与系统版本取 `android.os.Build`。
-- 展示行（`StackedList` + `ListItem`，外 28dp / 内 8dp）：版本 `0.1.0-debug（1）`、内核版本（当前 `0.2.0`）、ABI 版本、内核提交 `hydrogen @ <提交>`（release 12 位短哈希，debug 完整哈希）、设备架构 `arm64-v8a`、系统 `Android 16（API 36）`、数据库路径。
+- 展示行（`StackedList` + `ListItem`，外 28dp / 内 8dp）：版本 `0.1.1-debug（2）`、内核版本（当前 `0.2.0`）、ABI 版本、内核提交 `hydrogen @ <提交>`（release 12 位短哈希，debug 完整哈希）、设备架构 `arm64-v8a`、系统 `Android 16（API 36）`、数据库路径。
 - ABI 版本取值：native 加载成功且与构建约定一致时显示单个数字；不一致显示 `<运行时>（期望 <构建值>）`；库缺失或加载失败时内核版本与 ABI 版本都显示「不可用」（页面不崩溃）。
 - 内核提交只做产物溯源，不参与版本判断；`scripts/sync-shio.sh` / `sync-shio.ps1` 在同步产物时会把 `BuildConfig.SHIO_KERNEL_COMMIT` 自动改写为脚本里的 `PINNED_COMMIT`，手改无效也不必要。
+- 诊断入口：**长按「版本」行**弹出「诊断信息」对话框（`extraLarge` + `StackedList`），debug 与 release 都可用，展示存储格式 `format=2`、同步身份 `db_id`、设备身份 `device_id`、内核版本、ABI 版本与数据库路径，并可「复制」（写入剪贴板时打 `EXTRA_IS_SENSITIVE`）。未解锁（无会话）时长按不触发。
+- debug 构建另在「关于」列表里直接多出「存储格式」「同步身份」两行；release 列表保持 7 行，内部标识只走长按诊断。
+- 实现：给「版本」行加 `Modifier.pointerInput { detectTapGestures(onLongPress = …) }`（不用 `combinedClickable`，免额外 opt-in）；弹窗数据与 debug 两行同源（`VaultSession` + `KernelInfo`），复制复用 `ClipData` + `EXTRA_IS_SENSITIVE`，不新增第二套剪贴板代码。
 
 ## 导航与返回栈
 单 Activity、字符串路由，参数经 `Uri.encode`（不引入 kotlinx-serialization）；使用 `androidx.navigation:navigation-compose`。
@@ -289,13 +293,13 @@ ui/components/
 ## 内核 ABI 对齐
 对照基线：hydrogen `5f3e8e3`（`shio 0.2.0`，`SHIO_ABI_VERSION = 1`）。`app/src/main/cpp/include/shio.h` 与内核同名文件逐字节一致（由 `scripts/sync-shio.sh` 同步并校验）。
 
-已映射的符号（`NativeShio` / `shio_jni.cpp`）：`shio_abi_version`、`shio_version`、`shio_open`、`shio_close`、`shio_kernel_destroy`、`shio_insert`、`shio_put`、`shio_get`、`shio_delete`、`shio_list`、`shio_batch`、`shio_stats`、`shio_sync_enable`、`shio_sync_info`、`shio_last_error`、`shio_free`（JNI 内部调用）。
+已映射的符号（`NativeShio` / `shio_jni.cpp`）：`shio_abi_version`、`shio_version`、`shio_open`、`shio_close`、`shio_kernel_destroy`、`shio_insert`、`shio_put`、`shio_get`、`shio_delete`、`shio_list`、`shio_batch`、`shio_stats`、`shio_change_password`、`shio_sync_enable`、`shio_sync_info`、`shio_last_error`、`shio_free`（JNI 内部调用）。
 
 **有意不映射**的符号及原因：
 
 | 符号 | 原因 |
 |---|---|
-| `shio_change_password`、`shio_rotate_data_key` | MVP 不做改主口令与密钥轮换（内核已支持，留待后续变更） |
+| `shio_rotate_data_key` | MVP 不做密钥轮换（内核已支持，留待后续变更） |
 | `shio_backup`、`shio_restore` | MVP 不做导入导出与备份恢复（存储维护 S2 属于后续计划） |
 | `shio_flush` | 目前所有写入以 `shio_batch`/单条写为单位提交，`close`/`destroy` 前无需额外屏障；后续需显式落盘再补 |
 | 其余同步符号（`sync_changes`/`apply*`/`offers`/`snapshot*`/`rotation`/`migrate*`/`pairing*`、`shio_open_with_pairing`） | 本阶段只做「建库时启用同步」，不做同步 UI、配对与网络传输；**后续同步变更再接** |
@@ -377,14 +381,32 @@ ui/components/
 - 「1/5/15 分钟」：`onStop` 只记时间戳，`onStart` 比较差值，超过阈值才锁定；因此短暂切走（如看一眼通知）不打断使用。
 - 锁定动作只有一处：`AutoLockController.lockNow()` → `VaultComponent.repository.lock()`（`destroy` 句柄、清会话）→ `lockCount` 自增；`AppNavHost` 监听 `lockCount` 变化，清空回退栈并导航到 `unlock`。手动锁定（列表页锁图标）同样走 `lockNow()`，不再在导航层重复写一遍销毁逻辑。
 
+## 修改主口令
+- 入口：`设置 → 安全 → 修改主口令`（`Key` 图标，副标题「下次解锁使用新口令」），路由 `change-password`，受 `RequireUnlocked` 守卫。
+- 链路：`ChangePasswordScreen` → `VaultRepository.changePassword` → `ShioDatabase.changePassword`（口令转 `ByteArray` 后 `finally` 清零）→ `NativeShio.changePassword` → `shio_change_password`。
+- 界面：新口令 + 确认两个线框输入框（带显隐切换），≥8 字符、两次一致；提交中按钮禁用并显示 `LoadingIndicator`；成功 Snackbar「主口令已修改，下次解锁请使用新口令」并返回设置。
+- 不要求输入当前口令：会话已解锁即代表本次启动通过内核校验，内核 `change_password` 也只接受新口令；要求旧口令只能用「销毁句柄 → 重开」验证，失败会强迫用户重新解锁，收益低而破坏性大（决策 #64）。
+- 错误文案按 `ShioException` 码分支：`BUSY (-7)` 提示密钥轮换未完成、`CLOSED (-5)` 提示重新解锁、`READ_ONLY`/`CORRUPTED`/`IO` 各有对应提示。
+- 内核行为：只重包裹密钥，不重写记录；`format=2` 下会重包裹 `keys2` 全部行；条目内容与 `db_id` 不变，旧口令立即失效。
+
 ## 安全措施
 - 截屏防护：release 构建在 `MainActivity.onCreate` 设置 `WindowManager.LayoutParams.FLAG_SECURE`（真机 `screencap` 为全黑，最近任务预览同被屏蔽）；debug 不设置，便于截图验收。
 - 备份：`allowBackup=false` + `data_extraction_rules.xml` 排除 `root`/`file` 域，云备份与换机迁移都不带走数据库。
 - 日志：全部代码零 `Log.*` / `printStackTrace` / `println`；JNI 层也不打印。条目正文、口令、复制内容不会进入日志或崩溃信息。
-- 剪贴板：复制用户名/密码/备注/连接统一走 `ClipData.newPlainText`，API 33+ 打 `EXTRA_IS_SENSITIVE`（自动清除在后续阶段）。
+- 剪贴板：统一走 `vault/SensitiveClipboard`，规则见「剪贴板与敏感复制」。
 - 密码显隐：详情页用 `remember`（非 `rememberSaveable`），离开页面或旋转立即复位为隐藏；锁定销毁回退栈后详情页整个重建。
-- 口令生命周期：`LockScreen` 在 create/unlock 成功后立即清空输入状态；`ShioDatabase.open` 把口令转成 `ByteArray` 后 `finally` 清零；JNI 侧在边界内 `zeroize`。
+- 口令生命周期：`LockScreen` 在 create/unlock 成功后立即清空输入状态；`ShioDatabase.open` 把口令转成 `ByteArray` 后 `finally` 清零；`ShioDatabase.changePassword` 同样清零；JNI 侧在边界内 `zeroize`/`std::fill`。
 - 外链：只放行 `http`/`https` 且有主机名的地址（`VaultUrl`），避免 `javascript:`/`file:`/`intent:` 之类被当作可信跳转。
+
+## 剪贴板与敏感复制
+- 入口：`vault/SensitiveClipboard`（唯一复制路径），详情页四类字段与设置页诊断信息共用；其他位置不再直接调 `ClipboardManager`。
+- 写入：`ClipData.newPlainText` + API 33+ `EXTRA_IS_SENSITIVE`，避免剪贴板浮层与输入法联想展示明文。
+- 自动清除：复制后 30 秒（`CLEAR_AFTER_MILLIS`）清除；锁定（手动或自动）立即清除；再次复制重置计时。
+- 只清自己的内容：清除前读当前剪贴板，仍是我们写入的那条才动；若已是用户后复制的内容则放弃。
+- 可靠性补强：复制时记 `elapsedRealtime`，`MainActivity.onStart` 调 `clearIfExpired()` 补清（进程被冻结时计时协程不会跑完）；`clearPrimaryClip()` 失败保留待清记录以便重试；清除后复读校验，ROM 忽略清除时用空文本 `ClipData` 覆盖。
+- 不在切后台时清除：复制 → 切应用 → 粘贴是主用法，30 秒窗口内必须可用。
+- 输入法历史：输入法自带的「剪贴板」会把内容另存一份，应用无权删除。首次复制弹一次提示（`consumeImeNotice`，独立 `clipboard` 预置），说明系统剪贴板会被清除、输入法历史需自行关闭，并提供「打开输入法设置」。彻底避开剪贴板需 Autofill 或应用内分享，属后续变更。
+- 平台边界：进程被系统杀死后计时消失，剪贴板残留交系统回收；不引入 `AlarmManager`。
 
 ## 列表插入后的滚动
 - `LazyColumn` 用记录 ID 作 key：新条目插到开头时，Lazy 会保持旧首项为锚点，导致新条目被挤到搜索框上方只露半行。
@@ -394,3 +416,4 @@ ui/components/
 - 全新 `vault.db`，无迁移；Demo 的 `shio-demo.db` 与 `demo/` 命名空间不动。
 - 应用启动入口从 Demo 改为 `gate`；Demo 通过设置进入。
 - 现有 `scripts/smoke.sh` / `acceptance.sh` 继续可用；后续可增加 Vault 专用探针。
+
