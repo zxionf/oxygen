@@ -203,3 +203,10 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 
 - vivo 默认输入法是中文拼音：`adb shell input text "net"` 只会进输入法的组合区，不会提交给应用，界面上看不见。要么先 `input keyevent 66`（回车/提交组合），要么换 ASCII 输入法；否则会误判成「搜索框不吃输入」。
 - 验证搜索覆盖度用样例数据里的独有片段最省事：标题（`net`→Netflix）、用户名（`6222`→银行 App）、备注（`recovery`→GitHub）、无结果（`zzzz`）。
+
+## P13 真机验证自动锁定
+
+- 用 `adb shell input keyevent 3` 回桌面模拟切后台，`am start -n <pkg>/<activity>` 回前台；日志里会出现 “Activity not started, its current task has been brought to the front”，属正常。
+- 验证「立即」锁定：先回桌面 2–3 秒再回前台，应停在解锁页；验证「1 分钟」：后台 5 秒回来应仍在列表，后台 65 秒回来应在解锁页。
+- 旋转用 `settings put system user_rotation 1/0`（先 `accelerometer_rotation 0`），手机横过来后 `uiautomator dump` 仍应看到列表内容，证明 `isChangingConfigurations` 分支生效。
+- 解锁页按返回键应直接回到桌面：锁定时 `popUpTo(graph.id){inclusive=true}` 已把列表等全部清掉。

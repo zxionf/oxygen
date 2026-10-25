@@ -152,11 +152,11 @@
 
 ## M17 自动锁定
 
-- [ ] `onStop`/`onStart` 接入，旋转（`isChangingConfigurations`）不锁定
-- [ ] 默认切后台立即锁定
-- [ ] 1/5/15 分钟按时间戳判断
-- [ ] 锁定清空条目与口令状态，导航到解锁页
-- [ ] 验证：后台立即锁、旋转不锁、超时锁
+- [x] `onStop`/`onStart` 接入，旋转（`isChangingConfigurations`）不锁定（真机旋转两次仍在列表）
+- [x] 默认切后台立即锁定（真机：立即模式按 Home 再回来即在解锁页）
+- [x] 1/5/15 分钟按时间戳判断（`AutoLockPolicy` + `AutoLockPolicyTest` 5 例；真机 1 分钟：后台 5s 不锁、65s 锁）
+- [x] 锁定清空条目与口令状态，导航到解锁页（`lockNow` → `destroy` + 清会话 → `lockCount` → 清栈进 unlock）
+- [x] 验证：后台立即锁、旋转不锁、超时锁（真机全部通过；解锁页按返回键退出应用）
 
 ## M18 安全收尾
 

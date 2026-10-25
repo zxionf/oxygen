@@ -264,3 +264,8 @@ Change: 20261023-password-vault
 Context: 自动锁定时长原来只存在设置页的 rememberSaveable 里，进程一死就回默认；同时 M17 需要在 Activity 生命周期里读这个值。
 Decision: 新增 vault/AutoLockPreferences（SharedPreferences 名 session、键 auto_lock_timeout）+ AutoLockTimeout 枚举（立即/1/5/15 分钟，各带毫秒值），沿用外观偏好的「进程内单例 + 快照状态 + 直接读写」模式；设置页改为读写该偏好，不再用局部索引。
 Consequences: 冷启动自动恢复；M17 的锁定时长判断可直接读 AutoLockTimeout.millis；旧值/未知枚举名回退「立即」，不会崩。
+## [54] 2026-10-25 05:09:50 UTC
+Change: 20261023-password-vault
+Context: M17 要让锁定在「手动点锁图标」和「切后台自动锁」两种入口都生效；如果两处各写一遍 destroy + 清栈，很容易漏掉其中一处，且超时判定混着 Android 生命周期不好单测。
+Decision: 新增 vault/AutoLockController 作为唯一锁定发起方（MainActivity.onStart/onStop 调它，列表页锁图标也调 lockNow），超时判定抽成纯函数 AutoLockPolicy.shouldLockAfterBackground 并配 5 个单测；锁定后通过 lockCount 自增通知 AppNavHost 清栈并进 unlock，导航层不再自己调 repository.lock()。
+Consequences: 锁定只有一条代码路径，自动/手动行为必然一致；旋转靠 isChangingConfigurations 排除；「立即」在 onStop 当场锁定，「1/5/15 分钟」在 onStart 比较 elapsedRealtime 差值，短暂切走不打断；超时规则可离线单测。

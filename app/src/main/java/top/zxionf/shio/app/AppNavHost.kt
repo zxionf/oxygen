@@ -2,17 +2,17 @@ package top.zxionf.shio.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import kotlinx.coroutines.launch
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
 import top.zxionf.shio.ui.settings.SettingsScreen
@@ -21,6 +21,7 @@ import top.zxionf.shio.ui.unlock.LockScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
 import top.zxionf.shio.ui.vault.EntryEditorScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
+import top.zxionf.shio.vault.AutoLockController
 import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultPaths
 
@@ -35,6 +36,18 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    // 锁定（手动或自动）已由 AutoLockController 销毁句柄；这里只负责清栈并回到解锁页，
+    // 保证「销毁会话」和「导航」各只有一处实现。
+    val lockCount by AutoLockController.lockCount.collectAsStateWithLifecycle()
+    val initialLockCount = remember { lockCount }
+    LaunchedEffect(lockCount) {
+        if (lockCount == initialLockCount) return@LaunchedEffect
+        navController.navigate(Routes.Unlock) {
+            popUpTo(navController.graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Routes.Gate,
@@ -91,19 +104,9 @@ fun AppNavHost(
         }
 
         composable(Routes.Vault) {
-            val scope = rememberCoroutineScope()
             RequireUnlocked(navController) {
                 VaultListScreen(
-                    onLock = {
-                        // 真锁定：销毁内核句柄（清内存会话），再清空整个回退栈并进解锁页。
-                        scope.launch {
-                            VaultComponent.repository.lock()
-                            navController.navigate(Routes.Unlock) {
-                                popUpTo(navController.graph.id) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                    },
+                    onLock = { AutoLockController.lockNow() },
                     onSettings = { navController.navigate(Routes.Settings) },
                     onCreateEntry = { navController.navigate(Routes.editor()) },
                     onOpenEntry = { entryId -> navController.navigate(Routes.entry(entryId)) },

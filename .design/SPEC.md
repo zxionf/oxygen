@@ -322,3 +322,11 @@ ui/components/
 - 自动锁定：`vault/AutoLockPreferences`（`session` 预置），键 `auto_lock_timeout`，取值来自 `AutoLockTimeout`（`IMMEDIATELY`/`ONE_MINUTE`/`FIVE_MINUTES`/`FIFTEEN_MINUTES`，默认立即）。
 - 两者都是「进程内单例 + Compose 快照状态 + `SharedPreferences` 直接读写」，不引入 DataStore；冷启动由构造时读取恢复，设置页直接读快照状态展示。
 - 未知/旧版本写入的枚举名会被忽略并回退默认值，避免升级后崩溃。
+
+## 自动锁定
+
+- 入口：`vault/AutoLockController`（单例，唯一的锁定发起方）。`MainActivity.onStop` 调 `onActivityStopped(isChangingConfigurations)`，`onStart` 调 `onActivityStarted`；旋转等配置变更在 `onStop` 直接返回，不触发锁定。
+- 判定：`vault/AutoLockPolicy.shouldLockAfterBackground(timeout, backgroundedAt, now)`（纯函数，可单测）。时间源是 `SystemClock.elapsedRealtime` 的差值，不受系统时间调整影响；时间戳倒流按未超时处理。
+- 「立即」：`onStop` 当场锁定（真正进后台才触发，因为旋转被排除）。
+- 「1/5/15 分钟」：`onStop` 只记时间戳，`onStart` 比较差值，超过阈值才锁定；因此短暂切走（如看一眼通知）不打断使用。
+- 锁定动作只有一处：`AutoLockController.lockNow()` → `VaultComponent.repository.lock()`（`destroy` 句柄、清会话）→ `lockCount` 自增；`AppNavHost` 监听 `lockCount` 变化，清空回退栈并导航到 `unlock`。手动锁定（列表页锁图标）同样走 `lockNow()`，不再在导航层重复写一遍销毁逻辑。
