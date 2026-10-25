@@ -330,3 +330,13 @@ ui/components/
 - 「立即」：`onStop` 当场锁定（真正进后台才触发，因为旋转被排除）。
 - 「1/5/15 分钟」：`onStop` 只记时间戳，`onStart` 比较差值，超过阈值才锁定；因此短暂切走（如看一眼通知）不打断使用。
 - 锁定动作只有一处：`AutoLockController.lockNow()` → `VaultComponent.repository.lock()`（`destroy` 句柄、清会话）→ `lockCount` 自增；`AppNavHost` 监听 `lockCount` 变化，清空回退栈并导航到 `unlock`。手动锁定（列表页锁图标）同样走 `lockNow()`，不再在导航层重复写一遍销毁逻辑。
+
+## 安全措施
+
+- 截屏防护：release 构建在 `MainActivity.onCreate` 设置 `WindowManager.LayoutParams.FLAG_SECURE`（真机 `screencap` 为全黑，最近任务预览同被屏蔽）；debug 不设置，便于截图验收。
+- 备份：`allowBackup=false` + `data_extraction_rules.xml` 排除 `root`/`file` 域，云备份与换机迁移都不带走数据库。
+- 日志：全部代码零 `Log.*` / `printStackTrace` / `println`；JNI 层也不打印。条目正文、口令、复制内容不会进入日志或崩溃信息。
+- 剪贴板：复制用户名/密码/备注/连接统一走 `ClipData.newPlainText`，API 33+ 打 `EXTRA_IS_SENSITIVE`（自动清除在后续阶段）。
+- 密码显隐：详情页用 `remember`（非 `rememberSaveable`），离开页面或旋转立即复位为隐藏；锁定销毁回退栈后详情页整个重建。
+- 口令生命周期：`LockScreen` 在 create/unlock 成功后立即清空输入状态；`ShioDatabase.open` 把口令转成 `ByteArray` 后 `finally` 清零；JNI 侧在边界内 `zeroize`。
+- 外链：只放行 `http`/`https` 且有主机名的地址（`VaultUrl`），避免 `javascript:`/`file:`/`intent:` 之类被当作可信跳转。

@@ -210,3 +210,10 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 验证「立即」锁定：先回桌面 2–3 秒再回前台，应停在解锁页；验证「1 分钟」：后台 5 秒回来应仍在列表，后台 65 秒回来应在解锁页。
 - 旋转用 `settings put system user_rotation 1/0`（先 `accelerometer_rotation 0`），手机横过来后 `uiautomator dump` 仍应看到列表内容，证明 `isChangingConfigurations` 分支生效。
 - 解锁页按返回键应直接回到桌面：锁定时 `popUpTo(graph.id){inclusive=true}` 已把列表等全部清掉。
+
+## P14 release 验收与 FLAG_SECURE
+
+- release 包要自己 zipalign + apksigner 签名（debug keystore，口令 `android`），否则 `install` 会被拒。
+- 验证 FLAG_SECURE 生效最直接的办法：`adb exec-out screencap -p` 得到的 PNG 里除了状态栏全黑；`uiautomator dump` 仍能拿到控件树，所以功能验证不受影响。
+- release 首次安装后库是空的（没有 debug 样例播种），可以顺便确认「release 不带样例数据」。
+- `convert ... -format "%[fx:mean]" info:` 可以用平均亮度快速判断截图是黑屏还是真实界面。

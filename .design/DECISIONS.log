@@ -269,3 +269,8 @@ Change: 20261023-password-vault
 Context: M17 要让锁定在「手动点锁图标」和「切后台自动锁」两种入口都生效；如果两处各写一遍 destroy + 清栈，很容易漏掉其中一处，且超时判定混着 Android 生命周期不好单测。
 Decision: 新增 vault/AutoLockController 作为唯一锁定发起方（MainActivity.onStart/onStop 调它，列表页锁图标也调 lockNow），超时判定抽成纯函数 AutoLockPolicy.shouldLockAfterBackground 并配 5 个单测；锁定后通过 lockCount 自增通知 AppNavHost 清栈并进 unlock，导航层不再自己调 repository.lock()。
 Consequences: 锁定只有一条代码路径，自动/手动行为必然一致；旋转靠 isChangingConfigurations 排除；「立即」在 onStop 当场锁定，「1/5/15 分钟」在 onStart 比较 elapsedRealtime 差值，短暂切走不打断；超时规则可离线单测。
+## [55] 2026-10-25 05:22:48 UTC
+Change: 20261023-password-vault
+Context: M18 要求 release 禁止截屏而 debug 保留截图能力；同时要确认口令/条目正文不会经日志或备份泄漏。
+Decision: release（!BuildConfig.DEBUG）在 MainActivity.onCreate 设 FLAG_SECURE，debug 不设；沿用 allowBackup=false 与 data_extraction_rules 全排除；全仓不引入任何日志调用（含 JNI），错误只经 ShioException 上抛；详情页密码显隐用 remember 保证离开即复位。
+Consequences: release 截图/最近任务预览为黑屏，已在真机确认；debug 可正常截图验收；敏感信息只有「剪贴板」这一条外泄路径，已加 EXTRA_IS_SENSITIVE，自动清除留待后续阶段。

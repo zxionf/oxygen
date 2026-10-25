@@ -160,11 +160,11 @@
 
 ## M18 安全收尾
 
-- [ ] release 启用 `FLAG_SECURE`，debug 不启用
-- [ ] 审查日志，确保不含口令、条目正文、复制内容
-- [ ] 复制带敏感标记（自动清除下一阶段）
-- [ ] 离开详情/锁定后密码显示状态复位
-- [ ] `assembleDebug` + `lintDebug` 通过
+- [x] release 启用 `FLAG_SECURE`，debug 不启用（真机 release 截图全黑、debug 正常；release 也不含样例数据）
+- [x] 审查日志，确保不含口令、条目正文、复制内容（全仓零 `Log.*`/`println`/`printStackTrace`，JNI 亦然）
+- [x] 复制带敏感标记（`EXTRA_IS_SENSITIVE`，API 33+；自动清除下一阶段）
+- [x] 离开详情/锁定后密码显示状态复位（`remember` 而非 `rememberSaveable`，真机验证返回再进为掩码）
+- [x] `assembleDebug` + `assembleRelease` + `lintDebug` + `testDebugUnitTest` 通过
 
 ## M19 双设备验收
 
