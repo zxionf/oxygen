@@ -283,3 +283,12 @@ ui/components/
 - 列表：`list`（每页 100、上限 2000）逐条 `get` 取正文，内存中搜索。
 - 线程：仓库只暴露 `suspend` 函数，内部全部经 `ShioDatabase` 的单线程 IO 调度器；同一实例重复开库前先 `destroy`，避免 Android `<db>.lock` 的单写约束。
 - 同步范围：其余同步符号（变更页、快照、轮换、配对）与同步 UI、网络传输不在本阶段，这里只建立同步身份。
+
+### 会话与界面接入
+
+- `vault/VaultComponent.kt`：进程级单例持有唯一的 `VaultRepository`。解锁状态必须跨 Activity 配置变更与导航回退存活（旋转不能把人踢回未解锁），所以不放 ViewModel；锁定（`lock()`）即销毁句柄并清空会话。
+- `LockScreen` 直接接仓库：创建走 `create(path, password)`（内部 `sync_enable` + `format=2` 校验），解锁走 `unlock(path, password)`；成功后清空输入状态并回调 `onSuccess(session)`。
+- 失败文案按 `ShioException.code` 分支并带上常量名与码值，例如口令错误显示 `主口令不正确（INVALID_KEY (-3)）`；`INVALID_ARGUMENT` 表示库已存在、`LOCKED` 表示被其它进程占用、`BUSY` 表示轮换未完成、`CORRUPTED`/`UNSUPPORTED_FORMAT` 单独提示。
+- 锁定：`VaultComponent.repository.lock()` → `destroy` → 清空回退栈 → `unlock`。
+- `AppNavHost` 的 `RequireUnlocked` 守卫：进程被回收后系统恢复导航栈时，受保护页面（`vault`/`entry`/`editor`/`settings`/`appearance`）若发现没有会话，就按 `vault.db` 是否存在重定向到 `unlock`/`create` 并清栈，避免无解锁直接看到内容。
+- 设置 → 关于在 debug 且已解锁时多两行诊断：`存储格式 format=2` 与 `同步身份 <db_id>`；release 不展示。

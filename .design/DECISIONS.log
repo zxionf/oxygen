@@ -239,3 +239,8 @@ Change: 20261023-password-vault
 Context: 内核 DECISIONS[40] 要求 Android 首次建库必须 sync_enable 走 format=2，而本变更范围原本写了「不做多端同步」；两者需要显式取舍。
 Decision: 采用最小对齐：只映射 shio_sync_enable 与 shio_sync_info 两个符号，建库流程 open(create=true) → enableSync → 校验 sync_info.db_id 非空且 stats().format_version == 2，失败则 destroy 并删除 vault.db 与 vault.db.lock；不做同步 UI、配对与网络传输，其余同步符号留待后续同步变更。
 Consequences: 新建的密码库是 format=2 且不可回退，与内核决策一致；JNI 只多两个函数，Kotlin 侧多 enableSync/syncInfo 两个封装；后续同步变更要接的符号已在 SPEC 的「内核 ABI 对齐」表里列明。
+## [49] 2026-10-25 04:01:40 UTC
+Change: 20261023-password-vault
+Context: M12 要把创建/解锁真正接到内核，但会话不能放在某个页面的 remember 或 VaultViewModel（后者绑定列表页回退栈），否则旋转、回退栈销毁都会把解锁状态弄丢；另外进程被回收后系统恢复导航栈会绕过 gate 直接落到 vault。
+Decision: 用进程级单例 vault/VaultComponent 持有唯一 VaultRepository（等价于应用级会话）；LockScreen 直接调用 create/unlock 并按 ShioException 错误码给文案（如「主口令不正确（INVALID_KEY (-3)）」）；锁定先 lock() 再清栈进 unlock；新增 RequireUnlocked 守卫，受保护页面在没有会话时按 vault.db 是否存在重定向到 unlock/create 并清栈。
+Consequences: 解锁状态跨旋转与导航存活，锁定时一并销毁句柄；冷启动与进程回收恢复都必然经过 unlock/create，不会出现无解锁看到内容；debug 下设置→关于多两行诊断（format=2、db_id），release 不展示。

@@ -2,6 +2,8 @@ package top.zxionf.shio.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -10,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
 import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
 import top.zxionf.shio.ui.settings.SettingsScreen
@@ -18,6 +21,7 @@ import top.zxionf.shio.ui.unlock.LockScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
 import top.zxionf.shio.ui.vault.EntryEditorScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
+import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultPaths
 
 /**
@@ -87,19 +91,24 @@ fun AppNavHost(
         }
 
         composable(Routes.Vault) {
-            VaultListScreen(
-                onLock = {
-                    // 锁定必须清空整个回退栈（列表、详情、设置……），解锁页成为新栈底，
-                    // 否则返回键能直接退回已锁定内容。
-                    navController.navigate(Routes.Unlock) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onSettings = { navController.navigate(Routes.Settings) },
-                onCreateEntry = { navController.navigate(Routes.editor()) },
-                onOpenEntry = { entryId -> navController.navigate(Routes.entry(entryId)) },
-            )
+            val scope = rememberCoroutineScope()
+            RequireUnlocked(navController) {
+                VaultListScreen(
+                    onLock = {
+                        // 真锁定：销毁内核句柄（清内存会话），再清空整个回退栈并进解锁页。
+                        scope.launch {
+                            VaultComponent.repository.lock()
+                            navController.navigate(Routes.Unlock) {
+                                popUpTo(navController.graph.id) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onSettings = { navController.navigate(Routes.Settings) },
+                    onCreateEntry = { navController.navigate(Routes.editor()) },
+                    onOpenEntry = { entryId -> navController.navigate(Routes.entry(entryId)) },
+                )
+            }
         }
 
         composable(
@@ -107,11 +116,13 @@ fun AppNavHost(
             arguments = listOf(navArgument(Routes.EntryIdArg) { type = NavType.StringType }),
         ) { backStackEntry ->
             val entryId = backStackEntry.arguments?.getString(Routes.EntryIdArg).orEmpty()
-            EntryDetailScreen(
-                entryId = entryId,
-                onBack = { navController.popBackStack() },
-                onEdit = { id -> navController.navigate(Routes.editor(id)) },
-            )
+            RequireUnlocked(navController) {
+                EntryDetailScreen(
+                    entryId = entryId,
+                    onBack = { navController.popBackStack() },
+                    onEdit = { id -> navController.navigate(Routes.editor(id)) },
+                )
+            }
         }
 
         composable(
@@ -125,28 +136,60 @@ fun AppNavHost(
             ),
         ) { backStackEntry ->
             val entryId = backStackEntry.arguments?.getString(Routes.EditorEntryIdArg)
-            EntryEditorScreen(
-                entryId = entryId,
-                onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() },
-            )
+            RequireUnlocked(navController) {
+                EntryEditorScreen(
+                    entryId = entryId,
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() },
+                )
+            }
         }
 
         composable(Routes.Settings) {
-            SettingsScreen(
-                onBack = { navController.popBackStack() },
-                onAppearance = { navController.navigate(Routes.Appearance) },
-                onDemo = { navController.navigate(Routes.Demo) },
-            )
+            RequireUnlocked(navController) {
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onAppearance = { navController.navigate(Routes.Appearance) },
+                    onDemo = { navController.navigate(Routes.Demo) },
+                )
+            }
         }
 
         composable(Routes.Appearance) {
-            AppearanceScreen(onBack = { navController.popBackStack() })
+            RequireUnlocked(navController) {
+                AppearanceScreen(onBack = { navController.popBackStack() })
+            }
         }
 
         composable(Routes.Demo) {
             // 原型 Demo 必须始终可打开，这里直接复用现有实现。
             DemoScreen(onBack = { navController.popBackStack() })
+        }
+    }
+}
+
+/**
+ * 未解锁守卫：进程被回收后系统按保存状态恢复导航栈时，可能直接落回 `vault`/`entry`/
+ * `settings`，而内核句柄与内存会话已经没了。这里在进入受保护页面时检查会话，
+ * 缺失就按 `vault.db` 是否存在重定向到 `unlock` / `create`，并清空回退栈。
+ *
+ * 锁定流程自己会先清栈再进解锁页，不会与这里冲突。
+ */
+@Composable
+private fun RequireUnlocked(
+    navController: NavHostController,
+    content: @Composable () -> Unit,
+) {
+    val context = LocalContext.current
+    val unlocked = remember { VaultComponent.repository.isUnlocked }
+    if (unlocked) {
+        content()
+        return
+    }
+    LaunchedEffect(navController) {
+        val destination = if (VaultPaths.exists(context)) Routes.Unlock else Routes.Create
+        navController.navigate(destination) {
+            popUpTo(navController.graph.id) { inclusive = true }
         }
     }
 }

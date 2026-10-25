@@ -31,20 +31,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import top.zxionf.shio.kernel.ShioException
 import top.zxionf.shio.ui.components.AppIcons
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.components.AppTextField
 import top.zxionf.shio.ui.theme.ShioTheme
+import top.zxionf.shio.vault.VaultComponent
+import top.zxionf.shio.vault.VaultPaths
+import top.zxionf.shio.vault.VaultRepository
+import top.zxionf.shio.vault.VaultSession
 
 /** 创建 / 解锁两种形态。 */
 enum class LockMode { Create, Unlock }
@@ -52,8 +60,9 @@ enum class LockMode { Create, Unlock }
 /**
  * 创建 / 解锁页（M3E）。
  *
- * 大标题 + 单个 filled 输入框 + 全宽胶囊主按钮；错误显示在内联错误区。
- * M9 之前是假 gate：主口令长度 ≥ 8 且两次一致即可通过，成功后由调用方进入 `vault`。
+ * 大标题 + 单个线框输入框 + 全宽胶囊主按钮；错误显示在内联错误区。
+ * M12 起真正接内核：创建走 `VaultRepository.create`（含 `sync_enable` 与 format=2 校验），
+ * 解锁走 `VaultRepository.unlock`，失败时按 [ShioException] 错误码给出可读提示。
  *
  * [onBack] 为 null 表示当前页是栈底（创建/解锁就是应用入口），不显示返回箭头，
  * 此时系统返回键直接退出应用。
@@ -63,9 +72,12 @@ enum class LockMode { Create, Unlock }
 fun LockScreen(
     mode: LockMode,
     onBack: (() -> Unit)?,
-    onSuccess: () -> Unit,
+    onSuccess: (VaultSession) -> Unit,
     modifier: Modifier = Modifier,
+    repository: VaultRepository = VaultComponent.repository,
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var password by rememberSaveable(mode) { mutableStateOf("") }
     var confirm by rememberSaveable(mode) { mutableStateOf("") }
     var revealed by rememberSaveable(mode) { mutableStateOf(false) }
@@ -73,15 +85,37 @@ fun LockScreen(
     var busy by remember { mutableStateOf(false) }
 
     fun submit() {
-        error = when {
-            password.length < 8 -> "主口令至少 8 个字符"
+        if (busy) return
+        val localError = when {
+            password.length < MIN_PASSWORD_LENGTH -> "主口令至少 $MIN_PASSWORD_LENGTH 个字符"
             mode == LockMode.Create && confirm != password -> "两次输入的主口令不一致"
             else -> null
         }
-        if (error != null) return
+        if (localError != null) {
+            error = localError
+            return
+        }
+        error = null
         busy = true
-        // M9 之前不触碰内核：短暂展示载入态后直接进入密码库；M12 换成真实 create/unlock。
-        onSuccess()
+        val databasePath = VaultPaths.databasePath(context)
+        scope.launch {
+            try {
+                val session = if (mode == LockMode.Create) {
+                    repository.create(databasePath, password)
+                } else {
+                    repository.unlock(databasePath, password)
+                }
+                // 口令用完后立即从界面状态里清掉（JVM 字符串本身无法擦除，已在设计中接受）。
+                password = ""
+                confirm = ""
+                revealed = false
+                onSuccess(session)
+            } catch (failure: Throwable) {
+                error = describeFailure(failure)
+            } finally {
+                busy = false
+            }
+        }
     }
 
     Scaffold(
@@ -236,4 +270,27 @@ private fun UnlockPreview() {
     ShioTheme {
         LockScreen(mode = LockMode.Unlock, onBack = {}, onSuccess = {})
     }
+}
+
+/** 主口令最短长度（仅界面拦截；内核不限制长度）。 */
+private const val MIN_PASSWORD_LENGTH = 8
+
+/**
+ * 把内核异常翻译成界面文案；错误码写进括号，方便真机对照 `ShioException`。
+ */
+private fun describeFailure(failure: Throwable): String = when (failure) {
+    is ShioException -> when (failure.code) {
+        ShioException.INVALID_KEY -> "主口令不正确（INVALID_KEY (${failure.code})）"
+        ShioException.NOT_FOUND -> "找不到密码库（NOT_FOUND (${failure.code})）"
+        ShioException.INVALID_ARGUMENT -> "密码库已存在，请重新启动（INVALID_ARGUMENT (${failure.code})）"
+        ShioException.LOCKED -> "密码库正在被其它进程使用（LOCKED (${failure.code})）"
+        ShioException.BUSY -> "上次密钥轮换未完成（BUSY (${failure.code})）"
+        ShioException.CORRUPTED -> "密码库文件损坏（CORRUPTED (${failure.code})）"
+        ShioException.UNSUPPORTED_FORMAT -> "存储格式不受支持（UNSUPPORTED_FORMAT (${failure.code})）"
+        ShioException.READ_ONLY -> "数据库为只读（READ_ONLY (${failure.code})）"
+        ShioException.IO -> "磁盘读写失败（IO (${failure.code})）"
+        ShioException.DATABASE -> "数据库错误（DATABASE (${failure.code})）"
+        else -> "创建/解锁失败（错误码 ${failure.code}）"
+    }
+    else -> failure.message ?: "未知错误"
 }

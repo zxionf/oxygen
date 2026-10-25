@@ -36,6 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import top.zxionf.shio.BuildConfig
 import top.zxionf.shio.kernel.KernelInfo
+import top.zxionf.shio.vault.VaultComponent
+import top.zxionf.shio.vault.VaultPaths
 import top.zxionf.shio.ui.components.AppIcons
 import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppIcon
@@ -61,7 +63,19 @@ fun SettingsScreen(
     var autoLockIndex by rememberSaveable { mutableIntStateOf(0) }
     var autoLockDialogVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val databasePath = remember(context) { context.filesDir.resolve("vault.db").absolutePath }
+    val databasePath = remember(context) { VaultPaths.databasePath(context) }
+    // 解锁后的会话诊断：debug 才展示格式版本与同步身份，release 界面不暴露库内部标识。
+    val session = VaultComponent.repository.session
+    val debugDiagnostics = remember(session) {
+        if (!BuildConfig.DEBUG || session == null) {
+            emptyList()
+        } else {
+            listOf(
+                "存储格式" to "format=${session.formatVersion}",
+                "同步身份" to session.dbId.ifEmpty { "未启用" },
+            )
+        }
+    }
 
     // 关于：应用版本、内核版本与 ABI、运行环境、数据库路径。
     // 内核版本/ABI 版本来自运行时 shio_version()/shio_abi_version()；提交号只是产物溯源。
@@ -86,6 +100,7 @@ fun SettingsScreen(
             "内核提交" to kernelCommit,
             "设备架构" to deviceAbi,
             "系统" to system,
+        ) + debugDiagnostics + listOf(
             "数据库" to databasePath,
         )
     }
