@@ -248,3 +248,38 @@ ui/components/
 - 创建/解锁页在无上一级时（`previousBackStackEntry == null`）不显示返回箭头：`LockScreen(onBack = null)`，避免出现点了没反应的死按钮。
 - 详情 → 编辑保存后回退一级；删除后 `popBackStack()` 回列表；编辑器有未保存修改时返回先弹「放弃修改？」。
 - 旋转：列表搜索词在 `VaultViewModel`（ViewModel 跨配置变更存活）、编辑/创建/解锁表单与生成器参数用 `rememberSaveable`、外观选择写 `SharedPreferences`；详情页密码显隐用 `remember`，旋转即复位为隐藏。
+
+## 内核 ABI 对齐
+
+对照基线：hydrogen `5f3e8e3`（`shio 0.2.0`，`SHIO_ABI_VERSION = 1`）。`app/src/main/cpp/include/shio.h` 与内核同名文件逐字节一致（由 `scripts/sync-shio.sh` 同步并校验）。
+
+已映射的符号（`NativeShio` / `shio_jni.cpp`）：`shio_abi_version`、`shio_version`、`shio_open`、`shio_close`、`shio_kernel_destroy`、`shio_insert`、`shio_put`、`shio_get`、`shio_delete`、`shio_list`、`shio_batch`、`shio_stats`、`shio_sync_enable`、`shio_sync_info`、`shio_last_error`、`shio_free`（JNI 内部调用）。
+
+**有意不映射**的符号及原因：
+
+| 符号 | 原因 |
+|---|---|
+| `shio_change_password`、`shio_rotate_data_key` | MVP 不做改主口令与密钥轮换（内核已支持，留待后续变更） |
+| `shio_backup`、`shio_restore` | MVP 不做导入导出与备份恢复（存储维护 S2 属于后续计划） |
+| `shio_flush` | 目前所有写入以 `shio_batch`/单条写为单位提交，`close`/`destroy` 前无需额外屏障；后续需显式落盘再补 |
+| 其余同步符号（`sync_changes`/`apply*`/`offers`/`snapshot*`/`rotation`/`migrate*`/`pairing*`、`shio_open_with_pairing`） | 本阶段只做「建库时启用同步」，不做同步 UI、配对与网络传输；**后续同步变更再接** |
+
+错误码：`ShioException` 覆盖 `shio.h` 的全部 23 个 `SHIO_*` 常量（`0` 与 `-1`…`-23`），新增错误码需同步补常量。
+
+运行环境相关事实（来自内核文档，应用侧需遵守）：
+
+- `.so` 按 API 24 基线构建（`.note.android.ident` = 24），应用 `minSdk = 29` 可正常加载；不要求两者一致。
+- Android 上 redb 的字节范围锁不可用，内核在数据库旁维护 `<db>.lock` 并用 `flock` 加锁：写句柄独占、只读句柄共享，冲突返回 `SHIO_LOCKED (-8)`。**因此同一进程不要同时持有两个写句柄**（`ShioDatabase.open` 会先销毁旧句柄），也不要整体删除/搬走数据库目录而不关闭句柄；锁文件可重建，不必清理。
+- 记录格式：`format=1` 为普通库，`format=2` 为启用同步后的库（不可退回）；`data_version` 由调用方解释，内核不强制。**密码库首次建库后即 `format=2`**（见下节）。
+- `shio_open` 的 `options_json` 只接受 `create`、`read_only`、`max_value_size`、`cache_size`，未知字段会被拒绝；`create` 与 `read_only` 不能同时为真。
+
+## 密码库数据层
+
+- 代码：`vault/VaultPaths.kt`（`filesDir/vault.db` 定位与存在性）、`vault/VaultRepository.kt`（建库/解锁/锁定 + `vault/entries` 读写）、`vault/VaultEntryCodec.kt`（`org.json` 编解码）。
+- 集合：命名空间 `vault`、集合 `entries`；记录值只放业务字段（`title`/`username`/`password`/`url`/`notes`），ID 与时间戳取内核 meta。
+- 建库顺序（内核 `.design/api.md` + DECISIONS[40]）：`open(create=true)` → `sync_enable` → 校验 `sync_info.db_id` 非空且 `stats().format_version == 2`；任一步失败就 `destroy` 并删除 `vault.db` 与 `vault.db.lock`，不留 format=1 半成品。
+- 解锁：显式 `{"create":false}`；`sync_info` 取不到（`SHIO_SYNC_DISABLED`，即 format=1 旧库）时仍允许解锁，只是没有同步身份。
+- 锁定：`ShioDatabase.destroy()` 并清空 `VaultSession`；界面层沿用「锁定 → `unlock`，清空回退栈」路径。
+- 列表：`list`（每页 100、上限 2000）逐条 `get` 取正文，内存中搜索。
+- 线程：仓库只暴露 `suspend` 函数，内部全部经 `ShioDatabase` 的单线程 IO 调度器；同一实例重复开库前先 `destroy`，避免 Android `<db>.lock` 的单写约束。
+- 同步范围：其余同步符号（变更页、快照、轮换、配对）与同步 UI、网络传输不在本阶段，这里只建立同步身份。

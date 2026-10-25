@@ -36,5 +36,6 @@ class ShioException @JvmOverloads constructor(
         const val ROTATION_REQUIRED = -20
         const val PAIRING_EXPIRED = -21
         const val PAIRING_INVALID = -22
+        const val CANCELLED = -23
     }
 }

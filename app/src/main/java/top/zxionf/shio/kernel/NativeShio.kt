@@ -80,5 +80,14 @@ internal object NativeShio {
 
     external fun stats(handle: Long): ByteArray
 
+    /**
+     * 启用同步，返回 `sync_info` JSON；首次建库必须紧接着调用。
+     * [deviceId] 为 16 字节原始设备 ID；为 null 时内核生成随机设备 ID。
+     */
+    external fun syncEnable(handle: Long, deviceId: ByteArray?): ByteArray
+
+    /** 同步摘要 JSON；未启用同步返回 `SHIO_SYNC_DISABLED`。 */
+    external fun syncInfo(handle: Long): ByteArray
+
     external fun lastError(handle: Long): String
 }

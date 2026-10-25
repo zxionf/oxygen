@@ -104,15 +104,17 @@
 
 ## M11 数据模型与仓库
 
-- [ ] `VaultEntry` 数据类与 JSON 编解码
-- [ ] `VaultRepository`：create / unlock / lock 封装
-- [ ] 创建显式 `{"create":true}`，解锁显式 `{"create":false}`
-- [ ] gate 改为按 `vault.db` 是否存在分流
-- [ ] 构建通过
+- [x] `VaultEntry` 数据类与 JSON 编解码（`VaultEntryCodec`，`org.json`）
+- [x] `VaultRepository`：create / unlock / lock 封装（含 `entries`/`insert`/`update`/`delete` 门面）
+- [x] 创建显式 `{"create":true}`，解锁显式 `{"create":false}`
+- [x] gate 改为按 `vault.db` 是否存在分流（`VaultPaths.exists`）
+- [x] 映射 `shio_sync_enable` / `shio_sync_info`（JNI + `ShioDatabase.enableSync/syncInfo`）
+- [x] 建库后立即启用同步并校验 `sync_info.db_id` 与 `format_version == 2`，失败则删库不留半成品
+- [x] 构建通过（`assembleDebug` / `assembleRelease` / `lintDebug` / `testDebugUnitTest`；release APK 内含两个 sync 符号）
 
 ## M12 真实创建 / 解锁 / 锁定
 
-- [ ] 创建页接入仓库，成功后进入列表
+- [ ] 创建页接入仓库（`create` 内含 `sync_enable` 校验），成功后进入列表，并展示 `format=2`/`db_id` 诊断信息（仅在 debug）
 - [ ] 解锁页接入仓库，错误口令显示 `INVALID_KEY (-3)`
 - [ ] 锁定调用 `destroy`，清空内存状态并进入解锁页
 - [ ] 构建并在模拟器完成 create → lock → unlock 冒烟

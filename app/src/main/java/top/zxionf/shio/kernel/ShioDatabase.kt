@@ -165,6 +165,22 @@ class ShioDatabase {
     }
 
     /**
+     * 启用多端同步并把库升级到 `format=2`（不可回退），返回 `sync_info` JSON。
+     *
+     * 只用于**首次建库**：内核要求新库 open 后立即调用并校验结果，
+     * 否则会留下 format=1 的半成品（见 `.design/api.md`）。
+     */
+    suspend fun enableSync(deviceId: ByteArray? = null): String = withContext(dispatcher) {
+        require(deviceId == null || deviceId.size == 16) { "device id must be 16 bytes" }
+        NativeShio.syncEnable(requireHandle(), deviceId).decodeToString()
+    }
+
+    /** 同步摘要 JSON；未启用同步抛 [ShioException.SYNC_DISABLED]。 */
+    suspend fun syncInfo(): String = withContext(dispatcher) {
+        NativeShio.syncInfo(requireHandle()).decodeToString()
+    }
+
+    /**
      * 当前 worker 线程最近一次内核错误；仅用于排查，异常消息里已包含该内容。
      * 由于调度器不保证同一线程，返回值可能为空。
      */

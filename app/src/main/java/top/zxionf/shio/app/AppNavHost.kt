@@ -3,6 +3,7 @@ package top.zxionf.shio.app
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,6 +18,7 @@ import top.zxionf.shio.ui.unlock.LockScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
 import top.zxionf.shio.ui.vault.EntryEditorScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
+import top.zxionf.shio.vault.VaultPaths
 
 /**
  * 应用的唯一导航图。
@@ -35,16 +37,18 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable(Routes.Gate) {
-            // M1 只有骨架：gate 暂时固定进入密码库，并把 gate 移出回退栈。
+            // 按 vault.db 是否存在分流：有库进 unlock，没有进 create；gate 自身立即移出回退栈。
+            val context = LocalContext.current
             LaunchedEffect(navController) {
-                navController.navigate(Routes.Vault) {
+                val destination = if (VaultPaths.exists(context)) Routes.Unlock else Routes.Create
+                navController.navigate(destination) {
                     popUpTo(Routes.Gate) { inclusive = true }
                 }
             }
             PlaceholderScreen(
                 title = "启动分流",
                 route = Routes.Gate,
-                description = "检查 vault.db 是否存在：存在进解锁页，否则进创建页。当前固定进入密码库。",
+                description = "检查 vault.db 是否存在：存在进解锁页，否则进创建页。",
             )
         }
 

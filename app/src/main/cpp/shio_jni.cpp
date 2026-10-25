@@ -725,6 +725,72 @@ Java_top_zxionf_shio_kernel_NativeShio_stats(JNIEnv* env, jobject /*self*/, jlon
     return copy_and_free(env, output, output_length);
 }
 
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_top_zxionf_shio_kernel_NativeShio_syncEnable(JNIEnv* env, jobject /*self*/, jlong id,
+                                                  jbyteArray device_id) {
+    auto handle = acquire(id);
+    if (handle == nullptr) {
+        throw_closed(env);
+        return nullptr;
+    }
+    std::vector<std::uint8_t> device_bytes;
+    if (device_id != nullptr && !get_bytes(env, device_id, &device_bytes)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "device id is invalid");
+        return nullptr;
+    }
+    // 内核按固定 16 字节读取 device_id（DeviceId::from_bytes），不传长度。
+    if (device_id != nullptr && device_bytes.size() != 16) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "device id must be 16 bytes");
+        return nullptr;
+    }
+    const bool has_device = device_id != nullptr;
+
+    std::lock_guard<std::mutex> lock(handle->mutex);
+    if (handle->destroyed) {
+        throw_closed(env);
+        return nullptr;
+    }
+
+    std::uint8_t* output = nullptr;
+    std::size_t output_length = 0;
+    const std::int32_t rc = shio_sync_enable(
+        handle->kernel, has_device ? device_bytes.data() : nullptr, &output, &output_length);
+    if (rc != SHIO_OK) {
+        if (output != nullptr) {
+            shio_free(output, output_length);
+        }
+        throw_kernel_error(env, rc);
+        return nullptr;
+    }
+    return copy_and_free(env, output, output_length);
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_top_zxionf_shio_kernel_NativeShio_syncInfo(JNIEnv* env, jobject /*self*/, jlong id) {
+    auto handle = acquire(id);
+    if (handle == nullptr) {
+        throw_closed(env);
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(handle->mutex);
+    if (handle->destroyed) {
+        throw_closed(env);
+        return nullptr;
+    }
+
+    std::uint8_t* output = nullptr;
+    std::size_t output_length = 0;
+    const std::int32_t rc = shio_sync_info(handle->kernel, &output, &output_length);
+    if (rc != SHIO_OK) {
+        if (output != nullptr) {
+            shio_free(output, output_length);
+        }
+        throw_kernel_error(env, rc);
+        return nullptr;
+    }
+    return copy_and_free(env, output, output_length);
+}
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_top_zxionf_shio_kernel_NativeShio_lastError(JNIEnv* env, jobject /*self*/, jlong /*id*/) {
     // shio_last_error 是线程局部的，不需要内核句柄。

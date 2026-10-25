@@ -190,3 +190,11 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 2026-10-25 踩过：只改了脚本和文档，忘了 `SHIO_KERNEL_COMMIT`，设置页「内核提交」还显示旧哈希。现在两个同步脚本在结尾用 awk 把 `SHIO_KERNEL_COMMIT` 下一行的 40 位哈希改写成 `PINNED_COMMIT`，跟着脚本走就不会漏。
 - awk 正则别写 `"[0-9a-f]{40}"`：Kotlin 里是 `"\"<hash>\""`，哈希后面紧跟的是反斜杠，带引号的模式匹配不到；直接 `gsub(/[0-9a-f]{40}/, commit)`，并用「上一行是 SHIO_KERNEL_COMMIT」限定作用域。
 - 内核版本查询用 `shio_version()`（返回编译期包版本，如 `0.2.0`），ABI 版本仍用 `shio_abi_version()`；两者都不需要打开数据库，JNI 层直接 `NewStringUTF` 复制静态指针即可。
+
+## P11 跨仓库 ABI 审计（hydrogen 5f3e8e3）
+
+- 审计方式：`diff app/src/main/cpp/include/shio.h ../hydrogen/crates/shio-ffi/include/shio.h`（必须一致）、`llvm-readelf --dyn-syms` 对照 `Java_..._NativeShio_*` 导出、头文件 `SHIO_*` 常量对照 `ShioException`。
+- 2026-10-25 查到：`SHIO_CANCELLED (-23)` 漏了（内核在存储维护 S1 新增），已补。
+- 内核 Android 侧的新事实：redb 字节范围锁在 Android 不可用，改由 facade 在库旁维护 `<db>.lock` + `flock`（写独占/读共享），冲突是 `SHIO_LOCKED`；因此同进程只能有一个写句柄，备份/清理不能在持有期间删目录。
+- 内核决策要求「Android 首次建库必须 `sync_enable` 走 format=2」（hydrogen DECISIONS [40]），与本仓库 MVP「不做同步」的范围存在冲突，建库流程（M11/M12）开工前必须先定。
+- 内核 `.so` 按 API 24 基线链接，应用 minSdk 29，两者不必一致；`shio_open` 的 options 只认 `create`/`read_only`/`max_value_size`/`cache_size`。

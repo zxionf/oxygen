@@ -19,8 +19,14 @@ MVP 覆盖：
 - 多密码库
 - 分类、标签、收藏（下一阶段）
 - 剪贴板自动清除（下一阶段；MVP 只做复制与敏感标记）
-- 生物识别、Autofill、TOTP、导入导出、多端同步
+- 生物识别、Autofill、TOTP、导入导出
 - 改主口令（内核支持，JNI 未暴露）
+
+**多端同步：MVP 不做同步 UI、配对与网络传输，但首次建库按内核要求启用同步**
+
+- 内核 `DECISIONS[40]` 要求 Android 首次真实建库必须调用 `sync_enable` 并校验 `sync_info`，库因此是 `format=2`（不可回退），不采用先建 `format=1` 再升级的路径。
+- 因此 M11 只映射 `shio_sync_enable` 与 `shio_sync_info` 两个符号，建库时调用并校验；其余 20 个同步符号、配对文本与全部网络能力留到后续同步变更。
+- 现状与待办写在 `SPEC.md` 的「内核 ABI 对齐」与「密码库数据层」两节。
 
 现有 `demo/` 与 `shio-demo.db` 保留，在设置中提供“原型 Demo”入口。
 
@@ -137,10 +143,11 @@ MVP 覆盖：
 
 - `type` 预留为 `login`，分类 UI 下一阶段再启用。
 - 创建/更新时间与删除标记使用内核 meta。
-- 解锁后 `list` + 逐条 `get` 载入内存（上限 1000 条），搜索在内存中做。
+- 解锁后 `list` + 逐条 `get` 载入内存（上限 2000 条、按 100 条分页），搜索在内存中做。
 - 搜索字段：标题、用户名、网址、备注。
 - 新建用 `insert`，编辑用 `put`，删除用 `delete`。
-- 创建时显式 `{"create":true}`；解锁时显式 `{"create":false}`，避免误建库。
+- 创建时显式 `{"create":true}`，成功后立即 `sync_enable` 并校验 `format_version == 2`；解锁时显式 `{"create":false}`，避免误建库。
+- 编码/解码：`VaultEntryCodec`（`org.json`），记录值只放业务字段，ID 来自内核 meta。
 
 ## 会话与安全
 

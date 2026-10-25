@@ -229,3 +229,13 @@ Change: 20261023-password-vault
 Context: M10 之前锁定只是 navigate 到 unlock，回退栈里还留着 vault/详情/设置，按返回键能直接退回已锁定的内容；同时解锁页一直显示返回箭头，栈底时点了没反应。
 Decision: 锁定改为 navigate(unlock) 且 popUpTo(navController.graph.id){inclusive=true} + launchSingleTop，让解锁页成为唯一目的地；LockScreen 的 onBack 改为可空，调用方在 previousBackStackEntry 为空时传 null，顶栏不渲染返回箭头。
 Consequences: 解锁页的返回语义统一为「退出应用」，无法绕过锁定回到列表；解锁成功仍 popUpTo(unlock, inclusive) 让 vault 成为新栈底，回退栈任意时刻最深两层（unlock → vault）。
+## [47] 2026-10-25 03:04:30 UTC
+Change: 20261023-password-vault
+Context: 内核更新到 5f3e8e3 后对照其文档做了一次 ABI 对齐审计：头文件已一致、shio_version 已接，但 ShioException 缺 SHIO_CANCELLED(-23)，且内核侧有 20 多个新符号（sync/backup/change_password/flush）在应用侧没有映射，也没有书面说明哪些是有意不接。
+Decision: 补齐 ShioException.CANCELLED = -23，使其覆盖 shio.h 全部错误码；在 SPEC 新增「内核 ABI 对齐」章节，列出现有映射、有意不映射的符号及原因（改口令/轮换、备份恢复、flush、同步），并记录 .lock 语义、API 24 基线、format=1/2 与 open options 约束。
+Consequences: 跨仓库接口差异变成可审计清单：内核再加符号时先看这张表决定接不接；未知错误码不会再落成「未知错误」；.lock 与单写句柄的约束在接入真实数据层前已写明。
+## [48] 2026-10-25 03:19:10 UTC
+Change: 20261023-password-vault
+Context: 内核 DECISIONS[40] 要求 Android 首次建库必须 sync_enable 走 format=2，而本变更范围原本写了「不做多端同步」；两者需要显式取舍。
+Decision: 采用最小对齐：只映射 shio_sync_enable 与 shio_sync_info 两个符号，建库流程 open(create=true) → enableSync → 校验 sync_info.db_id 非空且 stats().format_version == 2，失败则 destroy 并删除 vault.db 与 vault.db.lock；不做同步 UI、配对与网络传输，其余同步符号留待后续同步变更。
+Consequences: 新建的密码库是 format=2 且不可回退，与内核决策一致；JNI 只多两个函数，Kotlin 侧多 enableSync/syncInfo 两个封装；后续同步变更要接的符号已在 SPEC 的「内核 ABI 对齐」表里列明。
