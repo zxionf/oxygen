@@ -340,3 +340,8 @@ ui/components/
 - 密码显隐：详情页用 `remember`（非 `rememberSaveable`），离开页面或旋转立即复位为隐藏；锁定销毁回退栈后详情页整个重建。
 - 口令生命周期：`LockScreen` 在 create/unlock 成功后立即清空输入状态；`ShioDatabase.open` 把口令转成 `ByteArray` 后 `finally` 清零；JNI 侧在边界内 `zeroize`。
 - 外链：只放行 `http`/`https` 且有主机名的地址（`VaultUrl`），避免 `javascript:`/`file:`/`intent:` 之类被当作可信跳转。
+
+## 列表插入后的滚动
+
+- `LazyColumn` 用记录 ID 作 key：新条目插到开头时，Lazy 会保持旧首项为锚点，导致新条目被挤到搜索框上方只露半行。
+- 处理：`VaultListScreen` 记录上一次条目数，条目数增加且当前可见位置在前两项内时 `scrollToItem(0)`；用户已向下翻（`firstVisibleItemIndex > 1`）则不打扰当前位置。

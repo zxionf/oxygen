@@ -274,3 +274,8 @@ Change: 20261023-password-vault
 Context: M18 要求 release 禁止截屏而 debug 保留截图能力；同时要确认口令/条目正文不会经日志或备份泄漏。
 Decision: release（!BuildConfig.DEBUG）在 MainActivity.onCreate 设 FLAG_SECURE，debug 不设；沿用 allowBackup=false 与 data_extraction_rules 全排除；全仓不引入任何日志调用（含 JNI），错误只经 ShioException 上抛；详情页密码显隐用 remember 保证离开即复位。
 Consequences: release 截图/最近任务预览为黑屏，已在真机确认；debug 可正常截图验收；敏感信息只有「剪贴板」这一条外泄路径，已加 EXTRA_IS_SENSITIVE，自动清除留待后续阶段。
+## [56] 2026-10-25 05:52:17 UTC
+Change: 20261023-password-vault
+Context: 验收时发现保存新条目后回到列表，新条目只露出半行被搜索框压住（LazyColumn 用 ID 作 key，插入开头时保持旧首项为锚点）。
+Decision: 在 VaultListScreen 记录上一次条目数，条目数增加且 firstVisibleItemIndex <= 1 时 scrollToItem(0)；已经向下翻的用户不受影响。
+Consequences: 新建条目保存后立刻完整可见；搜索过滤导致的数量变化不会触发滚动（只有数量增加才判断）；代价是新增条目时若用户刚好在第 2 项会跳回顶部。

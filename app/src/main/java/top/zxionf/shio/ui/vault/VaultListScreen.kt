@@ -34,10 +34,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -115,6 +118,18 @@ private fun VaultListContent(
         derivedStateOf {
             listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 120
         }
+    }
+
+    // LazyColumn 用记录 ID 做 key，新条目插到开头时会把旧的首项当锚点，导致新条目被挤到
+    // 搜索框上方。列表本来就在顶部（前两项内）时滚回顶，让刚保存的条目完整可见；
+    // 用户已经往下翻时不打扰。
+    var previousEntryCount by remember { mutableIntStateOf(state.entries.size) }
+    LaunchedEffect(state.entries.size) {
+        val count = state.entries.size
+        if (count > previousEntryCount && listState.firstVisibleItemIndex <= 1) {
+            listState.scrollToItem(0)
+        }
+        previousEntryCount = count
     }
 
     Scaffold(
