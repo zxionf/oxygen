@@ -75,7 +75,7 @@ app/src/main/
 │   ├── demo/
 │   │   ├── DemoScreen.kt        # 原型 Demo 单页
 │   │   └── DemoViewModel.kt     # 状态与操作编排
-│   ├── vault/                   # VaultEntry、FakeVaultStore、VaultViewModel
+│   ├── vault/                   # VaultEntry、VaultRepository、VaultViewModel、VaultUrl
 │   ├── ui/
 │   │   ├── vault/               # 列表、详情、编辑器
 │   │   ├── unlock/              # 创建 / 解锁
@@ -307,3 +307,11 @@ ui/components/
 - 复制：`ClipData.newPlainText` 写入系统剪贴板，API 33+ 加 `ClipDescription.EXTRA_IS_SENSITIVE`，避免剪贴板浮层与输入法联想展示明文；复制成功用 Snackbar 提示。
 - 外链：`vault/VaultUrl.isHttpUrl` 只放行 `http`/`https` 且带主机名的地址（`javascript:`/`file:`/`intent:`/无 scheme 一律拒绝），通过 `ACTION_VIEW` 交给系统；无主机的条目直接不显示「在浏览器打开」按钮。
 - 删除：`AlertDialog` 确认 → `VaultRepository.delete`（内核 `delete`）→ 成功后 `onBack()`；列表靠 resume 刷新，不再手动同步内存。
+
+### 编辑器（真实数据）
+
+- `ui/vault/EntryEditorViewModel`：编辑时 `bind` 读原值（`repository.entry`），`save` 时新建走 `insert`、编辑走 `put`；成功后置 `saved`，页面负责 `onBack`。
+- 字段状态仍在页面（`rememberSaveable`，旋转不丢）；只有原值加载完成后才组合编辑主体，避免"先按空值渲染再被覆盖"。
+- 校验：标题与密码必填（空值行显示「必填」+ Snackbar 提示）；有未保存修改时返回先弹「放弃修改？」。
+- 保存后回退一级；列表与详情都靠 resume 重读内核数据，不做本地缓存同步。
+- 原值读取失败（条目被删/库已锁）显示错误态（重试 / 返回），不留可编辑的空壳。

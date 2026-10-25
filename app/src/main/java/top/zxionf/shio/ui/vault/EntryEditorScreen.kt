@@ -28,6 +28,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
@@ -70,12 +72,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import top.zxionf.shio.ui.components.AppIcons
 import top.zxionf.shio.ui.components.AppTextField
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ListStackShapes
-import top.zxionf.shio.vault.FakeVaultStore
 import top.zxionf.shio.vault.VaultEntry
 
 /**
@@ -87,17 +90,84 @@ import top.zxionf.shio.vault.VaultEntry
  * 形状、排版、动效全部来自全局 M3E 主题（`MaterialTheme.motionScheme`），
  * 页面不再自带配色或弹簧参数。
  *
- * 数据：M6 仍用 [FakeVaultStore]（内存，debug 构建播样例数据）；M11 起换成内核仓库。
+ * 数据：[EntryEditorViewModel] 负责按 ID 读原值与写回内核（新建 `insert` / 编辑 `put`）；
+ * 字段编辑状态留在本页的 `rememberSaveable`，旋转不丢。
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EntryEditorScreen(
     entryId: String?,
     onBack: () -> Unit,
     onSaved: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: EntryEditorViewModel = viewModel(),
 ) {
-    val initial = remember(entryId) { entryId?.let { FakeVaultStore.find(it) } }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(entryId) { viewModel.load(entryId) }
+    LaunchedEffect(state.saved) { if (state.saved) onSaved() }
+    LaunchedEffect(state.errorMessage) {
+        val message = state.errorMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message)
+    }
+
+    when {
+        state.isLoading -> Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            LoadingIndicator()
+        }
+
+        state.errorMessage != null && state.initial == null -> Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            AppIcon(
+                icon = AppIcons.Info,
+                contentDescription = null,
+                size = 48.dp,
+                tint = MaterialTheme.colorScheme.outline,
+            )
+            Text(
+                text = state.errorMessage.orEmpty(),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+            TextButton(onClick = { viewModel.load(entryId) }, modifier = Modifier.padding(top = 8.dp)) {
+                Text("重试")
+            }
+            TextButton(onClick = onBack) { Text("返回") }
+        }
+
+        else -> EditorBody(
+            entryId = entryId,
+            initial = state.initial,
+            isSaving = state.isSaving,
+            onBack = onBack,
+            onSave = viewModel::save,
+            snackbarHostState = snackbarHostState,
+            modifier = modifier,
+        )
+    }
+}
+
+/** 编辑器主体：字段状态 + 顶栏 + 卡片列表 + 字段 sheet。 */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditorBody(
+    entryId: String?,
+    initial: VaultEntry?,
+    isSaving: Boolean,
+    onBack: () -> Unit,
+    onSave: (VaultEntry) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+) {
     val initialTitle = initial?.title.orEmpty()
     val initialUsername = initial?.username.orEmpty()
     val initialPassword = initial?.password.orEmpty()
@@ -113,7 +183,6 @@ fun EntryEditorScreen(
     var editingField by rememberSaveable(entryId) { mutableStateOf<EditorField?>(null) }
     var discardDialogVisible by remember { mutableStateOf(false) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     val dirty = title != initialTitle ||
@@ -130,6 +199,7 @@ fun EntryEditorScreen(
     }
 
     fun save() {
+        if (isSaving) return
         if (titleMissing || passwordMissing) {
             showErrors = true
             val message = when {
@@ -140,9 +210,9 @@ fun EntryEditorScreen(
             scope.launch { snackbarHostState.showSnackbar(message) }
             return
         }
-        FakeVaultStore.upsert(
+        onSave(
             VaultEntry(
-                id = initial?.id ?: FakeVaultStore.newId(),
+                id = initial?.id.orEmpty(),
                 title = title.trim(),
                 username = username.trim(),
                 password = password,
@@ -150,7 +220,6 @@ fun EntryEditorScreen(
                 notes = notes.trim(),
             ),
         )
-        onSaved()
     }
 
     BackHandler(onBack = ::requestBack)

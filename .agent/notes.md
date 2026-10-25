@@ -105,7 +105,7 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - `compileSdk` / `targetSdk` 37，`minSdk` 29；Compose BOM 2026.09.00，material3 1.5.0-beta02，navigation 2.10.2，activity 1.13.0，lifecycle 2.11.0，core-ktx 1.19.1。
 - NDK `29.0.14206865`；CMake `3.22.1+`（使用系统 4.4.4）。
 - 图标为 `material-icons-extended`（`AppIcons` / `AppIcon`），不再使用 Material Symbols Rounded 字体；release 开启 R8，JNI 入口由 `proguard-rules.pro` 保留。
-- 密码库当前仍是 `FakeVaultStore`；M11 起接入 `vault.db`。
+- 密码库已接 `vault.db`：列表/详情/编辑器全部走 `VaultRepository`；debug 解锁后若库为空会用 `SampleVaultEntries` 播种。
 - 崩溃检查：`adb logcat -d -s AndroidRuntime:E '*:S'`。
 
 ## P4 设备验收命令（Linux）

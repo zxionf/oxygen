@@ -254,3 +254,8 @@ Change: 20261023-password-vault
 Context: 详情页要接真实数据、剪贴板敏感标记与外链，同时不能把校验规则埋进 Composable（不可单测）；另外原来详情从内存假仓库取数据，编辑返回后不会刷新。
 Decision: 新增 EntryDetailViewModel（按 ID 读 + resume 重读 + 删除）；剪贴板统一走 copySensitiveText（ClipData + API 33+ EXTRA_IS_SENSITIVE）；外链白名单抽成纯 Kotlin 的 vault/VaultUrl.isHttpUrl（java.net.URI，不用 android.net.Uri）并配单元测试；无合法网址时不显示「在浏览器打开」。
 Consequences: 详情页数据与列表同源（vault/entries），删除后返回列表自动刷新；URL 规则可被 VaultUrlTest 覆盖（3 组 11 个断言），不依赖设备；FakeVaultStore 只剩编辑器在用，M15 一并删除。
+## [52] 2026-10-25 04:48:57 UTC
+Change: 20261023-password-vault
+Context: 编辑器原来从内存假仓库读写，M15 要换成内核 insert/put；但原值需要异步读取，而字段状态是 rememberSaveable 的初值初始化，异步到达会与初始值打架。
+Decision: 拆成 EntryEditorViewModel（读原值 / insert / put / saved 标志）+ EditorBody（字段状态与 UI）：只有原值加载完成才组合 EditorBody，字段 rememberSaveable 用真实原值初始化；保存成功由 saved 标志触发回退；读取失败显示错误态（重试/返回）。删除 FakeVaultStore.kt。
+Consequences: 编辑器与列表/详情同源 vault.db，新建与编辑都直接落库；异步加载不会覆盖用户输入；FakeVaultStore 删除后 debug 样例只经由 SampleVaultEntries 播种进真实库。
