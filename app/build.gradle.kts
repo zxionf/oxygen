@@ -16,6 +16,15 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
+        // 内核溯源信息：入库的 jniLibs/libshio_ffi.so 来自该提交，ABI 版本与 NativeShio 一致。
+        // 由 scripts/sync-shio.sh 在同步产物时自动改写，不要手改。
+        buildConfigField(
+            "String",
+            "SHIO_KERNEL_COMMIT",
+            "\"5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4\"",
+        )
+        buildConfigField("int", "SHIO_ABI_VERSION", "1")
+
         ndk {
             abiFilters += listOf("arm64-v8a", "x86_64")
         }

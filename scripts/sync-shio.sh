@@ -14,7 +14,7 @@
 set -euo pipefail
 
 # 固定的内核来源与 ABI 基线（改动需同步 .design/DECISIONS.log）。
-PINNED_COMMIT="50e073b3998c690811414aa9534393b4033cac35"
+PINNED_COMMIT="5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4"
 DEFAULT_NDK_VERSION="29.0.14206865"
 PAGE_ALIGN="0x4000" # 16 KB
 
@@ -197,5 +197,24 @@ check_abi() {
 
 check_abi "arm64-v8a" "aarch64-linux-android" "AArch64"
 check_abi "x86_64" "x86_64-linux-android" "Advanced Micro Devices X86-64"
+
+# --- 5. 同步 BuildConfig 里的内核提交 -------------------------------------
+# 关于页展示的「内核提交」来自 BuildConfig；与产物同步改写，避免手改遗漏造成溯源失真。
+gradle_file="$repo_root/app/build.gradle.kts"
+if [[ -f "$gradle_file" ]]; then
+    # 只改 SHIO_KERNEL_COMMIT 下一行里的 40 位提交哈希（源码中是 "\"<hash>\"" 形式）。
+    tmp_file="$(mktemp)"
+    awk -v commit="$PINNED_COMMIT" '
+        prev ~ /"SHIO_KERNEL_COMMIT",/ { gsub(/[0-9a-f]{40}/, commit) }
+        { print; prev = $0 }
+    ' "$gradle_file" > "$tmp_file"
+    if ! cmp -s "$tmp_file" "$gradle_file"; then
+        install -m 0644 "$tmp_file" "$gradle_file"
+        step "更新 app/build.gradle.kts 的 SHIO_KERNEL_COMMIT -> $PINNED_COMMIT"
+    else
+        step "SHIO_KERNEL_COMMIT 已是 $PINNED_COMMIT"
+    fi
+    rm -f "$tmp_file"
+fi
 
 step "完成：产物来自 hydrogen $PINNED_COMMIT（NDK $NDK_VERSION）"

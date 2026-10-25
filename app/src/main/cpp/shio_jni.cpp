@@ -328,6 +328,16 @@ Java_top_zxionf_shio_kernel_NativeShio_abiVersion(JNIEnv* /*env*/, jobject /*sel
     return static_cast<jint>(shio_abi_version());
 }
 
+// 内核版本（编译期包版本，如 "0.2.0"）。指针指向进程级静态存储，直接复制成 jstring。
+extern "C" JNIEXPORT jstring JNICALL
+Java_top_zxionf_shio_kernel_NativeShio_kernelVersion(JNIEnv* env, jobject /*self*/) {
+    const char* version = shio_version();
+    if (version == nullptr) {
+        return env->NewStringUTF("");
+    }
+    return env->NewStringUTF(version);
+}
+
 extern "C" JNIEXPORT jlong JNICALL
 Java_top_zxionf_shio_kernel_NativeShio_open(JNIEnv* env, jobject /*self*/, jstring path,
                                             jbyteArray password, jbyteArray options_json) {

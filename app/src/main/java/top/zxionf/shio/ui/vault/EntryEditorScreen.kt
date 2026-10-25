@@ -424,6 +424,7 @@ private fun FieldSheet(
     onDone: () -> Unit,
 ) {
     var revealed by remember { mutableStateOf(false) }
+    var generating by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
     Column(
@@ -435,54 +436,75 @@ private fun FieldSheet(
             .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        AppTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = field.label,
-            modifier = Modifier.focusRequester(focusRequester),
-            helperText = field.helper,
-            singleLine = !field.multiline,
-            minLines = if (field.multiline) 4 else 1,
-            keyboardType = field.keyboardType,
-            imeAction = ImeAction.Done,
-            keyboardActions = KeyboardActions(onDone = { onDone() }),
-            visualTransformation = if (field == EditorField.Password && !revealed) {
-                PasswordVisualTransformation()
-            } else {
-                VisualTransformation.None
-            },
-            trailingContent = if (field == EditorField.Password) {
-                {
-                    IconToggleButton(
-                        checked = revealed,
-                        onCheckedChange = { revealed = it },
-                    ) {
-                        AppIcon(
-                            icon = if (revealed) {
-                                AppIcons.VisibilityOff
-                            } else {
-                                AppIcons.Visibility
-                            },
-                            contentDescription = if (revealed) "隐藏密码" else "显示密码",
-                        )
+        if (generating) {
+            // M7 生成器：就地替换密码 sheet 的内容，避免嵌套两个 bottom sheet。
+            PasswordGeneratorPanel(
+                onUse = { generated ->
+                    onValueChange(generated)
+                    generating = false
+                },
+                onClose = { generating = false },
+            )
+        } else {
+            AppTextField(
+                value = value,
+                onValueChange = onValueChange,
+                label = field.label,
+                modifier = Modifier.focusRequester(focusRequester),
+                helperText = field.helper,
+                singleLine = !field.multiline,
+                minLines = if (field.multiline) 4 else 1,
+                keyboardType = field.keyboardType,
+                imeAction = ImeAction.Done,
+                keyboardActions = KeyboardActions(onDone = { onDone() }),
+                visualTransformation = if (field == EditorField.Password && !revealed) {
+                    PasswordVisualTransformation()
+                } else {
+                    VisualTransformation.None
+                },
+                trailingContent = if (field == EditorField.Password) {
+                    {
+                        IconToggleButton(
+                            checked = revealed,
+                            onCheckedChange = { revealed = it },
+                        ) {
+                            AppIcon(
+                                icon = if (revealed) {
+                                    AppIcons.VisibilityOff
+                                } else {
+                                    AppIcons.Visibility
+                                },
+                                contentDescription = if (revealed) "隐藏密码" else "显示密码",
+                            )
+                        }
                     }
+                } else {
+                    null
+                },
+            )
+            if (field == EditorField.Password) {
+                TextButton(
+                    onClick = { generating = true },
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    AppIcon(AppIcons.AutoAwesome, contentDescription = null, size = 20.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text("生成密码")
                 }
-            } else {
-                null
-            },
-        )
-        Button(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = CircleShape,
-        ) {
-            Text(text = "完成", style = MaterialTheme.typography.titleMedium)
+            }
+            Button(
+                onClick = onDone,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = CircleShape,
+            ) {
+                Text(text = "完成", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 
-    LaunchedEffect(field) {
-        focusRequester.requestFocus()
+    LaunchedEffect(field, generating) {
+        if (!generating) focusRequester.requestFocus()
     }
 }

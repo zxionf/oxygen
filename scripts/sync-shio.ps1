@@ -37,7 +37,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 # 固定的内核来源与 ABI 基线（改动需同步 .design/DECISIONS.log）。
-$PinnedCommit = '50e073b3998c690811414aa9534393b4033cac35'
+$PinnedCommit = '5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4'
 $AbiMap = [ordered]@{
     'arm64-v8a' = 'aarch64-linux-android'
     'x86_64'    = 'x86_64-linux-android'
@@ -177,6 +177,23 @@ foreach ($abi in $AbiMap.Keys) {
     $hash = Get-Sha256 $dest
     $size = (Get-Item -LiteralPath $dest).Length
     "   机器=$($ExpectedMachine[$abi]) 对齐=$PageAlign 大小=$size sha256=$hash"
+}
+
+# 同步 BuildConfig 里的内核提交：关于页的「内核提交」读的是它，避免手改遗漏。
+$gradleFile = Join-Path $RepoRoot 'app\build.gradle.kts'
+if (Test-Path $gradleFile) {
+    $content = Get-Content -LiteralPath $gradleFile -Raw
+    $updated = [regex]::Replace(
+        $content,
+        '("SHIO_KERNEL_COMMIT",\s*\r?\n\s*")[0-9a-f]{40}(")',
+        { param($m) $m.Groups[1].Value + $PinnedCommit + $m.Groups[2].Value }
+    )
+    if ($updated -ne $content) {
+        Set-Content -LiteralPath $gradleFile -Value $updated -NoNewline
+        Write-Step "更新 app/build.gradle.kts 的 SHIO_KERNEL_COMMIT -> $PinnedCommit"
+    } else {
+        Write-Step "SHIO_KERNEL_COMMIT 已是 $PinnedCommit"
+    }
 }
 
 Write-Step "完成：产物来自 hydrogen $PinnedCommit（NDK $NdkVersion）"

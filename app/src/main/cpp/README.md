@@ -3,9 +3,9 @@
 `include/shio.h` 是 hydrogen 内核 C ABI 的只读副本，来源：
 
 - 仓库：`hydrogen`
-- 提交：`50e073b3998c690811414aa9534393b4033cac35`
+- 提交：`5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4`
 - 路径：`crates/shio-ffi/include/shio.h`
-- sha256：`ba156f49fb3c144e98506b6b8faef76d6c67dccbe7b5d5ebfcaa405f0a119846`
+- sha256：`0e9568cab2c1ea6034a800c302d643d02d916de88cbe9f18a1549c4eaa5c0ad3`
 
 升级 `libshio_ffi.so` 时，必须同时复制同一提交的头文件。
 

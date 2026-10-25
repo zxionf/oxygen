@@ -1,5 +1,6 @@
 package top.zxionf.shio.ui.settings
 
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,8 +35,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import top.zxionf.shio.BuildConfig
+import top.zxionf.shio.kernel.KernelInfo
 import top.zxionf.shio.ui.components.AppIcons
-import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ShioTheme
@@ -60,8 +61,34 @@ fun SettingsScreen(
     var autoLockIndex by rememberSaveable { mutableIntStateOf(0) }
     var autoLockDialogVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val versionName = BuildConfig.VERSION_NAME
     val databasePath = remember(context) { context.filesDir.resolve("vault.db").absolutePath }
+
+    // 关于：应用版本、内核版本与 ABI、运行环境、数据库路径。
+    // 内核版本/ABI 版本来自运行时 shio_version()/shio_abi_version()；提交号只是产物溯源。
+    val aboutItems = remember {
+        val appVersion = "${BuildConfig.VERSION_NAME}（${BuildConfig.VERSION_CODE}）"
+        val kernelVersion = KernelInfo.kernelVersion ?: "不可用"
+        val abiVersion = KernelInfo.abiVersion?.let { running ->
+            if (KernelInfo.abiVersionMatches) {
+                "$running"
+            } else {
+                "$running（期望 ${KernelInfo.expectedAbiVersion}）"
+            }
+        } ?: "不可用"
+        val kernelCommit = "${KernelInfo.KERNEL_NAME} @ " +
+            if (BuildConfig.DEBUG) KernelInfo.kernelCommit else KernelInfo.shortCommit
+        val deviceAbi = Build.SUPPORTED_ABIS.firstOrNull() ?: "未知"
+        val system = "Android ${Build.VERSION.RELEASE}（API ${Build.VERSION.SDK_INT}）"
+        listOf(
+            "版本" to appVersion,
+            "内核版本" to kernelVersion,
+            "ABI 版本" to abiVersion,
+            "内核提交" to kernelCommit,
+            "设备架构" to deviceAbi,
+            "系统" to system,
+            "数据库" to databasePath,
+        )
+    }
 
     Scaffold(
         modifier = modifier,
@@ -131,17 +158,14 @@ fun SettingsScreen(
             }
 
             SectionTitle("关于")
-            StackedList(itemCount = 2) { index, shape ->
+            StackedList(itemCount = aboutItems.size) { index, shape ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = shape,
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
-                    if (index == 0) {
-                        AboutRow(label = "版本", value = versionName)
-                    } else {
-                        AboutRow(label = "数据库", value = databasePath)
-                    }
+                    val (label, value) = aboutItems[index]
+                    AboutRow(label = label, value = value)
                 }
             }
         }

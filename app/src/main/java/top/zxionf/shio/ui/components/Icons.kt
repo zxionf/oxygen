@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
@@ -59,6 +60,7 @@ enum class AppIcons(val icon: ImageVector) {
     Notes(Icons.AutoMirrored.Filled.Notes),
     Palette(Icons.Filled.Palette),
     Person(Icons.Filled.Person),
+    Refresh(Icons.Filled.Refresh),
     Search(Icons.Filled.Search),
     Settings(Icons.Filled.Settings),
     Shield(Icons.Filled.Shield),

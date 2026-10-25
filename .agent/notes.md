@@ -123,7 +123,7 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 网络受限时给 rustup 设镜像：`export RUSTUP_DIST_SERVER=https://rsproxy.cn`、`export RUSTUP_UPDATE_ROOT=https://rsproxy.cn/rustup`。
 - 用法：`scripts/sync-shio.sh`；只复制 target 下已有产物用 `--skip-build`；可用 `--hydrogen` / `--ndk` 覆盖默认路径与版本。
 - 脚本会同时同步 `app/src/main/cpp/include/shio.h`，并校验两个 ABI 的 ELF 架构与 16 KB LOAD 对齐。
-- hydrogen HEAD 必须等于脚本固定的 `50e073b`，否则直接失败；升级内核时同步修改脚本常量与 `.design/DECISIONS.log`。
+- hydrogen HEAD 必须等于脚本固定的 `5f3e8e3`，否则直接失败；升级内核时同步修改脚本常量与 `.design/DECISIONS.log`。
 
 ## P5 密码库 UI（Linux / Compose）
 
@@ -183,3 +183,10 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 字体图标（Material Symbols）在圆形图标按钮里始终有几像素下移，改用 `material-icons-extended`（BOM 1.7.8）的矢量图标后消失；业务名统一走 `ui/components/Icons.kt` 的 `AppIcons` 枚举 + `AppIcon`。
 - 代价：未开 R8 时 debug APK 约 69 MB、release 约 52 MB（原 34 / 27 MB）。要瘦身需在 release 打开 `isMinifyEnabled` + `isShrinkResources`，或换回核心图标集。
 - 用户要求：不启动模拟器，所有验证直接在真机 `10AE4N38SA000LK`（vivo V2359A / Android 16）上做。
+
+## P10 内核升级与版本溯源
+
+- 升级内核要同时动四处：`scripts/sync-shio.sh` / `sync-shio.ps1` 的 `PINNED_COMMIT`、`include/shio.h`（脚本会同步，sha256 写进 `cpp/README.md`）、`jniLibs/*/libshio_ffi.so`（脚本复制并校验 16 KB 对齐）、`app/build.gradle.kts` 的 `SHIO_KERNEL_COMMIT`。
+- 2026-10-25 踩过：只改了脚本和文档，忘了 `SHIO_KERNEL_COMMIT`，设置页「内核提交」还显示旧哈希。现在两个同步脚本在结尾用 awk 把 `SHIO_KERNEL_COMMIT` 下一行的 40 位哈希改写成 `PINNED_COMMIT`，跟着脚本走就不会漏。
+- awk 正则别写 `"[0-9a-f]{40}"`：Kotlin 里是 `"\"<hash>\""`，哈希后面紧跟的是反斜杠，带引号的模式匹配不到；直接 `gsub(/[0-9a-f]{40}/, commit)`，并用「上一行是 SHIO_KERNEL_COMMIT」限定作用域。
+- 内核版本查询用 `shio_version()`（返回编译期包版本，如 `0.2.0`），ABI 版本仍用 `shio_abi_version()`；两者都不需要打开数据库，JNI 层直接 `NewStringUTF` 复制静态指针即可。

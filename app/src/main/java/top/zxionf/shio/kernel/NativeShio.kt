@@ -24,6 +24,9 @@ internal object NativeShio {
 
     external fun abiVersion(): Int
 
+    /** 内核版本（编译期包版本，如 `0.2.0`）；来自 `shio_version()`，无需打开数据库。 */
+    external fun kernelVersion(): String
+
     external fun open(path: String, password: ByteArray, optionsJson: ByteArray?): Long
 
     external fun close(handle: Long)

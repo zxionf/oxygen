@@ -194,3 +194,33 @@ Change: 20261024-m3e-alignment
 Context: 用户要求把 M3E 定为这款软件的设计风格并写进文档，作为长期约束而不是一次性的改版结果。
 Decision: 在 SPEC 的「项目定位」与「约束」中把 Material 3 Expressive 定为全应用固定设计风格，并明确落到可检查的条目：MaterialExpressiveTheme 根主题、Expressive 形状阶梯、Roboto + emphasized 字体、MotionScheme 动效、material-icons-extended 图标、仅用 scheme role 配色、可点元素 ripple + 按下缩放、输入统一 AppTextField、列表分组统一 StackedList/FieldItem；违反基线的改动视为未完成。同步更新 SPEC 的技术栈/验证基线（Kotlin 2.4.21、Gradle 9.8.2、AGP 9.4.1、compileSdk 37、material3 1.5、仅真机验证、release 开 R8）与阶段计划（M1–M6 完成、M3E 已归档、M7 起按 M3E 实现）。
 Consequences: 后续任何界面工作先对照 SPEC 的 M3E 基线自查；阶段计划与 SPEC 中的旧版本号已同步为当前工具链；若将来要更换设计风格，必须先改 SPEC 与决策日志，不能在实现里悄悄偏离。
+## [40] 2026-10-25 00:57:50 UTC
+Change: 20261023-password-vault
+Context: M7 需要在编辑器里提供生成密码；而编辑器本身已用 ModalBottomSheet 编辑单个字段，再叠一层 sheet 会出现嵌套弹层、IME 与返回键行为不确定。
+Decision: 生成器做成 ui/vault/PasswordGeneratorPanel 的面板，在「密码」sheet 内就地替换内容（生成态/手动态互斥），用「使用此密码」写回字段后回到手动态；不叠加第二个 bottom sheet，也不做成独立路由。
+Consequences: 弹层层级只有一层，IME/返回键行为复用现有规则；后续详情页若要独立生成器入口，可直接复用该 panel 放进新的 sheet 或对话框。
+## [41] 2026-10-25 00:57:50 UTC
+Change: 20261023-password-vault
+Context: 生成算法需要可验证：既要保证每类勾选字符集至少一个，又不能出现「前几位固定是首字符」这类可预测模式。
+Decision: 每个勾选字符集先各取一个字符，剩余位从合并字符集随机取，最后整串 Fisher–Yates 打乱；随机源统一用 SecureRandom；符号集定为 !#$%&*+-=?@^_（不含引号、括号、反斜杠）。
+Consequences: 输出满足长度与字符集要求且分布无固定前缀；symbols 集与别处（URL/命令行）冲突更少；app/src/test 下新增 PasswordGeneratorTest 用 7 个用例锁定这些性质，首次运行 :app:testDebugUnitTest 即可回归。
+## [42] 2026-10-25 01:07:04 UTC
+Change: 20261023-password-vault
+Context: 设置页「关于」需要展示内核版本与 ABI 版本，但内核只暴露 shio_abi_version()，没有版本号字符串；同时不能把提交哈希硬编码在 UI 代码里。
+Decision: 在 app/build.gradle.kts 的 defaultConfig 注入 SHIO_KERNEL_COMMIT（hydrogen 提交 50e073b…）与 SHIO_ABI_VERSION（1），新增 kernel/KernelInfo.kt 统一读取并 runCatching 调 shio_abi_version()；设置页「关于」改为 StackedList 六行：版本、内核版本（debug 全哈希、release 12 位）、ABI 版本、设备架构、系统、数据库路径。
+Consequences: 换内核产物只需改一处 buildConfigField，关于页展示随构建自动更新；ABI 不一致或 native 加载失败时显示「不可用」而不崩溃；后续 M11 接入真实库后可在同一分组补 format_version/key_id。
+## [43] 2026-10-25 02:19:16 UTC
+Change: 20261023-password-vault
+Context: 内核更新后新增 shio_version()（编译期包版本 0.2.0），M8 的「关于」之前只能用 BuildConfig 里硬编码的提交号当版本显示，语义不对。
+Decision: 同步内核到 hydrogen 5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4（版本 0.2.0，ABI 仍为 1）：scripts/sync-shio.sh 与 sync-shio.ps1 的 PINNED_COMMIT、BuildConfig.SHIO_KERNEL_COMMIT、include/shio.h（sha256 0e9568ca…）一并更新；JNI 新增 NativeShio.kernelVersion() 映射 shio_version()；KernelInfo 暴露运行时 kernelVersion/abiVersion；设置页「关于」拆成七行，内核版本与 ABI 版本用运行时值，另加「内核提交」行只做产物溯源。
+Consequences: 版本号不再靠硬编码推断，换内核后关于页自动反映真实版本；内核提交仍受 BuildConfig 与脚本常量两处约束，升级时需同时改；M11 起可在同一分组追加 format_version/key_id。
+## [44] 2026-10-25 02:19:16 UTC
+Change: 20261023-password-vault
+Context: 内核升级后 ABI 版本保持 1，但 .so 内容与头文件都变了，需要明确「ABI 兼容」的判定依据。
+Decision: ABI 兼容以 shio_abi_version() 返回值 == 1 为准，启动时 NativeShio.init 继续强校验；内核包版本（shio_version）与提交号只作展示与溯源，不参与兼容判断。
+Consequences: 内核可在 ABI=1 前提下持续升级而不动应用侧校验逻辑；若将来 ABI 递增，启动即抛 UNSUPPORTED_FORMAT，需要在同一处同步 SUPPORTED_ABI_VERSION 与 SHIO_ABI_VERSION。
+## [45] 2026-10-25 02:26:14 UTC
+Change: 20261023-password-vault
+Context: 同步内核后设置页「内核提交」仍显示旧哈希 50e073b：产物、脚本、SPEC 都更新了，只有 app/build.gradle.kts 的 SHIO_KERNEL_COMMIT 漏改，说明「同一个提交号存多处、靠人同步」本身是缺陷。
+Decision: 把 SHIO_KERNEL_COMMIT 改成由 scripts/sync-shio.sh 与 sync-shio.ps1 在同步产物后自动改写（awk 定位「上一行是 SHIO_KERNEL_COMMIT」的那一行，替换 40 位哈希），并修正为 5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4；build.gradle 里注明「由脚本自动改写，不要手改」。
+Consequences: 提交号仍有两个源头（脚本常量 = 唯一源头，BuildConfig 由脚本派生），但已不会因漏改而失真；--skip-build 只复制产物时也会顺手校正该常量。

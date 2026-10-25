@@ -23,7 +23,7 @@
 - **设计风格：全应用固定 Material 3 Expressive**。所有界面必须满足 `## M3E 设计基线`：`MaterialExpressiveTheme` 根主题、Expressive 形状阶梯、Roboto + emphasized 字体、`MotionScheme` 动效、`material-icons-extended` 图标、仅用 scheme role 配色、可点元素 ripple + 按下缩放。新增页面或改动若违反基线，视为未完成。
 - 输入类控件统一使用 `ui/components/AppTextField`；列表分组统一使用 `StackedList`/`FieldItem`。
 - 内核以 hydrogen C ABI v1（`crates/shio-ffi/include/shio.h`）为准，JNI 启动时校验 `shio_abi_version == 1`。
-- `jniLibs` 下的 `libshio_ffi.so` 入库，来源固定 hydrogen 提交 `50e073b3998c690811414aa9534393b4033cac35`；两份产物均满足 16 KB LOAD 对齐。
+- `jniLibs` 下的 `libshio_ffi.so` 入库，来源固定 hydrogen 提交 `5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4`；两份产物均满足 16 KB LOAD 对齐。
 - 所有 native 调用在 `Dispatchers.IO.limitedParallelism(1)` 上串行执行，主线程不调用 native。
 - 口令以字节数组传入 native，调用结束立即清零；口令、明文与记录正文不写日志。
 - 无权限声明；`allowBackup=false`；release 构建不包含冒烟入口。
@@ -110,6 +110,7 @@ scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件
 | Kotlin 声明 | C ABI | 说明 |
 |---|---|---|
 | `abiVersion(): Int` | `shio_abi_version` | 启动时校验为 1 |
+| `kernelVersion(): String` | `shio_version` | 内核编译期版本（如 `0.2.0`），无需打开数据库 |
 | `open(path: String, password: ByteArray, optionsJson: ByteArray?): Long` | `shio_open` | 失败抛出 `ShioException` |
 | `close(handle: Long)` | `shio_close` | 可重复调用 |
 | `destroy(handle: Long)` | `shio_kernel_destroy` | 释放句柄，之后调用返回已关闭错误 |
@@ -133,7 +134,7 @@ scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件
 ## 构建与产物
 - `compileSdk` / `targetSdk` 37，`minSdk` 29，ABI 为 `arm64-v8a` 与 `x86_64`，NDK `29.0.14206865`，CMake `3.22.1+`（使用系统 4.4.4）。
 - 构建使用 JDK 21（系统 JDK 或 Android Studio JBR）；Gradle 9.8.2、AGP 9.4.1 与 Kotlin 2.4.21 固定到 Version Catalog / wrapper。
-- 首版 `libshio_ffi.so` 直接取自 hydrogen 提交 `50e073b`；Linux 用 `scripts/sync-shio.sh`、Windows 用 `scripts/sync-shio.ps1` 通过 `cargo-ndk` 重建并复制，来源提交与 NDK 版本写入脚本常量；Linux 脚本同时同步 `include/shio.h`。
+- 首版 `libshio_ffi.so` 直接取自 hydrogen 提交 `5f3e8e3`；Linux 用 `scripts/sync-shio.sh`、Windows 用 `scripts/sync-shio.ps1` 通过 `cargo-ndk` 重建并复制，来源提交与 NDK 版本写入脚本常量；Linux 脚本同时同步 `include/shio.h`。
 - Debug 构建用于日常验证；release 开启 R8（`isMinifyEnabled` + `isShrinkResources`），JNI 入口由 `proguard-rules.pro` 的 keep 规则保留。当前 release 仍使用 debug keystore，没有正式发布签名。
 
 ## M3E 目标与原则
@@ -199,7 +200,7 @@ ui/components/
 2. **条目详情**：堆叠列表（`ListItem` 行、外 28dp）+ 复制/显隐用 `IconButton` / `IconToggleButton` + 删除走 `DropdownMenu`（error 色）。
 3. **编辑器**：堆叠字段列表 + 字段 sheet，使用全局主题、`IconToggleButton`（密码显隐），保存放顶栏右上角勾选图标。
 4. **创建/解锁**：M3E 大标题 + `AppTextField`（线框式）+ 全宽主按钮 + 内联错误区；解锁错误码仍显示 `INVALID_KEY (-3)`。
-5. **设置**：`StackedList` 分组 + 自动锁定单选对话框 + 外观 / 原型 Demo 入口 + 版本与数据库路径。
+5. **设置**：`StackedList` 分组 + 自动锁定单选对话框 + 外观 / 原型 Demo 入口 + 关于（应用版本、内核版本、ABI 版本、内核提交、设备架构、系统、数据库路径）。
 6. **外观**：主题预览卡 + 色卡 / 圆形色板（`ToggleButton` 无法展示颜色本身，见决策 #32）。
 7. **原型 Demo**：只做包裹（顶栏返回 + M3E 容器），内部逻辑不变。
 
@@ -222,3 +223,19 @@ ui/components/
 - 辅助文本：`bodySmall` + `onSurfaceVariant`，放在输入框下方（不放进 `supportingText`，避免被外框包住）。
 - 图标：**不使用前置图标**；密码字段仅保留尾部 `IconToggleButton` 切换显隐。
 - 键盘：字段编辑使用 `ModalBottomSheet`，`Modifier.imePadding()` 加在 sheet 的 `modifier` 上，内容可滚动，键盘弹出后不被遮挡。
+
+## 密码生成器
+
+- 实现：`vault/PasswordGenerator.kt`（纯 Kotlin，`SecureRandom`）+ `ui/vault/PasswordGeneratorPanel.kt`（UI）。
+- 规则：长度 12–64（默认 20，滑块步进 1）；大写/小写/数字/符号四组开关，可排除易混淆字符（`I l 1 O 0 o | S 5 s B 8 b 2 Z z`）；先为每个勾选的字符集各取一个字符，其余随机填充，最后 Fisher–Yates 打乱，避免前几位固定。
+- 符号集固定为 `!#$%&*+-=?@^_`（不含引号、括号、反斜杠等易在别处出问题的字符）。
+- 交互：入口在编辑器的「密码」sheet 内（「生成密码」文字按钮），生成器就地替换 sheet 内容，不叠加第二个 bottom sheet；选项一变立即重新生成；「使用此密码」把结果写回编辑器字段并回到手动输入态，不直接落库。
+- 展示：结果放在 `surfaceContainerHigh` 卡片（`titleLarge`，最多 2 行省略），右上角「重新生成」；未勾选任何字符集时按钮禁用并提示「至少选择一种字符集」。
+- 单测：`app/src/test/java/top/zxionf/shio/vault/PasswordGeneratorTest.kt`（长度、字符集完整、排除易混淆、空选择、随机性，7 项）。
+
+## 设置页「关于」信息
+
+- 数据来源：内核版本与 ABI 版本来自**运行时**查询（`kernel/KernelInfo.kt` 调 `shio_version()` / `shio_abi_version()`）；应用版本与 `SHIO_KERNEL_COMMIT` / `SHIO_ABI_VERSION` 由 Gradle 写入 `BuildConfig`（`app/build.gradle.kts` 的 `defaultConfig`）；设备架构与系统版本取 `android.os.Build`。
+- 展示行（`StackedList` + `ListItem`，外 28dp / 内 8dp）：版本 `0.1.0-debug（1）`、内核版本（当前 `0.2.0`）、ABI 版本、内核提交 `hydrogen @ <提交>`（release 12 位短哈希，debug 完整哈希）、设备架构 `arm64-v8a`、系统 `Android 16（API 36）`、数据库路径。
+- ABI 版本取值：native 加载成功且与构建约定一致时显示单个数字；不一致显示 `<运行时>（期望 <构建值>）`；库缺失或加载失败时内核版本与 ABI 版本都显示「不可用」（页面不崩溃）。
+- 内核提交只做产物溯源，不参与版本判断；`scripts/sync-shio.sh` / `sync-shio.ps1` 在同步产物时会把 `BuildConfig.SHIO_KERNEL_COMMIT` 自动改写为脚本里的 `PINNED_COMMIT`，手改无效也不必要。
