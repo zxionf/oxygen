@@ -117,15 +117,15 @@
 - [x] 创建页接入仓库（`create` 内含 `sync_enable` 校验），成功后进入列表，`format=2`/`db_id` 诊断显示在设置→关于（debug）
 - [x] 解锁页接入仓库，错误口令显示 `INVALID_KEY (-3)`（按错误码分支给文案）
 - [x] 锁定调用 `destroy`，清空内存状态并进入解锁页（`VaultComponent.repository.lock()`）
-- [ ] 构建并在真机完成 create → lock → unlock 冒烟（含错误口令 INVALID_KEY）
+- [x] 构建并在真机完成 create → lock → unlock 冒烟（含错误口令 INVALID_KEY）
 
 ## M13 真实列表与搜索
 
-- [ ] 解锁后 `list` + 逐条 `get`，上限 1000 条
-- [ ] 内存搜索：标题、用户名、网址、备注
-- [ ] 写入后刷新或局部更新列表
-- [ ] 按标题排序
-- [ ] 截图真实数据列表
+- [x] 解锁后 `list` + 逐条 `get`（每页 100、上限 2000）
+- [x] 内存搜索：标题、用户名、网址、备注（`VaultEntrySearchTest` 8 例；密码不参与搜索）
+- [x] 写入后刷新：列表页 `LifecycleResumeEffect` 触发 `refresh()` 重读整库
+- [x] 按标题排序（`title.lowercase()` 升序）
+- [x] 真机验证真实数据列表（解锁后从 vault.db 读 8 条样例、搜索命中/无结果、排序；截图未入仓）
 
 ## M14 真实详情
 

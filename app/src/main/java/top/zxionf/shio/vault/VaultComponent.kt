@@ -9,4 +9,10 @@ package top.zxionf.shio.vault
  */
 object VaultComponent {
     val repository: VaultRepository = VaultRepository()
+
+    /**
+     * 本次进程是否已尝试写入 debug 样例条目；避免用户删空库后又自动填回去。
+     * release 构建不会读这个标记。
+     */
+    var samplesSeeded: Boolean = false
 }

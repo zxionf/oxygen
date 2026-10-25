@@ -292,3 +292,11 @@ ui/components/
 - 锁定：`VaultComponent.repository.lock()` → `destroy` → 清空回退栈 → `unlock`。
 - `AppNavHost` 的 `RequireUnlocked` 守卫：进程被回收后系统恢复导航栈时，受保护页面（`vault`/`entry`/`editor`/`settings`/`appearance`）若发现没有会话，就按 `vault.db` 是否存在重定向到 `unlock`/`create` 并清栈，避免无解锁直接看到内容。
 - 设置 → 关于在 debug 且已解锁时多两行诊断：`存储格式 format=2` 与 `同步身份 <db_id>`；release 不展示。
+
+### 列表与搜索（真实数据）
+
+- `VaultViewModel` 以 `VaultComponent.repository` 为数据源：`refresh()` 调用 `repository.entries()`（`list` 每页 100、上限 2000，逐条 `get` 取正文），结果放内存后做搜索与排序。
+- 搜索字段：标题、用户名、网址、备注，忽略大小写；**密码不参与搜索**（避免通过搜索探测口令）。排序按 `title.lowercase()` 升序。
+- 刷新时机：列表页 `LifecycleResumeEffect` 每次重新可见都 `refresh()`，覆盖「保存/删除后返回」「旋转」「从后台回前台」；不做增量合并。
+- 界面状态：`VaultUiState` 增加 `isLoading`/`errorMessage`。首次加载且无数据时整页 `LoadingIndicator`；出错用 `EmptyState`（图标 + 文案 + 「重试」）；空库与无搜索结果沿用两种空态。
+- debug 样例：解锁后若库为空且本进程未播种过，把 `SampleVaultEntries` 逐条 `insert` 进真实库（`VaultComponent.samplesSeeded` 保证只播一次）；release 不播种。

@@ -198,3 +198,8 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 内核 Android 侧的新事实：redb 字节范围锁在 Android 不可用，改由 facade 在库旁维护 `<db>.lock` + `flock`（写独占/读共享），冲突是 `SHIO_LOCKED`；因此同进程只能有一个写句柄，备份/清理不能在持有期间删目录。
 - 内核决策要求「Android 首次建库必须 `sync_enable` 走 format=2」（hydrogen DECISIONS [40]），与本仓库 MVP「不做同步」的范围存在冲突，建库流程（M11/M12）开工前必须先定。
 - 内核 `.so` 按 API 24 基线链接，应用 minSdk 29，两者不必一致；`shio_open` 的 options 只认 `create`/`read_only`/`max_value_size`/`cache_size`。
+
+## P12 真机验证搜索的技巧
+
+- vivo 默认输入法是中文拼音：`adb shell input text "net"` 只会进输入法的组合区，不会提交给应用，界面上看不见。要么先 `input keyevent 66`（回车/提交组合），要么换 ASCII 输入法；否则会误判成「搜索框不吃输入」。
+- 验证搜索覆盖度用样例数据里的独有片段最省事：标题（`net`→Netflix）、用户名（`6222`→银行 App）、备注（`recovery`→GitHub）、无结果（`zzzz`）。

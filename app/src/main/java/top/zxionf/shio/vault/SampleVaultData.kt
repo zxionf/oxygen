@@ -1,8 +1,8 @@
 package top.zxionf.shio.vault
 
 /**
- * M4 假数据：覆盖「有用户名」「只有网址」「只有备注」「中文标题」几种列表项形态。
- * M13 接入真实数据后删除。
+ * debug 样例条目：覆盖「有用户名」「只有网址」「只有备注」「中文标题」几种列表项形态。
+ * 只在 debug 构建里用作种⼦：解锁后若库为空，`VaultViewModel` 把它们 `insert` 进真实库。
  */
 internal val SampleVaultEntries = listOf(
     VaultEntry(

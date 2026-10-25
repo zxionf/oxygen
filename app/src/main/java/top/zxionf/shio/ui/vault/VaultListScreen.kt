@@ -22,9 +22,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -40,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.SolidColor
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,6 +69,7 @@ class VaultListActions(
     val onSettings: () -> Unit = {},
     val onCreateEntry: () -> Unit = {},
     val onOpenEntry: (String) -> Unit = {},
+    val onRefresh: () -> Unit = {},
 )
 
 @Composable
@@ -86,12 +90,18 @@ fun VaultListScreen(
             onSettings = onSettings,
             onCreateEntry = onCreateEntry,
             onOpenEntry = onOpenEntry,
+            onRefresh = viewModel::refresh,
         )
+    }
+    // 从编辑器/详情返回、或旋转后重新可见时拉一次整库，保证写入后能看到最新结果。
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose {}
     }
     VaultListContent(state = state, actions = actions, modifier = modifier)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun VaultListContent(
     state: VaultUiState,
@@ -162,6 +172,22 @@ private fun VaultListContent(
             )
 
             when {
+                // 首次加载：整页只有加载指示器，避免先闪一下「空库」空态。
+                state.isLoading && state.entries.isEmpty() && state.totalCount == 0 -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    LoadingIndicator()
+                }
+
+                state.hasError -> EmptyState(
+                    icon = AppIcons.Info.icon,
+                    title = "读取失败",
+                    description = state.errorMessage.orEmpty(),
+                    actionLabel = "重试",
+                    onAction = actions.onRefresh,
+                )
+
                 state.isEmptyLibrary -> EmptyState(
                     icon = AppIcons.Shield.icon,
                     title = "密码库还是空的",
