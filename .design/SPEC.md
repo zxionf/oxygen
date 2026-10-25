@@ -315,3 +315,10 @@ ui/components/
 - 校验：标题与密码必填（空值行显示「必填」+ Snackbar 提示）；有未保存修改时返回先弹「放弃修改？」。
 - 保存后回退一级；列表与详情都靠 resume 重读内核数据，不做本地缓存同步。
 - 原值读取失败（条目被删/库已锁）显示错误态（重试 / 返回），不留可编辑的空壳。
+
+## 偏好持久化
+
+- 外观：`ui/theme/AppearancePreferences`（`appearance` 预置），`theme_mode` 与 `palette` 两个字符串枚举名；选择立即生效并落盘。
+- 自动锁定：`vault/AutoLockPreferences`（`session` 预置），键 `auto_lock_timeout`，取值来自 `AutoLockTimeout`（`IMMEDIATELY`/`ONE_MINUTE`/`FIVE_MINUTES`/`FIFTEEN_MINUTES`，默认立即）。
+- 两者都是「进程内单例 + Compose 快照状态 + `SharedPreferences` 直接读写」，不引入 DataStore；冷启动由构造时读取恢复，设置页直接读快照状态展示。
+- 未知/旧版本写入的枚举名会被忽略并回退默认值，避免升级后崩溃。

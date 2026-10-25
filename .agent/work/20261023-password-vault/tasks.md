@@ -145,10 +145,10 @@
 
 ## M16 自动锁定偏好与冷启动
 
-- [ ] 自动锁定时长写入 `SharedPreferences`
-- [ ] 冷启动后恢复自动锁定设置
-- [ ] 验证主题模式与色板冷启动恢复（M2 已持久化）
-- [ ] 截图重启后的外观与设置
+- [x] 自动锁定时长写入 `SharedPreferences`（`vault/AutoLockPreferences`，`session/auto_lock_timeout`）
+- [x] 冷启动后恢复自动锁定设置（真机 force-stop 后仍显示 5 分钟）
+- [x] 验证主题模式与色板冷启动恢复（真机：LIGHT + TEAL，重启后解锁页直接是浅色青色）
+- [x] 真机验证重启后的外观与设置（截图未入仓）
 
 ## M17 自动锁定
 

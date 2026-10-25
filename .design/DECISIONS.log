@@ -259,3 +259,8 @@ Change: 20261023-password-vault
 Context: 编辑器原来从内存假仓库读写，M15 要换成内核 insert/put；但原值需要异步读取，而字段状态是 rememberSaveable 的初值初始化，异步到达会与初始值打架。
 Decision: 拆成 EntryEditorViewModel（读原值 / insert / put / saved 标志）+ EditorBody（字段状态与 UI）：只有原值加载完成才组合 EditorBody，字段 rememberSaveable 用真实原值初始化；保存成功由 saved 标志触发回退；读取失败显示错误态（重试/返回）。删除 FakeVaultStore.kt。
 Consequences: 编辑器与列表/详情同源 vault.db，新建与编辑都直接落库；异步加载不会覆盖用户输入；FakeVaultStore 删除后 debug 样例只经由 SampleVaultEntries 播种进真实库。
+## [53] 2026-10-25 04:57:41 UTC
+Change: 20261023-password-vault
+Context: 自动锁定时长原来只存在设置页的 rememberSaveable 里，进程一死就回默认；同时 M17 需要在 Activity 生命周期里读这个值。
+Decision: 新增 vault/AutoLockPreferences（SharedPreferences 名 session、键 auto_lock_timeout）+ AutoLockTimeout 枚举（立即/1/5/15 分钟，各带毫秒值），沿用外观偏好的「进程内单例 + 快照状态 + 直接读写」模式；设置页改为读写该偏好，不再用局部索引。
+Consequences: 冷启动自动恢复；M17 的锁定时长判断可直接读 AutoLockTimeout.millis；旧值/未知枚举名回退「立即」，不会崩。

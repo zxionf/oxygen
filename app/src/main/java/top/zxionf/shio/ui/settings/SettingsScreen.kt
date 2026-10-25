@@ -36,6 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import top.zxionf.shio.BuildConfig
 import top.zxionf.shio.kernel.KernelInfo
+import top.zxionf.shio.vault.AutoLockPreferences
+import top.zxionf.shio.vault.AutoLockTimeout
 import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultPaths
 import top.zxionf.shio.ui.components.AppIcons
@@ -43,8 +45,7 @@ import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ShioTheme
 
-/** 自动锁定时长（M16/M17 会写入偏好并生效）。 */
-private val AutoLockOptions = listOf("立即", "1 分钟", "5 分钟", "15 分钟")
+/** 自动锁定时长的选项见 [AutoLockTimeout]，默认「立即」。 */
 
 /**
  * 设置页（M3E）。
@@ -60,9 +61,11 @@ fun SettingsScreen(
     onDemo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var autoLockIndex by rememberSaveable { mutableIntStateOf(0) }
     var autoLockDialogVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    // 自动锁定时长持久化在 SharedPreferences（"session"），冷启动自动恢复。
+    val autoLockPreferences = remember(context) { AutoLockPreferences.get(context) }
+    val autoLockTimeout = autoLockPreferences.timeout
     val databasePath = remember(context) { VaultPaths.databasePath(context) }
     // 解锁后的会话诊断：debug 才展示格式版本与同步身份，release 界面不暴露库内部标识。
     val session = VaultComponent.repository.session
@@ -141,7 +144,7 @@ fun SettingsScreen(
                     SettingRow(
                         icon = AppIcons.Lock,
                         label = "自动锁定",
-                        value = AutoLockOptions[autoLockIndex],
+                        value = autoLockTimeout.label,
                         onClick = { autoLockDialogVisible = true },
                     )
                 }
@@ -193,19 +196,19 @@ fun SettingsScreen(
             title = { Text("自动锁定") },
             text = {
                 Column {
-                    AutoLockOptions.forEachIndexed { index, option ->
+                    AutoLockTimeout.entries.forEach { option ->
                         ListItem(
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                             leadingContent = {
                                 RadioButton(
-                                    selected = index == autoLockIndex,
+                                    selected = option == autoLockTimeout,
                                     onClick = {
-                                        autoLockIndex = index
+                                        autoLockPreferences.updateTimeout(option)
                                         autoLockDialogVisible = false
                                     },
                                 )
                             },
-                            content = { Text(option, style = MaterialTheme.typography.bodyLarge) },
+                            content = { Text(option.label, style = MaterialTheme.typography.bodyLarge) },
                         )
                     }
                 }
