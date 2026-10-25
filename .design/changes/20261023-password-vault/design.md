@@ -1,6 +1,6 @@
 # 20261023-password-vault
 
-## 目标与范围
+## 密码库 MVP 范围
 
 从内核集成 Demo 过渡到个人密码库。先搭 UI 框架并确定视觉风格，再接入真实数据。
 
@@ -38,7 +38,7 @@ MVP 覆盖：
 4. **Demo 不回归**：每次构建后确认原型 Demo 仍能打开。
 5. **中文优先**：文案先写中文；英文/多语言后续再立变更。
 
-## 导航
+## 密码库路由表
 
 引入 `androidx.navigation:navigation-compose`，单 Activity、字符串路由（不引入 kotlinx-serialization 插件）。
 
@@ -126,7 +126,7 @@ MVP 覆盖：
 - 选择立即生效并持久化到 `SharedPreferences`；不新增 DataStore 依赖。
 - 预设色板使用手写的 light/dark `ColorScheme`，不引入取色库。
 
-## 数据模型
+## 密码库记录模型
 
 数据库：`filesDir/vault.db`；命名空间 `vault`；集合 `entries`。
 

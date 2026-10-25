@@ -279,3 +279,8 @@ Change: 20261023-password-vault
 Context: 验收时发现保存新条目后回到列表，新条目只露出半行被搜索框压住（LazyColumn 用 ID 作 key，插入开头时保持旧首项为锚点）。
 Decision: 在 VaultListScreen 记录上一次条目数，条目数增加且 firstVisibleItemIndex <= 1 时 scrollToItem(0)；已经向下翻的用户不受影响。
 Consequences: 新建条目保存后立刻完整可见；搜索过滤导致的数量变化不会触发滚动（只有数量增加才判断）；代价是新增条目时若用户刚好在第 2 项会跳回顶部。
+## [57] 2026-10-25 06:06:30 UTC
+Change: 20261023-password-vault
+Context: 归档预览显示 4 节是 replaced 而非 appended：design.md 的「目标与范围」「导航」「数据模型」与 SPEC 里 Demo/现状同名小节冲突，直接归档会覆盖内核集成 Demo 的范围、demo/notes 数据模型与 M10 的返回栈规则。
+Decision: 归档前把 design.md 三个标题改成不会撞名的「密码库 MVP 范围」「密码库路由表」「密码库记录模型」（正文不动），复核 dry-run 九节全部 appended 后才执行 sele close；归档后再做一次去重：路由表并进「导航与返回栈」，记录模型并进「密码库数据层」，删除被取代的「实施原则」「页面与布局」「计划中的代码结构」「阶段拆分」「会话与安全」。
+Consequences: SPEC 保持「一个概念一节」且不残留与 M3E 冲突的旧描述（例如旧的『卡片圆角 16dp』『不引入 material-icons-extended』）；Demo 与内核集成的既有章节完整保留；过程性内容（实施原则、阶段拆分）只留在 tasks.md 与阶段计划.md。

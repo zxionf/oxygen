@@ -100,3 +100,15 @@ adb -s 10AE4N38SA000LK shell uiautomator dump /sdcard/x.xml && adb -s 10AE4N38SA
 2. 执行 `sele close`，把 `design.md` 结论折叠进 `SPEC.md`。
 3. 更新 `.design/阶段计划.md`（密码库 MVP 标记完成）与 `.agent/STATE.md`。
 4. `sele lint` 全绿后结束。
+
+## M20 归档记录（2026-10-25）
+
+- `sele close --dry-run` 首次显示 4 节 `replaced`（会覆盖 Demo 目标与范围、demo/notes 数据模型、M10 导航规则）。按决策 #57 先把 `design.md` 三个撞名标题改成「密码库 MVP 范围 / 密码库路由表 / 密码库记录模型」，复核 9 节全部 `appended` 后执行 `sele close`。
+- 折叠后去重（决策 #57）：
+  - 路由表并进 `## 导航与返回栈`（做成表格），删除独立的「密码库路由表」。
+  - 记录模型（含 `{"type":"login",...}` 示例与 `type` 预留说明）并进 `## 密码库数据层`，删除独立的「密码库记录模型」。
+  - 删除已被现状取代的「实施原则」「页面与布局」（旧文写「卡片圆角 16dp」「不引入 material-icons-extended」，与 M3E 冲突）、「计划中的代码结构」「阶段拆分」（过程信息归 tasks.md 与阶段计划.md）、「会话与安全」（并入「安全措施」与「自动锁定」）。
+  - `## 密码库 MVP 范围` 提到「项目定位」之后，作为第二大节。
+  - 更新两处旧引用（「与密码库变更的关系」「目标与范围（内核集成 Demo）」）指向本文件。
+- `.design/阶段计划.md`：密码库 MVP 由「进行中」改为「已归档」并列出 M1–M20 全部内容；`.agent/STATE.md` 改为 Active Change 无。
+- 最终：`sele lint` 四项全绿；`assembleDebug` / `assembleRelease` / `lintDebug` / `testDebugUnitTest`（23 例）通过。

@@ -2,12 +2,40 @@
 
 <!-- 当前设计真相源：一个概念一节，只写现状。历史见 git，取舍理由见 DECISIONS.log。 -->
 
-> 密码库 MVP 的设计见 `.design/changes/20261023-password-vault/design.md`，任务见 `.agent/work/20261023-password-vault/tasks.md`；本文件只记录设计事实。
+> 密码库 MVP 已归档（变更 `20261023-password-vault`），设计结论就在本文件；任务与验收记录见 `.agent/work/20261023-password-vault/`。
 
 ## 项目定位
 - shio-android：shio 内核的 Android 应用端，仓库位于 `oxygen`。
 - 内核（加密持久化、同步）由 `hydrogen` 仓库提供；本仓库负责 Android 应用层、内核集成与交互。
 - **设计风格固定为 Material 3 Expressive（M3E）**，细节见 `## M3E 设计基线`；任何新页面与界面改动都必须先满足该基线，不再回到默认 M3。
+
+## 密码库 MVP 范围
+从内核集成 Demo 过渡到个人密码库。先搭 UI 框架并确定视觉风格，再接入真实数据。
+
+MVP 覆盖：
+
+- 首次创建密码库、解锁、手动锁定、切后台自动锁定
+- 条目列表、搜索
+- 新建 / 编辑 / 删除条目
+- 字段：标题、用户名、密码、网址、备注
+- 密码显示/隐藏、复制、密码生成器
+- 设置：自动锁定、外观、原型 Demo、关于
+- 安全：release 禁止截屏、敏感信息不写日志
+
+不在本次范围：
+
+- 多密码库
+- 分类、标签、收藏（下一阶段）
+- 剪贴板自动清除（下一阶段；MVP 只做复制与敏感标记）
+- 生物识别、Autofill、TOTP、导入导出
+- 改主口令（内核支持，JNI 未暴露）
+
+**多端同步：MVP 不做同步 UI、配对与网络传输，但首次建库按内核要求启用同步**
+
+- 内核 `DECISIONS[40]` 要求 Android 首次真实建库必须调用 `sync_enable` 并校验 `sync_info`，库因此是 `format=2`（不可回退），不采用先建 `format=1` 再升级的路径。
+- 密码库仍只建立同步身份：内核已映射 `shio_sync_enable` 与 `shio_sync_info`，建库时调用并校验；变更页、快照、轮换、配对与全部网络能力均未接入（清单见「内核 ABI 对齐」）。
+
+现有 `demo/` 与 `shio-demo.db` 保留，在设置中提供“原型 Demo”入口。
 
 ## 技术栈
 - Kotlin 2.4.21、Jetpack Compose（BOM 2026.09.00，material3 1.5.0-beta02）、Material 3 Expressive、Lifecycle 2.11.0、Navigation Compose 2.10.2；单 Activity、单 `app` 模块。
@@ -46,7 +74,7 @@
 - 记录 ID 使用 UUIDv7：`insert` 由内核生成，`batch` 由客户端按相同布局生成；Kotlin 负责 16 字节与标准 UUID 字符串互转。
 - `list` 只返回元信息，Demo 取回列表后对每项调用 `get` 取正文，单次最多 50 条。
 - 数据库路径为应用私有目录 `filesDir/shio-demo.db`；界面显示完整路径。
-- 密码库目标模型为 `vault/entries`，数据库为 `filesDir/vault.db`；设计见 `.design/changes/20261023-password-vault/design.md`。
+- 密码库目标模型为 `vault/entries`，数据库为 `filesDir/vault.db`；详见「密码库数据层」。
 
 ## 演示界面（原型 Demo）
 单页 Compose，自上而下：
@@ -102,7 +130,7 @@ scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件
 - 覆盖：建库/开库、单条写入、读取、删除、列表、批量写、统计、关闭与重开。
 - 不覆盖：多端同步、改口令、数据密钥轮换、只读模式界面、发布签名、CI、任何业务功能。
 - 界面只求可操作与可观察，不做视觉打磨与导航结构。
-- 密码库 MVP 的设计见 `.design/changes/20261023-password-vault/design.md`；本节只描述内核集成 Demo。
+- 密码库 MVP 的当前设计在本文件的「密码库 MVP 范围」及后续各节；本节只描述内核集成 Demo。
 
 ## JNI 接口
 句柄对 Kotlin 表现为不透明的 `Long`，不是裸指针。JNI 内部维护 `id -> Handle` 表，`Handle` 持有 `shio_kernel*` 与互斥量；`destroy` 先从表中摘除，再等待在途调用结束并释放。
@@ -211,11 +239,10 @@ ui/components/
 - 交付一份 M3E 审计清单（页面 × 检查项）写入 `handover.md`。
 
 ## 与密码库变更的关系
-- 密码库 MVP 的设计见 `.design/changes/20261023-password-vault/design.md`，任务见 `.agent/work/20261023-password-vault/tasks.md`。
-- 本文件只记录设计事实；密码库数据层接入 `vault.db` 的设计见上述变更文档。
+- 密码库 MVP 已随变更 `20261023-password-vault` 归档：它的设计结论已折叠进本文件（本项目定位、密码库 MVP 范围、导航与返回栈、密码库数据层、密码生成器、偏好持久化、自动锁定、安全措施等节）。
+- 变更目录仅留作历史记录，不再从那里取设计上下文；任务与验收记录在 `.agent/work/20261023-password-vault/`。
 
 ## 表单输入框规范
-
 - 组件：全应用输入统一走 `ui/components/AppTextField.kt`（编辑器字段 sheet、创建/解锁页共用），页面不再各自写 TextField。
 
 - 形态：标准的 M3 **线框式** `OutlinedTextField`。未聚焦描边 1dp `outline`，聚焦 2dp `primary`；容器色为 `Color.Transparent`，即背景与所在容器（sheet 的 `surfaceContainerLow`）一致，不再单独填充；不画额外下划线。
@@ -225,7 +252,6 @@ ui/components/
 - 键盘：字段编辑使用 `ModalBottomSheet`，`Modifier.imePadding()` 加在 sheet 的 `modifier` 上，内容可滚动，键盘弹出后不被遮挡。
 
 ## 密码生成器
-
 - 实现：`vault/PasswordGenerator.kt`（纯 Kotlin，`SecureRandom`）+ `ui/vault/PasswordGeneratorPanel.kt`（UI）。
 - 规则：长度 12–64（默认 20，滑块步进 1）；大写/小写/数字/符号四组开关，可排除易混淆字符（`I l 1 O 0 o | S 5 s B 8 b 2 Z z`）；先为每个勾选的字符集各取一个字符，其余随机填充，最后 Fisher–Yates 打乱，避免前几位固定。
 - 符号集固定为 `!#$%&*+-=?@^_`（不含引号、括号、反斜杠等易在别处出问题的字符）。
@@ -234,15 +260,26 @@ ui/components/
 - 单测：`app/src/test/java/top/zxionf/shio/vault/PasswordGeneratorTest.kt`（长度、字符集完整、排除易混淆、空选择、随机性，7 项）。
 
 ## 设置页「关于」信息
-
 - 数据来源：内核版本与 ABI 版本来自**运行时**查询（`kernel/KernelInfo.kt` 调 `shio_version()` / `shio_abi_version()`）；应用版本与 `SHIO_KERNEL_COMMIT` / `SHIO_ABI_VERSION` 由 Gradle 写入 `BuildConfig`（`app/build.gradle.kts` 的 `defaultConfig`）；设备架构与系统版本取 `android.os.Build`。
 - 展示行（`StackedList` + `ListItem`，外 28dp / 内 8dp）：版本 `0.1.0-debug（1）`、内核版本（当前 `0.2.0`）、ABI 版本、内核提交 `hydrogen @ <提交>`（release 12 位短哈希，debug 完整哈希）、设备架构 `arm64-v8a`、系统 `Android 16（API 36）`、数据库路径。
 - ABI 版本取值：native 加载成功且与构建约定一致时显示单个数字；不一致显示 `<运行时>（期望 <构建值>）`；库缺失或加载失败时内核版本与 ABI 版本都显示「不可用」（页面不崩溃）。
 - 内核提交只做产物溯源，不参与版本判断；`scripts/sync-shio.sh` / `sync-shio.ps1` 在同步产物时会把 `BuildConfig.SHIO_KERNEL_COMMIT` 自动改写为脚本里的 `PINNED_COMMIT`，手改无效也不必要。
 
 ## 导航与返回栈
+单 Activity、字符串路由，参数经 `Uri.encode`（不引入 kotlinx-serialization）；使用 `androidx.navigation:navigation-compose`。
 
-- 路由：`gate` → `create` / `unlock` → `vault` → `entry/{id}`、`editor?entryId=`、`settings` → `appearance`、`demo`；字符串路由，参数经 `Uri.encode`（不引入 kotlinx-serialization）。
+| 路由 | 页面 | 说明 |
+|---|---|---|
+| `gate` | 启动分流 | `vault.db` 存在去 `unlock`，否则去 `create` |
+| `create` | 创建密码库 | 主口令 + 确认 |
+| `unlock` | 解锁 | 主口令、错误展示 |
+| `vault` | 密码库列表 | 搜索、条目列表、FAB、锁定、设置 |
+| `entry/{id}` | 条目详情 | 查看、复制、显隐、外链、编辑、删除 |
+| `editor?entryId={entryId}` | 编辑器 | 无 `entryId` 为新建 |
+| `settings` | 设置 | 自动锁定、外观、Demo、关于 |
+| `appearance` | 外观 | 主题模式与配色 |
+| `demo` | 原型 Demo | 复用现有 `DemoScreen` |
+
 - 解锁/创建成功：`navigate(vault) { popUpTo(unlock|create) { inclusive = true } }`，`vault` 成为新栈底。
 - 锁定：`navigate(unlock) { popUpTo(graph.id) { inclusive = true }; launchSingleTop = true }`，**整个回退栈被清空**，解锁页成为唯一目的地；因此系统返回键在解锁页直接退出应用，不能退回已锁定的列表/详情/设置。
 - 创建/解锁页在无上一级时（`previousBackStackEntry == null`）不显示返回箭头：`LockScreen(onBack = null)`，避免出现点了没反应的死按钮。
@@ -250,7 +287,6 @@ ui/components/
 - 旋转：列表搜索词在 `VaultViewModel`（ViewModel 跨配置变更存活）、编辑/创建/解锁表单与生成器参数用 `rememberSaveable`、外观选择写 `SharedPreferences`；详情页密码显隐用 `remember`，旋转即复位为隐藏。
 
 ## 内核 ABI 对齐
-
 对照基线：hydrogen `5f3e8e3`（`shio 0.2.0`，`SHIO_ABI_VERSION = 1`）。`app/src/main/cpp/include/shio.h` 与内核同名文件逐字节一致（由 `scripts/sync-shio.sh` 同步并校验）。
 
 已映射的符号（`NativeShio` / `shio_jni.cpp`）：`shio_abi_version`、`shio_version`、`shio_open`、`shio_close`、`shio_kernel_destroy`、`shio_insert`、`shio_put`、`shio_get`、`shio_delete`、`shio_list`、`shio_batch`、`shio_stats`、`shio_sync_enable`、`shio_sync_info`、`shio_last_error`、`shio_free`（JNI 内部调用）。
@@ -274,9 +310,21 @@ ui/components/
 - `shio_open` 的 `options_json` 只接受 `create`、`read_only`、`max_value_size`、`cache_size`，未知字段会被拒绝；`create` 与 `read_only` 不能同时为真。
 
 ## 密码库数据层
-
 - 代码：`vault/VaultPaths.kt`（`filesDir/vault.db` 定位与存在性）、`vault/VaultRepository.kt`（建库/解锁/锁定 + `vault/entries` 读写）、`vault/VaultEntryCodec.kt`（`org.json` 编解码）。
-- 集合：命名空间 `vault`、集合 `entries`；记录值只放业务字段（`title`/`username`/`password`/`url`/`notes`），ID 与时间戳取内核 meta。
+- 集合：命名空间 `vault`、集合 `entries`；记录值只放业务字段，ID 与时间戳取内核 meta。
+
+```json
+{
+  "type": "login",
+  "title": "GitHub",
+  "username": "user@example.com",
+  "password": "……",
+  "url": "https://github.com",
+  "notes": ""
+}
+```
+
+- `type` 暂固定为 `login`（分类 UI 属于下一阶段）；`VaultEntryCodec` 只编解码 `title`/`username`/`password`/`url`/`notes` 五个字段。
 - 建库顺序（内核 `.design/api.md` + DECISIONS[40]）：`open(create=true)` → `sync_enable` → 校验 `sync_info.db_id` 非空且 `stats().format_version == 2`；任一步失败就 `destroy` 并删除 `vault.db` 与 `vault.db.lock`，不留 format=1 半成品。
 - 解锁：显式 `{"create":false}`；`sync_info` 取不到（`SHIO_SYNC_DISABLED`，即 format=1 旧库）时仍允许解锁，只是没有同步身份。
 - 锁定：`ShioDatabase.destroy()` 并清空 `VaultSession`；界面层沿用「锁定 → `unlock`，清空回退栈」路径。
@@ -317,14 +365,12 @@ ui/components/
 - 原值读取失败（条目被删/库已锁）显示错误态（重试 / 返回），不留可编辑的空壳。
 
 ## 偏好持久化
-
 - 外观：`ui/theme/AppearancePreferences`（`appearance` 预置），`theme_mode` 与 `palette` 两个字符串枚举名；选择立即生效并落盘。
 - 自动锁定：`vault/AutoLockPreferences`（`session` 预置），键 `auto_lock_timeout`，取值来自 `AutoLockTimeout`（`IMMEDIATELY`/`ONE_MINUTE`/`FIVE_MINUTES`/`FIFTEEN_MINUTES`，默认立即）。
 - 两者都是「进程内单例 + Compose 快照状态 + `SharedPreferences` 直接读写」，不引入 DataStore；冷启动由构造时读取恢复，设置页直接读快照状态展示。
 - 未知/旧版本写入的枚举名会被忽略并回退默认值，避免升级后崩溃。
 
 ## 自动锁定
-
 - 入口：`vault/AutoLockController`（单例，唯一的锁定发起方）。`MainActivity.onStop` 调 `onActivityStopped(isChangingConfigurations)`，`onStart` 调 `onActivityStarted`；旋转等配置变更在 `onStop` 直接返回，不触发锁定。
 - 判定：`vault/AutoLockPolicy.shouldLockAfterBackground(timeout, backgroundedAt, now)`（纯函数，可单测）。时间源是 `SystemClock.elapsedRealtime` 的差值，不受系统时间调整影响；时间戳倒流按未超时处理。
 - 「立即」：`onStop` 当场锁定（真正进后台才触发，因为旋转被排除）。
@@ -332,7 +378,6 @@ ui/components/
 - 锁定动作只有一处：`AutoLockController.lockNow()` → `VaultComponent.repository.lock()`（`destroy` 句柄、清会话）→ `lockCount` 自增；`AppNavHost` 监听 `lockCount` 变化，清空回退栈并导航到 `unlock`。手动锁定（列表页锁图标）同样走 `lockNow()`，不再在导航层重复写一遍销毁逻辑。
 
 ## 安全措施
-
 - 截屏防护：release 构建在 `MainActivity.onCreate` 设置 `WindowManager.LayoutParams.FLAG_SECURE`（真机 `screencap` 为全黑，最近任务预览同被屏蔽）；debug 不设置，便于截图验收。
 - 备份：`allowBackup=false` + `data_extraction_rules.xml` 排除 `root`/`file` 域，云备份与换机迁移都不带走数据库。
 - 日志：全部代码零 `Log.*` / `printStackTrace` / `println`；JNI 层也不打印。条目正文、口令、复制内容不会进入日志或崩溃信息。
@@ -342,6 +387,10 @@ ui/components/
 - 外链：只放行 `http`/`https` 且有主机名的地址（`VaultUrl`），避免 `javascript:`/`file:`/`intent:` 之类被当作可信跳转。
 
 ## 列表插入后的滚动
-
 - `LazyColumn` 用记录 ID 作 key：新条目插到开头时，Lazy 会保持旧首项为锚点，导致新条目被挤到搜索框上方只露半行。
 - 处理：`VaultListScreen` 记录上一次条目数，条目数增加且当前可见位置在前两项内时 `scrollToItem(0)`；用户已向下翻（`firstVisibleItemIndex > 1`）则不打扰当前位置。
+
+## 兼容与迁移
+- 全新 `vault.db`，无迁移；Demo 的 `shio-demo.db` 与 `demo/` 命名空间不动。
+- 应用启动入口从 Demo 改为 `gate`；Demo 通过设置进入。
+- 现有 `scripts/smoke.sh` / `acceptance.sh` 继续可用；后续可增加 Vault 专用探针。
