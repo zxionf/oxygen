@@ -49,9 +49,14 @@ fun AppNavHost(
         }
 
         composable(Routes.Create) {
+            // 创建页可能是栈底（gate 分流来），此时不显示返回箭头：返回即退出应用。
             LockScreen(
                 mode = LockMode.Create,
-                onBack = { navController.popBackStack() },
+                onBack = if (navController.previousBackStackEntry != null) {
+                    { navController.popBackStack() }
+                } else {
+                    null
+                },
                 onSuccess = {
                     navController.navigate(Routes.Vault) {
                         popUpTo(Routes.Create) { inclusive = true }
@@ -61,9 +66,14 @@ fun AppNavHost(
         }
 
         composable(Routes.Unlock) {
+            // 解锁页永远是栈底：返回退出应用，不能退回密码库。
             LockScreen(
                 mode = LockMode.Unlock,
-                onBack = { navController.popBackStack() },
+                onBack = if (navController.previousBackStackEntry != null) {
+                    { navController.popBackStack() }
+                } else {
+                    null
+                },
                 onSuccess = {
                     navController.navigate(Routes.Vault) {
                         popUpTo(Routes.Unlock) { inclusive = true }
@@ -74,7 +84,14 @@ fun AppNavHost(
 
         composable(Routes.Vault) {
             VaultListScreen(
-                onLock = { navController.navigate(Routes.Unlock) },
+                onLock = {
+                    // 锁定必须清空整个回退栈（列表、详情、设置……），解锁页成为新栈底，
+                    // 否则返回键能直接退回已锁定内容。
+                    navController.navigate(Routes.Unlock) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
                 onSettings = { navController.navigate(Routes.Settings) },
                 onCreateEntry = { navController.navigate(Routes.editor()) },
                 onOpenEntry = { entryId -> navController.navigate(Routes.entry(entryId)) },

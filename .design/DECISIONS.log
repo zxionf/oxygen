@@ -224,3 +224,8 @@ Change: 20261023-password-vault
 Context: 同步内核后设置页「内核提交」仍显示旧哈希 50e073b：产物、脚本、SPEC 都更新了，只有 app/build.gradle.kts 的 SHIO_KERNEL_COMMIT 漏改，说明「同一个提交号存多处、靠人同步」本身是缺陷。
 Decision: 把 SHIO_KERNEL_COMMIT 改成由 scripts/sync-shio.sh 与 sync-shio.ps1 在同步产物后自动改写（awk 定位「上一行是 SHIO_KERNEL_COMMIT」的那一行，替换 40 位哈希），并修正为 5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4；build.gradle 里注明「由脚本自动改写，不要手改」。
 Consequences: 提交号仍有两个源头（脚本常量 = 唯一源头，BuildConfig 由脚本派生），但已不会因漏改而失真；--skip-build 只复制产物时也会顺手校正该常量。
+## [46] 2026-10-25 02:43:37 UTC
+Change: 20261023-password-vault
+Context: M10 之前锁定只是 navigate 到 unlock，回退栈里还留着 vault/详情/设置，按返回键能直接退回已锁定的内容；同时解锁页一直显示返回箭头，栈底时点了没反应。
+Decision: 锁定改为 navigate(unlock) 且 popUpTo(navController.graph.id){inclusive=true} + launchSingleTop，让解锁页成为唯一目的地；LockScreen 的 onBack 改为可空，调用方在 previousBackStackEntry 为空时传 null，顶栏不渲染返回箭头。
+Consequences: 解锁页的返回语义统一为「退出应用」，无法绕过锁定回到列表；解锁成功仍 popUpTo(unlock, inclusive) 让 vault 成为新栈底，回退栈任意时刻最深两层（unlock → vault）。

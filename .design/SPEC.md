@@ -239,3 +239,12 @@ ui/components/
 - 展示行（`StackedList` + `ListItem`，外 28dp / 内 8dp）：版本 `0.1.0-debug（1）`、内核版本（当前 `0.2.0`）、ABI 版本、内核提交 `hydrogen @ <提交>`（release 12 位短哈希，debug 完整哈希）、设备架构 `arm64-v8a`、系统 `Android 16（API 36）`、数据库路径。
 - ABI 版本取值：native 加载成功且与构建约定一致时显示单个数字；不一致显示 `<运行时>（期望 <构建值>）`；库缺失或加载失败时内核版本与 ABI 版本都显示「不可用」（页面不崩溃）。
 - 内核提交只做产物溯源，不参与版本判断；`scripts/sync-shio.sh` / `sync-shio.ps1` 在同步产物时会把 `BuildConfig.SHIO_KERNEL_COMMIT` 自动改写为脚本里的 `PINNED_COMMIT`，手改无效也不必要。
+
+## 导航与返回栈
+
+- 路由：`gate` → `create` / `unlock` → `vault` → `entry/{id}`、`editor?entryId=`、`settings` → `appearance`、`demo`；字符串路由，参数经 `Uri.encode`（不引入 kotlinx-serialization）。
+- 解锁/创建成功：`navigate(vault) { popUpTo(unlock|create) { inclusive = true } }`，`vault` 成为新栈底。
+- 锁定：`navigate(unlock) { popUpTo(graph.id) { inclusive = true }; launchSingleTop = true }`，**整个回退栈被清空**，解锁页成为唯一目的地；因此系统返回键在解锁页直接退出应用，不能退回已锁定的列表/详情/设置。
+- 创建/解锁页在无上一级时（`previousBackStackEntry == null`）不显示返回箭头：`LockScreen(onBack = null)`，避免出现点了没反应的死按钮。
+- 详情 → 编辑保存后回退一级；删除后 `popBackStack()` 回列表；编辑器有未保存修改时返回先弹「放弃修改？」。
+- 旋转：列表搜索词在 `VaultViewModel`（ViewModel 跨配置变更存活）、编辑/创建/解锁表单与生成器参数用 `rememberSaveable`、外观选择写 `SharedPreferences`；详情页密码显隐用 `remember`，旋转即复位为隐藏。

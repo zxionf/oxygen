@@ -54,12 +54,15 @@ enum class LockMode { Create, Unlock }
  *
  * 大标题 + 单个 filled 输入框 + 全宽胶囊主按钮；错误显示在内联错误区。
  * M9 之前是假 gate：主口令长度 ≥ 8 且两次一致即可通过，成功后由调用方进入 `vault`。
+ *
+ * [onBack] 为 null 表示当前页是栈底（创建/解锁就是应用入口），不显示返回箭头，
+ * 此时系统返回键直接退出应用。
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LockScreen(
     mode: LockMode,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onSuccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -88,8 +91,10 @@ fun LockScreen(
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        AppIcon(AppIcons.ArrowBack, contentDescription = "返回")
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            AppIcon(AppIcons.ArrowBack, contentDescription = "返回")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
