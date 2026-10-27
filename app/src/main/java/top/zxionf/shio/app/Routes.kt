@@ -16,6 +16,7 @@ object Routes {
     const val Settings = "settings"
     const val Appearance = "appearance"
     const val ChangePassword = "change-password"
+    const val Tags = "tags"
     const val Demo = "demo"
 
     /** 详情路由参数名。 */

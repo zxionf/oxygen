@@ -17,6 +17,7 @@ import top.zxionf.shio.demo.DemoScreen
 import top.zxionf.shio.ui.settings.AppearanceScreen
 import top.zxionf.shio.ui.settings.ChangePasswordScreen
 import top.zxionf.shio.ui.settings.SettingsScreen
+import top.zxionf.shio.ui.settings.TagsScreen
 import top.zxionf.shio.ui.unlock.LockMode
 import top.zxionf.shio.ui.unlock.LockScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
@@ -155,6 +156,7 @@ fun AppNavHost(
                     onBack = { navController.popBackStack() },
                     onAppearance = { navController.navigate(Routes.Appearance) },
                     onChangePassword = { navController.navigate(Routes.ChangePassword) },
+                    onManageTags = { navController.navigate(Routes.Tags) },
                     // 恢复后旧会话作废：清栈回解锁页，用备份时的主口令重新解锁。
                     onRestored = {
                         navController.navigate(Routes.Unlock) {
@@ -179,6 +181,12 @@ fun AppNavHost(
                     onBack = { navController.popBackStack() },
                     onChanged = { navController.popBackStack() },
                 )
+            }
+        }
+
+        composable(Routes.Tags) {
+            RequireUnlocked(navController) {
+                TagsScreen(onBack = { navController.popBackStack() })
             }
         }
 

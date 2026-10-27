@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -24,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -62,6 +64,7 @@ import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ShioTheme
 import top.zxionf.shio.vault.SampleVaultEntries
 import top.zxionf.shio.vault.SensitiveClipboard
+import top.zxionf.shio.vault.VaultTag
 import top.zxionf.shio.vault.VaultUrl
 
 /**
@@ -87,6 +90,7 @@ fun EntryDetailScreen(
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val entry = state.entry
+    var allTags by remember { mutableStateOf<List<VaultTag>>(emptyList()) }
     var passwordVisible by remember { mutableStateOf(false) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
     var imeClipboardNoticeVisible by remember { mutableStateOf(false) }
@@ -94,6 +98,8 @@ fun EntryDetailScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(entryId) { viewModel.bind(entryId) }
+    // 标签在条目变化时重读：新建标签后返回详情能看到新名称。
+    LaunchedEffect(state.entry?.id) { allTags = viewModel.allTags() }
     // 从编辑器返回、旋转、回前台都重读一次，保证看到最新值。
     LifecycleResumeEffect(entryId) {
         viewModel.refresh()
@@ -149,6 +155,15 @@ fun EntryDetailScreen(
                 },
                 actions = {
                     if (entry != null) {
+                        IconToggleButton(
+                            checked = entry.favorite,
+                            onCheckedChange = { viewModel.toggleFavorite() },
+                        ) {
+                            AppIcon(
+                                icon = if (entry.favorite) AppIcons.Star else AppIcons.StarBorder,
+                                contentDescription = if (entry.favorite) "取消收藏" else "收藏",
+                            )
+                        }
                         IconButton(onClick = { onEdit(entry.id) }) {
                             AppIcon(AppIcons.Edit, contentDescription = "编辑")
                         }
@@ -248,6 +263,14 @@ fun EntryDetailScreen(
                     notes = entry.notes,
                     onCopy = { copyToClipboard("备注", entry.notes) },
                 )
+
+                // 标签按条目里的 tagIds 解析；找不到的名称（标签被删）自动忽略。
+                val entryTags = entry.tagIds.mapNotNull { id ->
+                    allTags.firstOrNull { it.id == id }
+                }
+                if (entryTags.isNotEmpty()) {
+                    TagsSection(tags = entryTags)
+                }
             }
         }
     }
@@ -427,6 +450,45 @@ private fun NotesSection(
                         size = 20.dp,
                     )
                 }
+            }
+        }
+    }
+}
+
+/** 标签区块：横向滚动的 `AssistChip`，条目无标签时整个区块不出现。 */
+@Composable
+private fun TagsSection(
+    tags: List<VaultTag>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "标签",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            tags.forEach { tag ->
+                AssistChip(
+                    onClick = {},
+                    label = { Text(tag.name) },
+                    leadingIcon = {
+                        AppIcon(
+                            icon = AppIcons.Notes,
+                            contentDescription = null,
+                            size = 16.dp,
+                        )
+                    },
+                )
             }
         }
     }

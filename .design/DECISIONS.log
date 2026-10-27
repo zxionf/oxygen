@@ -344,3 +344,13 @@ Change: 20261027-import-export
 Context: VaultTransfer 用 org.json 做 JSON 编解码，但 Android 单元测试里的 org.json 是空壳，调用会抛 not mocked，导致 9 个用例里 4 个失败。
 Decision: 在 Version Catalog 增加 org-json 并在 build.gradle.kts 用 testImplementation 引入真实实现，仅在测试 classpath 生效，不影响 APK（运行时仍用系统 org.json）。
 Consequences: 编解码逻辑可以在 JVM 上直接单测；代价是多一个测试期依赖，且测试行为以 org.json 官方实现为准（与 Android 内置实现语义一致）。
+## [70] 2026-10-27 13:27:57 UTC
+Change: 20261027-tags-and-favorites
+Context: 标签可以做成条目内的字符串数组，也可以做成独立集合 + 条目引用 ID；前者简单但重命名要遍历所有条目，后者多一次查询但重命名只改一条记录。
+Decision: 采用独立集合 vault/tags 存标签定义（{"name":...}）+ 条目 JSON 里存 tagIds 引用数组；读取条目时忽略找不到的 ID（悬空引用），删除标签时遍历条目清理引用但单条失败不回滚。
+Consequences: 重命名/改色只改一处，标签可以独立枚举与统计；代价是删除需要 O(条目数) 的清理，且极端情况下可能留下悬空 ID（读取时被过滤，不会显示错误标签）。
+## [71] 2026-10-27 13:27:57 UTC
+Change: 20261027-tags-and-favorites
+Context: 收藏既可以是条目上的布尔字段，也可以是一个特殊标签（如 __favorite）。
+Decision: 收藏实现为条目 JSON 里的 favorite 布尔字段，不占用标签命名空间；列表筛选里「收藏」与标签 chips 并列但语义独立，筛选可叠加。
+Consequences: 用户不能重命名或删除「收藏」，语义稳定；标签列表保持干净；代价是多一个字段与一套独立的筛选开关。

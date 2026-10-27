@@ -2,6 +2,7 @@ package top.zxionf.shio.ui.vault
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -27,9 +28,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
@@ -76,10 +80,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import top.zxionf.shio.ui.components.AppIcons
+import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.AppTextField
 import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.theme.ListStackShapes
+import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultEntry
+import top.zxionf.shio.vault.VaultTag
 
 /**
  * 新建 / 编辑共用的条目编辑器（M3E）。
@@ -179,6 +186,11 @@ private fun EditorBody(
     var password by rememberSaveable(entryId) { mutableStateOf(initialPassword) }
     var url by rememberSaveable(entryId) { mutableStateOf(initialUrl) }
     var notes by rememberSaveable(entryId) { mutableStateOf(initialNotes) }
+    // ArrayList 是 Serializable，rememberSaveable 能在旋转后恢复；tagIds 不能丢。
+    var tagIds by rememberSaveable(entryId) {
+        mutableStateOf(ArrayList(initial?.tagIds.orEmpty()))
+    }
+    var allTags by remember { mutableStateOf<List<VaultTag>>(emptyList()) }
     var showErrors by rememberSaveable(entryId) { mutableStateOf(false) }
     var editingField by rememberSaveable(entryId) { mutableStateOf<EditorField?>(null) }
     var discardDialogVisible by remember { mutableStateOf(false) }
@@ -189,7 +201,13 @@ private fun EditorBody(
             username != initialUsername ||
             password != initialPassword ||
             url != initialUrl ||
-            notes != initialNotes
+            notes != initialNotes ||
+            tagIds.toList() != initial?.tagIds.orEmpty()
+
+    // 标签列表在进入页面时读一次；新建标签在 picker 里创建后会写回这里。
+    LaunchedEffect(entryId) {
+        allTags = runCatching { VaultComponent.repository.tags() }.getOrDefault(emptyList())
+    }
 
     val titleMissing = title.isBlank()
     val passwordMissing = password.isBlank()
@@ -218,6 +236,8 @@ private fun EditorBody(
                 password = password,
                 url = url.trim(),
                 notes = notes.trim(),
+                tagIds = tagIds.toList(),
+                favorite = initial?.favorite ?: false,
             ),
         )
     }
@@ -303,9 +323,19 @@ private fun EditorBody(
                     value = notes,
                     placeholder = "未填写",
                     icon = AppIcons.Notes,
-                    shape = ListStackShapes.last,
+                    shape = ListStackShapes.middle,
                     singleLine = true,
                     onClick = { editingField = EditorField.Notes },
+                )
+                FieldItem(
+                    label = "标签",
+                    value = tagIds.mapNotNull { id -> allTags.firstOrNull { it.id == id }?.name }
+                        .joinToString("、"),
+                    placeholder = "未选择",
+                    icon = AppIcons.Notes,
+                    shape = ListStackShapes.last,
+                    singleLine = true,
+                    onClick = { editingField = EditorField.Tags },
                 )
             }
         }
@@ -327,26 +357,53 @@ private fun EditorBody(
             // 加在内容里会导致先上移、窗口调整尺寸后又被键盘盖住。
             modifier = Modifier.imePadding(),
         ) {
-            FieldSheet(
-                field = field,
-                value = when (field) {
-                    EditorField.Title -> title
-                    EditorField.Username -> username
-                    EditorField.Password -> password
-                    EditorField.Url -> url
-                    EditorField.Notes -> notes
-                },
-                onValueChange = { newValue ->
-                    when (field) {
-                        EditorField.Title -> title = newValue
-                        EditorField.Username -> username = newValue
-                        EditorField.Password -> password = newValue
-                        EditorField.Url -> url = newValue
-                        EditorField.Notes -> notes = newValue
-                    }
-                },
-                onDone = ::closeSheet,
-            )
+            if (field == EditorField.Tags) {
+                TagsPickerSheet(
+                    allTags = allTags,
+                    selected = tagIds,
+                    onToggle = { id ->
+                        val next = tagIds.toMutableList()
+                        if (!next.remove(id)) next.add(id)
+                        tagIds = ArrayList(next)
+                    },
+                    onCreate = { name ->
+                        scope.launch {
+                            runCatching { VaultComponent.repository.insertTag(name) }
+                                .onSuccess { tag ->
+                                    allTags = VaultComponent.repository.tags()
+                                    if (tag.id !in tagIds) tagIds = ArrayList(tagIds + tag.id)
+                                }
+                                .onFailure {
+                                    snackbarHostState.showSnackbar(it.message ?: "新建标签失败")
+                                }
+                        }
+                    },
+                    onDone = ::closeSheet,
+                )
+            } else {
+                FieldSheet(
+                    field = field,
+                    value = when (field) {
+                        EditorField.Title -> title
+                        EditorField.Username -> username
+                        EditorField.Password -> password
+                        EditorField.Url -> url
+                        EditorField.Notes -> notes
+                        EditorField.Tags -> ""
+                    },
+                    onValueChange = { newValue ->
+                        when (field) {
+                            EditorField.Title -> title = newValue
+                            EditorField.Username -> username = newValue
+                            EditorField.Password -> password = newValue
+                            EditorField.Url -> url = newValue
+                            EditorField.Notes -> notes = newValue
+                            EditorField.Tags -> Unit
+                        }
+                    },
+                    onDone = ::closeSheet,
+                )
+            }
         }
     }
 
@@ -388,6 +445,7 @@ private enum class EditorField(
     Password("密码", "必填，只保存在本机", AppIcons.Key, KeyboardType.Password, false),
     Url("连接", "仅支持 http/https 链接", AppIcons.Link, KeyboardType.Uri, false),
     Notes("备注", "可留空，支持多行", AppIcons.Notes, KeyboardType.Text, true),
+    Tags("标签", "来自标签管理，可多选", AppIcons.Notes, KeyboardType.Text, false),
 }
 
 /**
@@ -575,5 +633,115 @@ private fun FieldSheet(
 
     LaunchedEffect(field, generating) {
         if (!generating) focusRequester.requestFocus()
+    }
+}
+
+/**
+ * 标签多选面板：勾选已有标签，或当场新建一个。
+ *
+ * 状态由调用方（编辑器）持有，本面板只负责展示与回调，便于把「哪些标签被选中」
+ * 与「保存时写入条目」保持在同一处。
+ */
+@Composable
+private fun TagsPickerSheet(
+    allTags: List<VaultTag>,
+    selected: List<String>,
+    onToggle: (String) -> Unit,
+    onCreate: (String) -> Unit,
+    onDone: () -> Unit,
+) {
+    var draft by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(
+            text = "标签",
+            style = MaterialTheme.typography.headlineSmallEmphasized,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.weight(1f)) {
+                AppTextField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    label = "新建标签",
+                    helperText = "填名字后点右侧按钮添加并选中",
+                    singleLine = true,
+                    imeAction = ImeAction.Done,
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (draft.isNotBlank()) {
+                                onCreate(draft)
+                                draft = ""
+                            }
+                        },
+                    ),
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = {
+                    if (draft.isNotBlank()) {
+                        onCreate(draft)
+                        draft = ""
+                    }
+                },
+                enabled = draft.isNotBlank(),
+            ) {
+                AppIcon(AppIcons.Add, contentDescription = "新建并选中")
+            }
+        }
+
+        if (allTags.isEmpty()) {
+            Text(
+                text = "还没有标签，可先在上方新建。",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            StackedList(itemCount = allTags.size) { index, shape ->
+                val tag = allTags[index]
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = shape,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    ListItem(
+                        modifier = Modifier.clickable { onToggle(tag.id) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        content = {
+                            Text(
+                                text = tag.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        },
+                        trailingContent = {
+                            Checkbox(
+                                checked = tag.id in selected,
+                                onCheckedChange = { onToggle(tag.id) },
+                            )
+                        },
+                    )
+                }
+            }
+        }
+
+        Button(
+            onClick = onDone,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = CircleShape,
+        ) {
+            Text(text = "完成", style = MaterialTheme.typography.titleMedium)
+        }
     }
 }

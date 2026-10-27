@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -24,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
@@ -32,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +64,7 @@ import top.zxionf.shio.ui.components.StackedList
 import top.zxionf.shio.ui.components.rememberPressScale
 import top.zxionf.shio.ui.theme.ShioTheme
 import top.zxionf.shio.vault.VaultEntry
+import top.zxionf.shio.vault.VaultFilterState
 import top.zxionf.shio.vault.VaultUiState
 import top.zxionf.shio.vault.VaultViewModel
 
@@ -73,6 +78,9 @@ class VaultListActions(
     val onCreateEntry: () -> Unit = {},
     val onOpenEntry: (String) -> Unit = {},
     val onRefresh: () -> Unit = {},
+    val onToggleFavoriteFilter: () -> Unit = {},
+    val onToggleTagFilter: (String) -> Unit = {},
+    val onClearFilters: () -> Unit = {},
 )
 
 @Composable
@@ -94,6 +102,9 @@ fun VaultListScreen(
             onCreateEntry = onCreateEntry,
             onOpenEntry = onOpenEntry,
             onRefresh = viewModel::refresh,
+            onToggleFavoriteFilter = viewModel::toggleFavoriteFilter,
+            onToggleTagFilter = viewModel::toggleTagFilter,
+            onClearFilters = viewModel::clearFilters,
         )
     }
     // 从编辑器/详情返回、或旋转后重新可见时拉一次整库，保证写入后能看到最新结果。
@@ -186,6 +197,15 @@ private fun VaultListContent(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
+            if (state.filters.allTags.isNotEmpty() || state.filters.isActive) {
+                FilterRow(
+                    filters = state.filters,
+                    onToggleFavorite = actions.onToggleFavoriteFilter,
+                    onToggleTag = actions.onToggleTagFilter,
+                    onClear = actions.onClearFilters,
+                )
+            }
+
             when {
                 // 首次加载：整页只有加载指示器，避免先闪一下「空库」空态。
                 state.isLoading && state.entries.isEmpty() && state.totalCount == 0 -> Box(
@@ -225,6 +245,48 @@ private fun VaultListContent(
                     listState = listState,
                 )
             }
+        }
+    }
+}
+
+/** 筛选行：收藏 chip + 全部标签 chip（横向滚动），筛选生效时提供「清除」。 */
+@Composable
+private fun FilterRow(
+    filters: VaultFilterState,
+    onToggleFavorite: () -> Unit,
+    onToggleTag: (String) -> Unit,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        FilterChip(
+            selected = filters.onlyFavorite,
+            onClick = onToggleFavorite,
+            label = { Text("收藏") },
+            leadingIcon = {
+                AppIcon(
+                    icon = if (filters.onlyFavorite) AppIcons.Star else AppIcons.StarBorder,
+                    contentDescription = null,
+                    size = 16.dp,
+                )
+            },
+        )
+        filters.allTags.forEach { tag ->
+            FilterChip(
+                selected = tag.id in filters.selectedTagIds,
+                onClick = { onToggleTag(tag.id) },
+                label = { Text(tag.name) },
+            )
+        }
+        if (filters.isActive) {
+            TextButton(onClick = onClear) { Text("清除") }
         }
     }
 }
@@ -309,6 +371,9 @@ private fun EntryList(
             EntryRow(
                 entry = entry,
                 shape = shape,
+                tags = entry.tagIds.mapNotNull { id ->
+                    state.filters.allTags.firstOrNull { it.id == id }?.name
+                },
                 onClick = { actions.onOpenEntry(entry.id) },
             )
         }
@@ -320,6 +385,7 @@ private fun EntryList(
 private fun EntryRow(
     entry: VaultEntry,
     shape: androidx.compose.ui.graphics.Shape,
+    tags: List<String>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -357,18 +423,41 @@ private fun EntryRow(
             }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = entry.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (entry.favorite) {
+                        AppIcon(
+                            icon = AppIcons.Star,
+                            contentDescription = "已收藏",
+                            size = 16.dp,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = entry.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 if (entry.subtitle.isNotEmpty()) {
                     Text(
                         text = entry.subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                // 副标题后最多展示两个标签，其余用 +N 概括（保持 72dp 行高不撑开）。
+                if (tags.isNotEmpty()) {
+                    val shown = tags.take(2)
+                    val extra = tags.size - shown.size
+                    Text(
+                        text = if (extra > 0) shown.joinToString("·") + " +$extra" else shown.joinToString("·"),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )

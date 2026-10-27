@@ -11,6 +11,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import top.zxionf.shio.kernel.ShioException
 
+/** 列表筛选状态：收藏 + 标签集合 + 可用标签（用于渲染 chips）。 */
+data class VaultFilterState(
+    val onlyFavorite: Boolean = false,
+    val selectedTagIds: Set<String> = emptySet(),
+    val allTags: List<VaultTag> = emptyList(),
+) {
+    val isActive: Boolean
+        get() = onlyFavorite || selectedTagIds.isNotEmpty()
+}
+
 /** 密码库列表的界面状态。 */
 data class VaultUiState(
     val query: String = "",
@@ -18,12 +28,13 @@ data class VaultUiState(
     val totalCount: Int = 0,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val filters: VaultFilterState = VaultFilterState(),
 ) {
     /** 库真的为空（已读完且没有任何条目，且没有出错）。 */
     val isEmptyLibrary: Boolean
         get() = !isLoading && errorMessage == null && totalCount == 0
 
-    /** 有数据但当前关键词搜不到。 */
+    /** 有数据但当前关键词/筛选无命中。 */
     val isEmptySearch: Boolean
         get() = !isLoading && errorMessage == null && totalCount > 0 && entries.isEmpty()
 
@@ -49,15 +60,17 @@ class VaultViewModel(
     private val query = MutableStateFlow("")
     private val loading = MutableStateFlow(true)
     private val error = MutableStateFlow<String?>(null)
+    private val filters = MutableStateFlow(VaultFilterState())
 
-    val state: StateFlow<VaultUiState> = combine(entries, query, loading, error) {
-            all, keyword, isLoading, failure ->
+    val state: StateFlow<VaultUiState> = combine(entries, query, loading, error, filters) {
+            all, keyword, isLoading, failure, filterState ->
         VaultUiState(
             query = keyword,
-            entries = filterEntries(all, keyword),
+            entries = filterEntries(all, keyword, filterState),
             totalCount = all.size,
             isLoading = isLoading,
             errorMessage = failure,
+            filters = filterState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -77,6 +90,23 @@ class VaultViewModel(
 
     fun onClearQuery() = onQueryChange("")
 
+    /** 切换「只看收藏」筛选。 */
+    fun toggleFavoriteFilter() {
+        filters.value = filters.value.copy(onlyFavorite = !filters.value.onlyFavorite)
+    }
+
+    /** 切换单个标签筛选；多个标签之间是「同时包含」关系。 */
+    fun toggleTagFilter(tagId: String) {
+        val current = filters.value.selectedTagIds
+        val next = if (tagId in current) current - tagId else current + tagId
+        filters.value = filters.value.copy(selectedTagIds = next)
+    }
+
+    /** 清空全部筛选（关键词不受影响）。 */
+    fun clearFilters() {
+        filters.value = filters.value.copy(onlyFavorite = false, selectedTagIds = emptySet())
+    }
+
     /** 重新读取整库；列表页每次回到前台都调一次，保证写入后可见。 */
     fun refresh() {
         if (!repository.isUnlocked) {
@@ -90,6 +120,15 @@ class VaultViewModel(
             error.value = null
             try {
                 entries.value = repository.entries()
+                // 标签与条目同读：标签被删后，筛选里残留的 ID 要一并清掉，
+                // 否则会出现「筛选着不存在的标签、列表恒为空」且看不到任何 chip 的状态。
+                val tags = runCatching { repository.tags() }.getOrDefault(emptyList())
+                val validIds = tags.map { it.id }.toSet()
+                val current = filters.value
+                filters.value = current.copy(
+                    allTags = tags,
+                    selectedTagIds = current.selectedTagIds intersect validIds,
+                )
             } catch (failure: Throwable) {
                 error.value = describeFailure(failure)
             } finally {
@@ -98,9 +137,18 @@ class VaultViewModel(
         }
     }
 
-    private fun filterEntries(all: List<VaultEntry>, keyword: String): List<VaultEntry> {
-        val filtered = if (keyword.isBlank()) all else all.filter { it.matches(keyword) }
-        return filtered.sortedBy { it.title.lowercase() }
+    private fun filterEntries(
+        all: List<VaultEntry>,
+        keyword: String,
+        filters: VaultFilterState,
+    ): List<VaultEntry> {
+        var list = all
+        if (keyword.isNotBlank()) list = list.filter { it.matches(keyword) }
+        if (filters.onlyFavorite) list = list.filter { it.favorite }
+        if (filters.selectedTagIds.isNotEmpty()) {
+            list = list.filter { entry -> filters.selectedTagIds.all { it in entry.tagIds } }
+        }
+        return list.sortedBy { it.title.lowercase() }
     }
 
     private fun describeFailure(failure: Throwable): String = when (failure) {

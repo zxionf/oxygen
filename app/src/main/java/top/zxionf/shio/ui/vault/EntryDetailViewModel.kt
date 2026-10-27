@@ -11,6 +11,7 @@ import top.zxionf.shio.kernel.ShioException
 import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultEntry
 import top.zxionf.shio.vault.VaultRepository
+import top.zxionf.shio.vault.VaultTag
 
 /** 详情页状态。 */
 data class EntryDetailUiState(
@@ -70,6 +71,26 @@ class EntryDetailViewModel(
             }
         }
     }
+
+    /** 切换收藏；成功后用读回的值刷新条目。 */
+    fun toggleFavorite() {
+        val entry = _state.value.entry ?: return
+        viewModelScope.launch {
+            try {
+                repository.updateFavorite(entry.id, !entry.favorite)
+                val refreshed = repository.entry(entry.id)
+                _state.value = _state.value.copy(
+                    entry = refreshed ?: entry.copy(favorite = !entry.favorite),
+                )
+            } catch (failure: Throwable) {
+                _state.value = _state.value.copy(errorMessage = describeFailure(failure))
+            }
+        }
+    }
+
+    /** 全部标签，用于把条目的 `tagIds` 解析成名称。 */
+    suspend fun allTags(): List<VaultTag> =
+        runCatching { repository.tags() }.getOrDefault(emptyList())
 
     /** 删除当前条目；成功后 `deleted = true`。 */
     fun delete() {

@@ -62,8 +62,8 @@ import top.zxionf.shio.ui.theme.ShioTheme
 /**
  * 设置页（M3E）。
  *
- * 分组列表：自动锁定（单选对话框）、外观、原型 Demo、关于。
- * 自动锁定目前只在页面内保存选择；持久化与真正生效在 M16/M17。
+ * 分组：安全（自动锁定 / 修改主口令）、数据（导入导出 / 备份恢复 / 标签管理）、
+ * 外观与体验、关于。偏好均已持久化（见 SPEC 的「偏好持久化」）。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,6 +72,7 @@ fun SettingsScreen(
     onAppearance: () -> Unit,
     onDemo: () -> Unit,
     onChangePassword: () -> Unit = {},
+    onManageTags: () -> Unit = {},
     onRestored: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -296,7 +297,7 @@ fun SettingsScreen(
             }
 
             SectionTitle("数据")
-            StackedList(itemCount = 5) { index, shape ->
+            StackedList(itemCount = 6) { index, shape ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = shape,
@@ -342,7 +343,7 @@ fun SettingsScreen(
                             },
                         )
 
-                        else -> SettingRow(
+                        4 -> SettingRow(
                             icon = AppIcons.Edit,
                             label = "从备份恢复",
                             value = if (restoreBusy) "正在读取…" else "替换当前数据，需要备份的主口令",
@@ -352,6 +353,13 @@ fun SettingsScreen(
                                     restoreLauncher.launch(arrayOf("*/*"))
                                 }
                             },
+                        )
+
+                        else -> SettingRow(
+                            icon = AppIcons.Notes,
+                            label = "管理标签",
+                            value = "新建、重命名或删除标签",
+                            onClick = onManageTags,
                         )
                     }
                 }

@@ -236,6 +236,89 @@ class VaultRepository(
         return database.delete(NAMESPACE, COLLECTION, entryId)
     }
 
+    // ---- 标签与收藏 ----
+
+    /** 全部标签，按名称（小写）升序。 */
+    suspend fun tags(): List<VaultTag> {
+        requireUnlocked()
+        val result = mutableListOf<VaultTag>()
+        var after: String? = null
+        do {
+            val page = JSONObject(
+                database.list(NAMESPACE, TAG_COLLECTION, after = after, limit = PAGE_SIZE),
+            )
+            val items = page.optJSONArray("items")
+            for (index in 0 until (items?.length() ?: 0)) {
+                val meta = items?.optJSONObject(index) ?: continue
+                if (meta.optBoolean("deleted", false)) continue
+                val id = meta.optString("id").ifEmpty { continue }
+                val value = JSONObject(database.get(NAMESPACE, TAG_COLLECTION, id)).opt("value")
+                VaultTagCodec.decode(id, value?.toString() ?: continue)?.let { result += it }
+            }
+            after = page.optString("next").takeIf { it.isNotEmpty() && it != "null" }
+        } while (after != null && result.size < MAX_TAGS)
+        return result.sortedBy { it.name.lowercase() }
+    }
+
+    /** 新建标签；名称已被占用时抛 [IllegalArgumentException]。 */
+    suspend fun insertTag(rawName: String): VaultTag {
+        requireUnlocked()
+        val name = VaultTagCodec.normalizeName(rawName)
+            ?: throw IllegalArgumentException("标签名需为 1–${VaultTagCodec.MAX_NAME_LENGTH} 个字符")
+        if (tags().any { it.name.equals(name, ignoreCase = true) }) {
+            throw IllegalArgumentException("标签「$name」已存在")
+        }
+        val id = database.insert(NAMESPACE, TAG_COLLECTION, VaultTagCodec.encode(VaultTag("", name)))
+        return VaultTag(id = id, name = name)
+    }
+
+    /** 重命名标签；条目无需变动（它们只存 ID）。 */
+    suspend fun renameTag(tagId: String, rawName: String) {
+        requireUnlocked()
+        val name = VaultTagCodec.normalizeName(rawName)
+            ?: throw IllegalArgumentException("标签名需为 1–${VaultTagCodec.MAX_NAME_LENGTH} 个字符")
+        if (tags().any { it.id != tagId && it.name.equals(name, ignoreCase = true) }) {
+            throw IllegalArgumentException("标签「$name」已存在")
+        }
+        database.put(NAMESPACE, TAG_COLLECTION, tagId, VaultTagCodec.encode(VaultTag(tagId, name)))
+    }
+
+    /**
+     * 删除标签：先删标签记录，再从所有条目里清掉该 ID。
+     *
+     * 单条清理失败不回滚（不会丢掉其它数据）；残留的 ID 在读取时会被忽略。
+     */
+    suspend fun deleteTag(tagId: String): Int {
+        requireUnlocked()
+        database.delete(NAMESPACE, TAG_COLLECTION, tagId)
+        var cleaned = 0
+        entries().forEach { entry ->
+            if (tagId !in entry.tagIds) return@forEach
+            runCatching {
+                update(entry.copy(tagIds = entry.tagIds - tagId))
+            }.onSuccess { cleaned += 1 }
+        }
+        return cleaned
+    }
+
+    /** 每个标签下的条目数。 */
+    suspend fun tagUsage(): Map<String, Int> {
+        requireUnlocked()
+        val usage = mutableMapOf<String, Int>()
+        entries().forEach { entry ->
+            entry.tagIds.forEach { id -> usage[id] = (usage[id] ?: 0) + 1 }
+        }
+        return usage
+    }
+
+    /** 切换收藏状态。 */
+    suspend fun updateFavorite(entryId: String, favorite: Boolean) {
+        requireUnlocked()
+        val entry = entry(entryId) ?: throw IllegalArgumentException("条目不存在")
+        if (entry.favorite == favorite) return
+        update(entry.copy(favorite = favorite))
+    }
+
     private suspend fun open(databasePath: String, password: String, create: Boolean) {
         // 同一实例重复解锁时先释放旧句柄：内核在 Android 上用 <db>.lock 独占写句柄。
         if (database.isOpen) database.destroy()
@@ -273,8 +356,12 @@ class VaultRepository(
         const val OPTIONS_CREATE = """{"create":true}"""
         const val OPTIONS_OPEN = """{"create":false}"""
 
+        /** 标签集合：与 `entries` 同命名空间。 */
+        const val TAG_COLLECTION = "tags"
+
         private const val PAGE_SIZE = 100
         private const val MAX_ENTRIES = 2000
+        private const val MAX_TAGS = 500
 
         /** 恢复时的旁路文件名：先校验完毕再替换正式库。 */
         const val RESTORED_NAME = "vault-restored.db"

@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Title
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -66,6 +68,8 @@ enum class AppIcons(val icon: ImageVector) {
     Search(Icons.Filled.Search),
     Settings(Icons.Filled.Settings),
     Shield(Icons.Filled.Shield),
+    Star(Icons.Filled.Star),
+    StarBorder(Icons.Filled.StarBorder),
     Title(Icons.Filled.Title),
     Visibility(Icons.Filled.Visibility),
     VisibilityOff(Icons.Filled.VisibilityOff),
