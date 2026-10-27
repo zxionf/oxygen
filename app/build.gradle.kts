@@ -37,8 +37,8 @@ android {
         applicationId = "top.zxionf.shio"
         minSdk = 29
         targetSdk = 37
-        versionCode = 3
-        versionName = "0.1.5"
+        versionCode = 4
+        versionName = "0.1.6"
 
         // 内核溯源信息：入库的 jniLibs/libshio_ffi.so 来自该提交，ABI 版本与 NativeShio 一致。
         // 由 scripts/sync-shio.sh 在同步产物时自动改写，不要手改。
