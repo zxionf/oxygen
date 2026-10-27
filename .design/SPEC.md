@@ -26,7 +26,7 @@ MVP 覆盖：
 
 - 多密码库
 - 分类、标签、收藏（下一阶段）
-- 生物识别、Autofill、TOTP、导入导出
+- 生物识别、Autofill、TOTP、CSV/JSON 导入导出
 
 **多端同步：MVP 不做同步 UI、配对与网络传输，但首次建库按内核要求启用同步**
 
@@ -148,6 +148,8 @@ scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件
 | `batch(h, ns, coll, opsJson): ByteArray` | `shio_batch` | 输入 `[{"id":"uuid","value":...}]`，输出元信息数组 |
 | `stats(h): ByteArray` | `shio_stats` | `format_version`、`key_id`、`db_bytes` |
 | `changePassword(h, newPassword): Unit` | `shio_change_password` | 只重包裹密钥，不重写记录；旧口令立即失效 |
+| `backup(h, outPath): ByteArray` | `shio_backup` | 在线备份到指定路径，返回摘要 JSON |
+| `restore(backupPath, targetPath, password, optionsJson): Long` | `shio_restore` | 恢复到新文件，返回新句柄（仅用于校验） |
 | `syncEnable(h, deviceId): ByteArray` | `shio_sync_enable` | 首次建库启用同步，返回 `sync_info` |
 | `syncInfo(h): ByteArray` | `shio_sync_info` | 同步摘要；未启用返回 `SHIO_SYNC_DISABLED` |
 | `lastError(h): String` | `shio_last_error` | 异常消息已包含该内容，保留接口便于排查 |
@@ -293,14 +295,13 @@ ui/components/
 ## 内核 ABI 对齐
 对照基线：hydrogen `5f3e8e3`（`shio 0.2.0`，`SHIO_ABI_VERSION = 1`）。`app/src/main/cpp/include/shio.h` 与内核同名文件逐字节一致（由 `scripts/sync-shio.sh` 同步并校验）。
 
-已映射的符号（`NativeShio` / `shio_jni.cpp`）：`shio_abi_version`、`shio_version`、`shio_open`、`shio_close`、`shio_kernel_destroy`、`shio_insert`、`shio_put`、`shio_get`、`shio_delete`、`shio_list`、`shio_batch`、`shio_stats`、`shio_change_password`、`shio_sync_enable`、`shio_sync_info`、`shio_last_error`、`shio_free`（JNI 内部调用）。
+已映射的符号（`NativeShio` / `shio_jni.cpp`）：`shio_abi_version`、`shio_version`、`shio_open`、`shio_close`、`shio_kernel_destroy`、`shio_insert`、`shio_put`、`shio_get`、`shio_delete`、`shio_list`、`shio_batch`、`shio_stats`、`shio_change_password`、`shio_backup`、`shio_restore`、`shio_sync_enable`、`shio_sync_info`、`shio_last_error`、`shio_free`（JNI 内部调用）。
 
 **有意不映射**的符号及原因：
 
 | 符号 | 原因 |
 |---|---|
 | `shio_rotate_data_key` | MVP 不做密钥轮换（内核已支持，留待后续变更） |
-| `shio_backup`、`shio_restore` | MVP 不做导入导出与备份恢复（存储维护 S2 属于后续计划） |
 | `shio_flush` | 目前所有写入以 `shio_batch`/单条写为单位提交，`close`/`destroy` 前无需额外屏障；后续需显式落盘再补 |
 | 其余同步符号（`sync_changes`/`apply*`/`offers`/`snapshot*`/`rotation`/`migrate*`/`pairing*`、`shio_open_with_pairing`） | 本阶段只做「建库时启用同步」，不做同步 UI、配对与网络传输；**后续同步变更再接** |
 
@@ -380,6 +381,7 @@ ui/components/
 - 「立即」：`onStop` 当场锁定（真正进后台才触发，因为旋转被排除）。
 - 「1/5/15 分钟」：`onStop` 只记时间戳，`onStart` 比较差值，超过阈值才锁定；因此短暂切走（如看一眼通知）不打断使用。
 - 锁定动作只有一处：`AutoLockController.lockNow()` → `VaultComponent.repository.lock()`（`destroy` 句柄、清会话）→ `lockCount` 自增；`AppNavHost` 监听 `lockCount` 变化，清空回退栈并导航到 `unlock`。手动锁定（列表页锁图标）同样走 `lockNow()`，不再在导航层重复写一遍销毁逻辑。
+- 外部交互豁免：`beginExternalInteraction()` / `endExternalInteraction()` 计数。期间 `onStop` 只记时间戳、不立即锁定，`onStart` 用 `max(用户偏好, 120 秒)` 判定。用于 SAF 选文件（备份/恢复）、后续导入导出等系统界面调用——否则「立即」模式下这些流程一弹出就销毁句柄。
 
 ## 修改主口令
 - 入口：`设置 → 安全 → 修改主口令`（`Key` 图标，副标题「下次解锁使用新口令」），路由 `change-password`，受 `RequireUnlocked` 守卫。
@@ -417,3 +419,54 @@ ui/components/
 - 应用启动入口从 Demo 改为 `gate`；Demo 通过设置进入。
 - 现有 `scripts/smoke.sh` / `acceptance.sh` 继续可用；后续可增加 Vault 专用探针。
 
+## 备份与恢复
+
+密码库只有一份 `filesDir/vault.db`，换机、误删应用、刷机都会丢数据；内核提供同设备备份与恢复（`shio_backup` / `shio_restore`，存储维护 S2）。应用侧在设置里提供两个入口，用系统文件选择器（SAF）落到用户选的位置，恢复前必须显式确认并输入备份的主口令。
+
+### 备份流程
+- 入口：`设置 → 数据 → 备份密码库`。
+- 流程：
+  1. 打开 SAF `CreateDocument`（MIME `application/octet-stream`，默认文件名 `shio-backup-<yyyyMMdd-HHmm>.db`）；
+  2. 内核把备份写到应用缓存目录的临时文件（`cacheDir/backup-tmp.db`），返回摘要 JSON（`format_version`、`db_bytes`、`table_count`、`row_count`）；
+  3. 应用把临时文件流式拷贝到用户选定的 `content://` URI；
+  4. 删除临时文件。
+- 成功：Snackbar「已备份到 <文件名>」；失败按 `ShioException` 码给文案，临时文件必定清理。
+- 备份文件用**原库主口令**打开，不携带明文与密钥；这一点在界面文案里说明（「恢复时需要当时的主口令」）。
+
+### 恢复流程
+- 入口：`设置 → 数据 → 从备份恢复`。
+- 流程：
+  1. SAF `OpenDocument` 选备份文件；
+  2. 弹确认对话框：说明会**替换当前全部条目**、且必须输入该备份的主口令；输入框用 `AppTextField`；
+  3. 把 URI 流式拷贝到 `cacheDir/restore-tmp.db`；
+  4. 调用 `shio_restore(tmp, filesDir/vault-restored.db, password)`：目标文件必须不存在（先删陈旧残留），内核校验口令与结构，成功返回**新句柄**；
+  5. 成功后：销毁当前句柄与当前 `vault.db` → 把 `vault-restored.db` 改名为 `vault.db` → 清空 `VaultSession` → 导航回解锁页（用备份的主口令解锁）；
+  6. 任一步失败：删除临时文件与 `vault-restored.db`，**当前 `vault.db` 与句柄保持不变**，用户仍可继续使用。
+- 失败文案：`INVALID_KEY (-3)` →「备份的主口令不正确」；`CORRUPTED (-10)` →「备份文件损坏」；`INVALID_ARGUMENT (-1)` →「目标文件已存在」（应用内部已规避）；`IO`/`DATABASE` 单独提示。
+
+### 为什么恢复要「重启会话」
+内核的 `shio_restore` 返回的是指向**新文件**的句柄，而恢复后的库口令是备份当时的那个。继续复用旧会话会让「句柄 → 文件」与「口令 → 会话」错位，因此恢复成功后统一：销毁句柄、替换文件、清会话、回到解锁页，由用户用备份口令重新解锁。这样状态永远只有一条真实路径。
+
+### 备份与恢复界面
+- 设置页新增分组「数据」，两行：`备份密码库`（副标题「保存到文件，用当前主口令加密」）、`从备份恢复`（副标题「替换当前数据，需要备份的主口令」）。
+- 两个入口都在已解锁状态才可达（设置页本身受 `RequireUnlocked` 守卫）。
+- 备份提交期间禁用入口并显示加载；恢复对话框在提交中禁用按钮。
+
+### 实现要点
+- `shio_jni.cpp`：`NativeShio_backup(handle, outPath)`（返回摘要 JSON，输出缓冲区 `shio_free`）、`NativeShio_restore(backupPath, targetPath, password, optionsJson)`（返回新句柄并登记到句柄表）。
+- `NativeShio` / `ShioDatabase`：`backupTo(path): String`、`restoreToVerifiedFile(backupPath, targetPath, password): Long`（返回仅用于校验的句柄）、`destroyHandle(id)`；口令转 `ByteArray` 后清零。
+- `VaultRepository`：`backup(outPath)` 直接透传；`restoreInPlace(backupPath, password)` 负责「临时目标 → 校验通过 → 换文件 → 清会话」的整个事务性流程。
+- SAF 用 `rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument / OpenDocument)`；流拷贝放 `Dispatchers.IO`。
+- 外部交互豁免：SAF 会让 `MainActivity.onStop`，在「立即」锁定下会当场销毁句柄，导致备份/恢复必然失败。因此启动前 `AutoLockController.beginExternalInteraction()`、回调里 `endExternalInteraction()`；豁免期间 `onStop` 只记时间戳，`onStart` 用 `max(用户偏好, 120 秒)` 判定（决策 #65）。
+- 不改内核、不改存储格式；备份文件与 `vault.db` 同构（含 `format=2`）。
+
+### 边界
+- 不做云盘自动上传、不做定时备份、不做导入导出（CSV/JSON 属第二波 C22）。
+- 备份文件落在用户选的位置，应用不再持有；文件本身是加密的，但没有口令提示与找回。
+- 恢复只支持本应用同格式备份（`format=1/2` 均可，但会替换当前库）。
+
+### 验证
+- 备份到本地文件 → 删掉一条记录 → 从备份恢复 → 条目回到备份时的状态，需要输入备份主口令。
+- 恢复时故意输错口令 → 报 `INVALID_KEY`，当前库与条目不受影响。
+- 恢复后杀进程重开：新库可解锁、`db_id` 与备份时一致（可在「诊断信息」里看）。
+- 备份/恢复过程中界面不假死，失败后仍可正常使用。

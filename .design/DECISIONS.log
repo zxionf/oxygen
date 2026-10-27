@@ -319,3 +319,13 @@ Change: 20261025-change-password
 Context: 内核 change_password 只接受新口令，不校验旧口令；若界面要求输入旧口令，只能用「销毁句柄 → 用旧口令重开 → 改口令」的方式验证，中途失败会让用户被迫重新解锁。
 Decision: 修改主口令只要求新口令 + 确认（≥8 字符、两次一致），不要求输入当前口令；理由：会话已解锁即代表本次启动通过内核校验，且「别人拿到已解锁手机」场景下对方本就能读全部条目，收益低而流程破坏性大。
 Consequences: 流程简单且不破坏会话；代价是拿到已解锁设备的人可以改口令锁住原主（与多数同类应用的取舍一致）；该取舍写进 design.md 与决策日志，未来若要加旧口令校验需另开变更。
+## [65] 2026-10-27 11:45:22 UTC
+Change: 20261025-backup-restore
+Context: 自动锁定默认「立即」时，SAF 选文件会让 MainActivity 真的 onStop，于是当场销毁内核句柄；用户点 SAVE 回来后 backup 只能拿到 CLOSED，备份必然失败（实测产出 0 字节文件）。
+Decision: AutoLockController 增加外部交互豁免：beginExternalInteraction/endExternalInteraction 计数，期间 onStop 只记时间戳不立即锁定，onStart 用 max(用户偏好, 120 秒) 作为阈值判定；备份/恢复在启动 SAF 前 begin、回调里 end。
+Consequences: 所有通过 startActivityForResult 唤起系统界面的操作（当前是 SAF，后续导入导出、相机等）都能正常完成；用户离开超过宽限仍会按偏好锁定（「立即」用 120 秒宽限），安全性只在这段时间内放宽一次。
+## [66] 2026-10-27 11:45:22 UTC
+Change: 20261025-backup-restore
+Context: 恢复要替换整个库文件，但恢复后的口令是备份当时的那个；若沿用旧会话，会出现「句柄指向新文件、口令却来自旧库」的错位；另外内核 restore 打开目标文件时会创建 <db>.lock，直接 rename 会留下孤儿锁文件。
+Decision: 恢复走事务化四步：① restore 到旁路文件 vault-restored.db 并拿到校验句柄；② 立即 destroy 该句柄归还锁与 fd（失败则删旁路文件与其 .lock）；③ destroy 当前句柄、删旧 vault.db 与 .lock、把旁路文件 rename 成 vault.db、清掉旁路的 .lock；④ 清空 VaultSession 并回到解锁页，由用户用备份口令重新解锁。
+Consequences: 恢复失败时现有库完全不受影响（实测错口令后只剩 vault.db）；恢复成功后 files 目录干净、下次解锁是一次全新的 open；代价是用户必须重新输入备份时的口令，这一点在对话框与 Snackbar 里已说明。

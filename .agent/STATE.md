@@ -1,7 +1,7 @@
 # Agent State
 
 Active Change: 无
-Phase: 第一波已完成一半——C11 剪贴板自动清除、C12 改主口令均已归档并通过真机验收（2026-10-25）
+Phase: 第一波全部完成——C11 剪贴板自动清除、C12 改主口令、C13 备份与恢复均已归档（C13 经带窗口模拟器冒烟：备份 1056768 字节、删除条目后恢复成功、错口令 INVALID_KEY 且库不受影响）
 Blocked: 无
-Next: 用户暂停，暂不开 C13 备份与恢复；恢复开发时从 C13 开始（SAF + shio_backup/shio_restore，恢复需重建句柄）
-Note: release 已改用 zxionf 证书（~/zx.jks，v2 签名、16 KB 对齐通过），当前版本 0.1.5 / versionCode 3
+Next: 第二波待用户决定：C22 导入导出（含移除 debug 样例播种）→ C21 分类/标签/收藏 → C23 多密码库；第三波同步需先讨论传输层与信任模型
+Note: 本轮新增外部交互豁免（AutoLockController），release 签名用 zxionf 证书，版本 0.1.5 / versionCode 3

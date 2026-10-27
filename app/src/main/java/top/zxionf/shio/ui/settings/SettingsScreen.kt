@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -17,6 +19,8 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -36,12 +41,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import top.zxionf.shio.BuildConfig
 import top.zxionf.shio.kernel.KernelInfo
 import top.zxionf.shio.vault.AutoLockPreferences
+import top.zxionf.shio.vault.AutoLockController
+import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.SensitiveClipboard
 import top.zxionf.shio.vault.AutoLockTimeout
-import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.VaultPaths
 import top.zxionf.shio.vault.VaultSession
 import top.zxionf.shio.ui.components.AppIcons
@@ -65,6 +72,7 @@ fun SettingsScreen(
     onAppearance: () -> Unit,
     onDemo: () -> Unit,
     onChangePassword: () -> Unit = {},
+    onRestored: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var autoLockDialogVisible by remember { mutableStateOf(false) }
@@ -115,9 +123,65 @@ fun SettingsScreen(
         )
     }
 
+    // ---- 备份 / 恢复 ----
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var backupBusy by remember { mutableStateOf(false) }
+    var restoreBusy by remember { mutableStateOf(false) }
+    var restoreError by remember { mutableStateOf<String?>(null) }
+    var restoreDialogVisible by remember { mutableStateOf(false) }
+    var stagedBackup by remember { mutableStateOf<java.io.File?>(null) }
+
+    fun notify(message: String) {
+        scope.launch { snackbarHostState.showSnackbar(message) }
+    }
+
+    // 选保存位置：内核写临时文件后拷到用户选的 URI。
+    val backupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream"),
+    ) { uri ->
+        // 外部界面已返回，恢自动锁定判定。
+        AutoLockController.endExternalInteraction()
+        if (uri == null) return@rememberLauncherForActivityResult
+        backupBusy = true
+        scope.launch {
+            try {
+                val summary = VaultBackupFiles.backupTo(context, VaultComponent.repository, uri)
+                notify("已备份 ${summary.rowCount} 条记录（${summary.dbBytes / 1024} KB）")
+            } catch (failure: Throwable) {
+                // 失败时清掉 SAF 刚建出的空文件，不留 0 字节残留。
+                VaultBackupFiles.discardTarget(context, uri)
+                notify(describeBackupFailure(failure, backup = true))
+            } finally {
+                backupBusy = false
+            }
+        }
+    }
+
+    // 选备份文件：先拷到缓存，再弹口信对话框。
+    val restoreLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        AutoLockController.endExternalInteraction()
+        if (uri == null) return@rememberLauncherForActivityResult
+        restoreBusy = true
+        scope.launch {
+            try {
+                stagedBackup = VaultBackupFiles.stageRestore(context, uri)
+                restoreError = null
+                restoreDialogVisible = true
+            } catch (failure: Throwable) {
+                notify(describeBackupFailure(failure, backup = false))
+            } finally {
+                restoreBusy = false
+            }
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("设置", style = MaterialTheme.typography.titleLarge) },
@@ -161,6 +225,42 @@ fun SettingsScreen(
                             label = "修改主口令",
                             value = "下次解锁使用新口令",
                             onClick = onChangePassword,
+                        )
+                    }
+                }
+            }
+
+            SectionTitle("数据")
+            StackedList(itemCount = 2) { index, shape ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = shape,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    if (index == 0) {
+                        SettingRow(
+                            icon = AppIcons.Shield,
+                            label = "备份密码库",
+                            value = if (backupBusy) "正在备份…" else "保存到文件，用当前主口令加密",
+                            onClick = {
+                                if (!backupBusy && !restoreBusy) {
+                                    // 先声明外部交互，否则「立即」锁定会在 SAF 弹出时销毁句柄。
+                                    AutoLockController.beginExternalInteraction()
+                                    backupLauncher.launch(VaultBackupFiles.defaultBackupName())
+                                }
+                            },
+                        )
+                    } else {
+                        SettingRow(
+                            icon = AppIcons.Edit,
+                            label = "从备份恢复",
+                            value = if (restoreBusy) "正在读取…" else "替换当前数据，需要备份的主口令",
+                            onClick = {
+                                if (!backupBusy && !restoreBusy) {
+                                    AutoLockController.beginExternalInteraction()
+                                    restoreLauncher.launch(arrayOf("*/*"))
+                                }
+                            },
                         )
                     }
                 }
@@ -219,6 +319,40 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (restoreDialogVisible) {
+        RestoreConfirmDialog(
+            busy = restoreBusy,
+            errorText = restoreError,
+            onDismiss = {
+                if (!restoreBusy) {
+                    restoreDialogVisible = false
+                    VaultBackupFiles.clearStaged(stagedBackup)
+                    stagedBackup = null
+                    restoreError = null
+                }
+            },
+            onConfirm = { password ->
+                val staged = stagedBackup ?: return@RestoreConfirmDialog
+                restoreBusy = true
+                restoreError = null
+                scope.launch {
+                    try {
+                        VaultComponent.repository.restoreInPlace(staged.absolutePath, password)
+                        restoreDialogVisible = false
+                        notify("已恢复，请用备份时的主口令解锁")
+                        onRestored()
+                    } catch (failure: Throwable) {
+                        restoreError = describeBackupFailure(failure, backup = false)
+                    } finally {
+                        restoreBusy = false
+                        VaultBackupFiles.clearStaged(staged)
+                        stagedBackup = null
+                    }
+                }
+            },
+        )
     }
 
     if (diagnosticsVisible && session != null) {
@@ -414,4 +548,29 @@ private fun DiagnosticsDialog(
             }
         },
     )
+}
+
+/** 备份/恢复失败文案：错误码写进括号，方便真机对照。 */
+private fun describeBackupFailure(failure: Throwable, backup: Boolean): String = when (failure) {
+    is top.zxionf.shio.kernel.ShioException -> {
+        val hint = when (failure.code) {
+            top.zxionf.shio.kernel.ShioException.INVALID_KEY ->
+                "备份的主口令不正确（INVALID_KEY (${failure.code})）"
+            top.zxionf.shio.kernel.ShioException.CORRUPTED ->
+                "备份文件损坏（CORRUPTED (${failure.code})）"
+            top.zxionf.shio.kernel.ShioException.INVALID_ARGUMENT ->
+                "所选位置或口令不可用（INVALID_ARGUMENT (${failure.code})）"
+            top.zxionf.shio.kernel.ShioException.LOCKED ->
+                "密码库被其它进程占用（LOCKED (${failure.code})）"
+            top.zxionf.shio.kernel.ShioException.CLOSED ->
+                "密码库已锁定（CLOSED (${failure.code})）"
+            top.zxionf.shio.kernel.ShioException.IO ->
+                "磁盘读写失败（IO (${failure.code})）"
+            else -> "${if (backup) "备份" else "恢复"}失败（错误码 ${failure.code}）"
+        }
+        // 附上内核的原始描述：排查时比错误码更能说明问题（不含口令与正文）。
+        val detail = failure.message?.takeIf { it.isNotBlank() }
+        if (detail != null && detail !in hint) "$hint · $detail" else hint
+    }
+    else -> failure.message ?: if (backup) "备份失败" else "恢复失败"
 }

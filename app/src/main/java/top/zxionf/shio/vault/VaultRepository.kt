@@ -101,6 +101,67 @@ class VaultRepository(
         database.changePassword(newPassword)
     }
 
+    /** 在线备份到 [outPath]（目标必须不存在），返回内核的摘要信息。 */
+    suspend fun backup(outPath: String): BackupSummary {
+        requireUnlocked()
+        val json = JSONObject(database.backupTo(outPath))
+        return BackupSummary(
+            formatVersion = json.optInt("format_version"),
+            dbBytes = json.optLong("db_bytes"),
+            tableCount = json.optInt("table_count"),
+            rowCount = json.optLong("row_count"),
+        )
+    }
+
+    /**
+     * 从备份恢复，并用恢复后的库**替换**当前库。
+     *
+     * 顺序（任何一步失败都不动现有 `vault.db`）：
+     * 1. 先恢复到一个旁路文件 `vault-restored.db`（残留先删）；
+     * 2. 内核校验口令与结构，成功返回指向旁路文件的新句柄；
+     * 3. 销毁旧句柄、删除旧 `vault.db` 与 `.lock`，把旁路文件改名为 `vault.db`；
+     * 4. 清空会话，由调用方回到解锁页——恢复后的口令是备份当时的那个。
+     */
+    suspend fun restoreInPlace(backupPath: String, password: String): VaultSession? {
+        requireUnlocked()
+        val databaseFile = File(session?.databasePath ?: error("密码库未解锁"))
+        val restoredFile = File(databaseFile.parentFile, RESTORED_NAME)
+        // 旁路文件的残留会让内核拒绝恢复（目标必须不存在）。
+        deleteWithLock(restoredFile)
+
+        // ① 恢复到旁路文件，拿新句柄只为校验；校验完立即释放，把锁与 fd 还回。
+        //    失败时也要把旁路文件与它的 lock 清干净，不留「半个库」。
+        try {
+            val verified = database.restoreToVerifiedFile(
+                backupPath = backupPath,
+                targetPath = restoredFile.absolutePath,
+                password = password,
+            )
+            database.destroyHandle(verified)
+        } catch (failure: Throwable) {
+            deleteWithLock(restoredFile)
+            throw failure
+        }
+
+        // ② 到这里旁路文件口令与结构都已被内核验证，开始替换：
+        //    先释放当前库的句柄（否则 flock 占着，重命名后状态难料），再换文件。
+        database.destroy()
+        session = null
+        deleteWithLock(databaseFile)
+        if (!restoredFile.renameTo(databaseFile)) {
+            throw ShioException(ShioException.IO, "failed to move restored database into place")
+        }
+        // 重命名后原来旁路的 lock 文件名已经失效，一并清掉，避免下次开库时两个锁文件并存。
+        File("${restoredFile.absolutePath}.lock").delete()
+        return null
+    }
+
+    /** 删除数据库文件及其副本锁文件（`<db>.lock`）。 */
+    private fun deleteWithLock(file: File) {
+        file.delete()
+        File("${file.absolutePath}.lock").delete()
+    }
+
     /** 读取全部条目；按 `next` 分页直到读完。需要已解锁。 */
     suspend fun entries(): List<VaultEntry> {
         requireUnlocked()
@@ -198,5 +259,16 @@ class VaultRepository(
 
         private const val PAGE_SIZE = 100
         private const val MAX_ENTRIES = 2000
+
+        /** 恢复时的旁路文件名：先校验完毕再替换正式库。 */
+        const val RESTORED_NAME = "vault-restored.db"
     }
 }
+
+/** 备份摘要（来自内核 `shio_backup` 返回的 JSON）。 */
+data class BackupSummary(
+    val formatVersion: Int,
+    val dbBytes: Long,
+    val tableCount: Int,
+    val rowCount: Long,
+)

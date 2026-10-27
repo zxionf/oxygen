@@ -155,6 +155,13 @@ fun AppNavHost(
                     onBack = { navController.popBackStack() },
                     onAppearance = { navController.navigate(Routes.Appearance) },
                     onChangePassword = { navController.navigate(Routes.ChangePassword) },
+                    // 恢复后旧会话作废：清栈回解锁页，用备份时的主口令重新解锁。
+                    onRestored = {
+                        navController.navigate(Routes.Unlock) {
+                            popUpTo(navController.graph.id) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     onDemo = { navController.navigate(Routes.Demo) },
                 )
             }

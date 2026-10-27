@@ -86,6 +86,20 @@ internal object NativeShio {
      */
     external fun changePassword(handle: Long, newPassword: ByteArray)
 
+    /** 在线备份到 [outPath]（目标必须不存在），返回摘要 JSON。 */
+    external fun backup(handle: Long, outPath: String): ByteArray
+
+    /**
+     * 从 [backupPath] 恢复到 [targetPath]（目标必须不存在或为空），返回新句柄。
+     * 新句柄指向恢复后的库；调用方自己负责处理旧句柄与文件替换。
+     */
+    external fun restore(
+        backupPath: String,
+        targetPath: String,
+        password: ByteArray,
+        optionsJson: ByteArray?,
+    ): Long
+
     /**
      * 启用同步，返回 `sync_info` JSON；首次建库必须紧接着调用。
      * [deviceId] 为 16 字节原始设备 ID；为 null 时内核生成随机设备 ID。

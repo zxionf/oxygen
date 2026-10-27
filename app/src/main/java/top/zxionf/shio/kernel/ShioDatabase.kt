@@ -78,6 +78,16 @@ class ShioDatabase {
         }
     }
 
+    /**
+     * 释放一个**不在** [handle] 里的临时句柄（例如恢复时用于校验的句柄）。
+     * 用于把文件锁与 fd 还回去，之后才能安全替换文件。
+     */
+    suspend fun destroyHandle(id: Long) = withContext(dispatcher) {
+        if (id != 0L && id != handle.get()) {
+            NativeShio.destroy(id)
+        }
+    }
+
     suspend fun insert(namespace: String, collection: String, valueJson: String): String =
         withContext(dispatcher) {
             val idBytes = NativeShio.insert(
@@ -175,6 +185,41 @@ class ShioDatabase {
         val bytes = newPassword.toByteArray(Charsets.UTF_8)
         try {
             NativeShio.changePassword(requireHandle(), bytes)
+        } finally {
+            bytes.fill(0)
+        }
+    }
+
+    /**
+     * 在线备份到 [outPath]（目标必须不存在），返回摘要 JSON。
+     * 备份不加密解密、不携带明文，只能用原库口令打开。
+     */
+    suspend fun backupTo(outPath: String): String = withContext(dispatcher) {
+        require(outPath.isNotEmpty()) { "backup path must not be empty" }
+        NativeShio.backup(requireHandle(), outPath).decodeToString()
+    }
+
+    /**
+     * 从备份恢复到 [targetPath]（目标必须不存在或为空），成功后返回新句柄。
+     *
+     * 句柄只用于校验（口令 + 结构 + 完整性）；调用方拿到后应尽快 `destroy`，
+     * 以便文件锁与 fd 归还，再做文件替换。
+     */
+    suspend fun restoreToVerifiedFile(
+        backupPath: String,
+        targetPath: String,
+        password: String,
+    ): Long = withContext(dispatcher) {
+        require(backupPath.isNotEmpty()) { "backup path must not be empty" }
+        require(targetPath.isNotEmpty()) { "target path must not be empty" }
+        val bytes = password.toByteArray(Charsets.UTF_8)
+        try {
+            NativeShio.restore(
+                backupPath = backupPath,
+                targetPath = targetPath,
+                password = bytes,
+                optionsJson = null,
+            )
         } finally {
             bytes.fill(0)
         }

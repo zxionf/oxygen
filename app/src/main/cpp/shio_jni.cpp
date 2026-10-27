@@ -8,7 +8,6 @@
 
 #include <jni.h>
 
-#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -744,6 +743,7 @@ Java_top_zxionf_shio_kernel_NativeShio_changePassword(JNIEnv* env, jobject /*sel
         throw_shio(env, SHIO_INVALID_ARGUMENT, "new password is invalid");
         return;
     }
+    ByteEraser password_eraser{password_bytes};
 
     std::lock_guard<std::mutex> lock(handle->mutex);
     if (handle->destroyed) {
@@ -753,11 +753,90 @@ Java_top_zxionf_shio_kernel_NativeShio_changePassword(JNIEnv* env, jobject /*sel
 
     const std::int32_t rc = shio_change_password(
         handle->kernel, data_or_empty(password_bytes), password_bytes.size());
-    // 无论成功与否，先把口令副本从 C++ 堆上抹掉。
-    std::fill(password_bytes.begin(), password_bytes.end(), 0);
     if (rc != SHIO_OK) {
         throw_kernel_error(env, rc);
     }
+}
+
+// 在线备份：内核把当前库复制到 out_path（目标必须不存在），返回摘要 JSON。
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_top_zxionf_shio_kernel_NativeShio_backup(JNIEnv* env, jobject /*self*/, jlong id,
+                                             jstring out_path) {
+    auto handle = acquire(id);
+    if (handle == nullptr) {
+        throw_closed(env);
+        return nullptr;
+    }
+    std::string path_utf8;
+    if (!get_string(env, out_path, &path_utf8)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "backup path is null or invalid");
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> lock(handle->mutex);
+    if (handle->destroyed) {
+        throw_closed(env);
+        return nullptr;
+    }
+
+    std::uint8_t* output = nullptr;
+    std::size_t output_length = 0;
+    const std::int32_t rc = shio_backup(handle->kernel, path_utf8.c_str(), &output, &output_length);
+    if (rc != SHIO_OK) {
+        if (output != nullptr) {
+            shio_free(output, output_length);
+        }
+        throw_kernel_error(env, rc);
+        return nullptr;
+    }
+    return copy_and_free(env, output, output_length);
+}
+
+// 从备份恢复到新文件，返回新句柄（登记到句柄表）；不碰调用方已有句柄。
+extern "C" JNIEXPORT jlong JNICALL
+Java_top_zxionf_shio_kernel_NativeShio_restore(JNIEnv* env, jobject /*self*/, jstring backup_path,
+                                              jstring target_path, jbyteArray password,
+                                              jbyteArray options_json) {
+    std::string backup_utf8;
+    if (!get_string(env, backup_path, &backup_utf8)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "backup path is null or invalid");
+        return 0;
+    }
+    std::string target_utf8;
+    if (!get_string(env, target_path, &target_utf8)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "target path is null or invalid");
+        return 0;
+    }
+    std::vector<std::uint8_t> password_bytes;
+    if (password == nullptr || !get_bytes(env, password, &password_bytes)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "password is null or invalid");
+        return 0;
+    }
+    ByteEraser password_eraser{password_bytes};
+
+    std::vector<std::uint8_t> options_bytes;
+    const bool has_options = options_json != nullptr;
+    if (has_options && !get_bytes(env, options_json, &options_bytes)) {
+        throw_shio(env, SHIO_INVALID_ARGUMENT, "options JSON is invalid");
+        return 0;
+    }
+
+    shio_kernel* kernel = nullptr;
+    const std::int32_t rc = shio_restore(
+        backup_utf8.c_str(), target_utf8.c_str(), data_or_empty(password_bytes),
+        password_bytes.size(), has_options ? data_or_empty(options_bytes) : nullptr,
+        has_options ? options_bytes.size() : 0, &kernel);
+    if (rc != SHIO_OK || kernel == nullptr) {
+        throw_kernel_error(env, rc != SHIO_OK ? rc : SHIO_INTERNAL);
+        return 0;
+    }
+
+    auto restored = std::make_shared<Handle>();
+    restored->kernel = kernel;
+    const jlong new_id = g_next_id.fetch_add(1);
+    std::lock_guard<std::mutex> lock(g_table_mutex);
+    g_handles.emplace(new_id, std::move(restored));
+    return new_id;
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
