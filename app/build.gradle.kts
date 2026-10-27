@@ -130,4 +130,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    // JVM 单测里 `org.json` 只有 stub（调用会报 not mocked），引入真实实现便于验证编解码。
+    testImplementation(libs.org.json)
 }

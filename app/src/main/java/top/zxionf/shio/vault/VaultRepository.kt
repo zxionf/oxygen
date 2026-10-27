@@ -208,6 +208,22 @@ class VaultRepository(
         return database.insert(NAMESPACE, COLLECTION, VaultEntryCodec.encode(entry))
     }
 
+    /**
+     * 批量新增（导入用）：逐条 `insert`，返回成功条数。
+     *
+     * 不查重、不覆盖：记录 ID 由内核生成，导入方也没有稳定标识可用于匹配。
+     * 单条失败不影响后续条目，失败数由 [VaultTransfer.ParseResult.skipped] 与调用方合并统计。
+     */
+    suspend fun insertAll(entries: List<VaultEntry>): Int {
+        requireUnlocked()
+        var inserted = 0
+        entries.forEach { entry ->
+            runCatching { insert(entry.copy(id = "")) }
+                .onSuccess { inserted += 1 }
+        }
+        return inserted
+    }
+
     /** 覆盖已有条目。 */
     suspend fun update(entry: VaultEntry) {
         requireUnlocked()

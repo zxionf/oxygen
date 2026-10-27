@@ -136,6 +136,71 @@ fun SettingsScreen(
         scope.launch { snackbarHostState.showSnackbar(message) }
     }
 
+    // ---- 导入 / 导出 ----
+    var exportBusy by remember { mutableStateOf(false) }
+    var importBusy by remember { mutableStateOf(false) }
+
+    fun startExport(format: VaultTransferFiles.Format, launcher: androidx.activity.result.ActivityResultLauncher<String>) {
+        if (exportBusy || importBusy || backupBusy || restoreBusy) return
+        AutoLockController.beginExternalInteraction()
+        launcher.launch(VaultTransferFiles.defaultFileName(format))
+    }
+
+    fun runExport(uri: android.net.Uri, format: VaultTransferFiles.Format) {
+        exportBusy = true
+        scope.launch {
+            try {
+                val entries = VaultComponent.repository.entries()
+                val count = VaultTransferFiles.exportTo(context, entries, uri, format)
+                notify("已导出 $count 条到 ${format.label} 文件（含明文密码，请妥善保管）")
+            } catch (failure: Throwable) {
+                VaultBackupFiles.discardTarget(context, uri)
+                notify("导出失败：${failure.message ?: "未知错误"}")
+            } finally {
+                exportBusy = false
+            }
+        }
+    }
+
+    val exportCsvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(VaultTransferFiles.Format.CSV.mimeType),
+    ) { uri ->
+        AutoLockController.endExternalInteraction()
+        if (uri != null) runExport(uri, VaultTransferFiles.Format.CSV)
+    }
+
+    val exportJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(VaultTransferFiles.Format.JSON.mimeType),
+    ) { uri ->
+        AutoLockController.endExternalInteraction()
+        if (uri != null) runExport(uri, VaultTransferFiles.Format.JSON)
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        AutoLockController.endExternalInteraction()
+        if (uri == null) return@rememberLauncherForActivityResult
+        importBusy = true
+        scope.launch {
+            try {
+                val parsed = VaultTransferFiles.importFrom(context, uri)
+                if (parsed.entries.isEmpty() && parsed.skipped == 0) {
+                    notify("文件里没有可识别的条目")
+                } else {
+                    val inserted = VaultComponent.repository.insertAll(parsed.entries)
+                    // 内核写入失败的条目也要算进「跳过」。
+                    val skipped = parsed.skipped + (parsed.entries.size - inserted)
+                    notify("新增 $inserted 条，跳过 $skipped 条")
+                }
+            } catch (failure: Throwable) {
+                notify("导入失败：${failure.message ?: "未知错误"}")
+            } finally {
+                importBusy = false
+            }
+        }
+    }
+
     // 选保存位置：内核写临时文件后拷到用户选的 URI。
     val backupLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
@@ -231,32 +296,58 @@ fun SettingsScreen(
             }
 
             SectionTitle("数据")
-            StackedList(itemCount = 2) { index, shape ->
+            StackedList(itemCount = 5) { index, shape ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = shape,
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
-                    if (index == 0) {
-                        SettingRow(
+                    when (index) {
+                        0 -> SettingRow(
+                            icon = AppIcons.Copy,
+                            label = "导出为 CSV",
+                            value = if (exportBusy) "正在导出…" else "含明文密码，可导入回本应用",
+                            onClick = { startExport(VaultTransferFiles.Format.CSV, exportCsvLauncher) },
+                        )
+
+                        1 -> SettingRow(
+                            icon = AppIcons.Copy,
+                            label = "导出为 JSON",
+                            value = if (exportBusy) "正在导出…" else "字段更完整，便于备份与迁移",
+                            onClick = { startExport(VaultTransferFiles.Format.JSON, exportJsonLauncher) },
+                        )
+
+                        2 -> SettingRow(
+                            icon = AppIcons.Add,
+                            label = "从文件导入",
+                            value = if (importBusy) "正在导入…" else "新增条目，不覆盖现有数据",
+                            onClick = {
+                                if (!exportBusy && !importBusy && !backupBusy && !restoreBusy) {
+                                    AutoLockController.beginExternalInteraction()
+                                    importLauncher.launch(arrayOf("text/*", "application/json", "*/*"))
+                                }
+                            },
+                        )
+
+                        3 -> SettingRow(
                             icon = AppIcons.Shield,
                             label = "备份密码库",
                             value = if (backupBusy) "正在备份…" else "保存到文件，用当前主口令加密",
                             onClick = {
-                                if (!backupBusy && !restoreBusy) {
+                                if (!backupBusy && !restoreBusy && !exportBusy && !importBusy) {
                                     // 先声明外部交互，否则「立即」锁定会在 SAF 弹出时销毁句柄。
                                     AutoLockController.beginExternalInteraction()
                                     backupLauncher.launch(VaultBackupFiles.defaultBackupName())
                                 }
                             },
                         )
-                    } else {
-                        SettingRow(
+
+                        else -> SettingRow(
                             icon = AppIcons.Edit,
                             label = "从备份恢复",
                             value = if (restoreBusy) "正在读取…" else "替换当前数据，需要备份的主口令",
                             onClick = {
-                                if (!backupBusy && !restoreBusy) {
+                                if (!backupBusy && !restoreBusy && !exportBusy && !importBusy) {
                                     AutoLockController.beginExternalInteraction()
                                     restoreLauncher.launch(arrayOf("*/*"))
                                 }

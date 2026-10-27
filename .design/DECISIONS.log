@@ -329,3 +329,18 @@ Change: 20261025-backup-restore
 Context: 恢复要替换整个库文件，但恢复后的口令是备份当时的那个；若沿用旧会话，会出现「句柄指向新文件、口令却来自旧库」的错位；另外内核 restore 打开目标文件时会创建 <db>.lock，直接 rename 会留下孤儿锁文件。
 Decision: 恢复走事务化四步：① restore 到旁路文件 vault-restored.db 并拿到校验句柄；② 立即 destroy 该句柄归还锁与 fd（失败则删旁路文件与其 .lock）；③ destroy 当前句柄、删旧 vault.db 与 .lock、把旁路文件 rename 成 vault.db、清掉旁路的 .lock；④ 清空 VaultSession 并回到解锁页，由用户用备份口令重新解锁。
 Consequences: 恢复失败时现有库完全不受影响（实测错口令后只剩 vault.db）；恢复成功后 files 目录干净、下次解锁是一次全新的 open；代价是用户必须重新输入备份时的口令，这一点在对话框与 Snackbar 里已说明。
+## [67] 2026-10-27 12:46:05 UTC
+Change: 20261027-import-export
+Context: 导入要不要去重/覆盖需要先定义「同一条」的判定，但记录 ID 是内核生成的 UUIDv7，换库/换设备后没有稳定标识；按标题覆盖又可能把一个服务的密码更新成另一个的旧值。
+Decision: 导入一律只新增（逐条 insert，新 ID），不查重不覆盖；同批次内的重复也照新增。结果只报告「新增 N / 跳过 M」，跳过包含缺 title 或 password 的行、内核写入失败以及超过 2000 条上限的部分。需要去重时的正确路径是先备份（C13）再做独立的合并变更。
+Consequences: 导入行为可预测、不会静默改坏已有条目；代价是重复导入会得到重复条目，用户需自行清理或删库重建。
+## [68] 2026-10-27 12:46:05 UTC
+Change: 20261027-import-export
+Context: debug 构建此前会在首次解锁时把 8 条样例写进真实 vault.db，既污染用户数据，又让「空库」状态无法验证；有了导入导出后，造数据可以走真实路径。
+Decision: 删除 VaultViewModel.seedSamplesOnce 与 VaultComponent.samplesSeeded，SampleVaultEntries 只保留给 Compose 预览；debug 与 release 行为一致，首解锁就是空库。
+Consequences: 真机与模拟器首次建库都是空态，验证空库/导入流程更直接；需要样例数据时用导入功能或手工新建，不再有隐藏的写入路径。
+## [69] 2026-10-27 12:46:05 UTC
+Change: 20261027-import-export
+Context: VaultTransfer 用 org.json 做 JSON 编解码，但 Android 单元测试里的 org.json 是空壳，调用会抛 not mocked，导致 9 个用例里 4 个失败。
+Decision: 在 Version Catalog 增加 org-json 并在 build.gradle.kts 用 testImplementation 引入真实实现，仅在测试 classpath 生效，不影响 APK（运行时仍用系统 org.json）。
+Consequences: 编解码逻辑可以在 JVM 上直接单测；代价是多一个测试期依赖，且测试行为以 org.json 官方实现为准（与 Android 内置实现语义一致）。

@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import top.zxionf.shio.BuildConfig
 import top.zxionf.shio.kernel.ShioException
 
 /** 密码库列表的界面状态。 */
@@ -37,10 +36,10 @@ data class VaultUiState(
  *
  * 数据来自 [repository]（`vault/entries`）：解锁后 `list` + 逐条 `get` 载入内存，
  * 搜索与按标题排序都在内存里做。写入（新建/编辑/删除）由列表页 resume 时的
- * [refresh] 拉取最新结果，不做增量合并，避免与内核的 meta 不一致。
+ * [refresh] 拉取最新结果，不做增量合并，避免与内核 meta 不一致。
  *
- * debug 构建在同一次进程里首次刷新且库为空时写入样例条目（见 [SampleVaultEntries]），
- * release 不会带任何样例数据。
+ * 不再向真实库播种样例数据（C22 起改由导入功能提供样例，见
+ * `.design/changes/20261027-import-export/design.md`）。
  */
 class VaultViewModel(
     private val repository: VaultRepository = VaultComponent.repository,
@@ -90,22 +89,12 @@ class VaultViewModel(
             loading.value = true
             error.value = null
             try {
-                seedSamplesOnce()
                 entries.value = repository.entries()
             } catch (failure: Throwable) {
                 error.value = describeFailure(failure)
             } finally {
                 loading.value = false
             }
-        }
-    }
-
-    private suspend fun seedSamplesOnce() {
-        if (!BuildConfig.DEBUG || VaultComponent.samplesSeeded) return
-        VaultComponent.samplesSeeded = true
-        if (repository.entries().isNotEmpty()) return
-        SampleVaultEntries.forEach { sample ->
-            repository.insert(sample.copy(id = ""))
         }
     }
 
