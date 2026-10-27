@@ -49,7 +49,6 @@ import top.zxionf.shio.vault.AutoLockController
 import top.zxionf.shio.vault.VaultComponent
 import top.zxionf.shio.vault.SensitiveClipboard
 import top.zxionf.shio.vault.AutoLockTimeout
-import top.zxionf.shio.vault.VaultPaths
 import top.zxionf.shio.vault.VaultSession
 import top.zxionf.shio.ui.components.AppIcons
 import top.zxionf.shio.ui.components.StackedList
@@ -73,6 +72,7 @@ fun SettingsScreen(
     onDemo: () -> Unit,
     onChangePassword: () -> Unit = {},
     onManageTags: () -> Unit = {},
+    onSwitchVault: () -> Unit = {},
     onRestored: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -82,9 +82,10 @@ fun SettingsScreen(
     // 自动锁定时长持久化在 SharedPreferences（"session"），冷启动自动恢复。
     val autoLockPreferences = remember(context) { AutoLockPreferences.get(context) }
     val autoLockTimeout = autoLockPreferences.timeout
-    val databasePath = remember(context) { VaultPaths.databasePath(context) }
     // 解锁后的会话诊断：debug 才展示格式版本与同步身份，release 界面不暴露库内部标识。
     val session = VaultComponent.repository.session
+    // 多库下路径来自当前会话，不再有全局固定路径。
+    val databasePath = session?.databasePath ?: "未解锁"
     val debugDiagnostics = remember(session) {
         if (!BuildConfig.DEBUG || session == null) {
             emptyList()
@@ -297,7 +298,7 @@ fun SettingsScreen(
             }
 
             SectionTitle("数据")
-            StackedList(itemCount = 6) { index, shape ->
+            StackedList(itemCount = 7) { index, shape ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = shape,
@@ -355,11 +356,18 @@ fun SettingsScreen(
                             },
                         )
 
-                        else -> SettingRow(
+                        5 -> SettingRow(
                             icon = AppIcons.Notes,
                             label = "管理标签",
                             value = "新建、重命名或删除标签",
                             onClick = onManageTags,
+                        )
+
+                        else -> SettingRow(
+                            icon = AppIcons.Shield,
+                            label = "切换密码库",
+                            value = "回到库列表，或新建另一个库",
+                            onClick = onSwitchVault,
                         )
                     }
                 }

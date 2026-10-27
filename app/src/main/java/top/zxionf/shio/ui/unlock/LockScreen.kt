@@ -50,7 +50,8 @@ import top.zxionf.shio.ui.components.AppIcon
 import top.zxionf.shio.ui.components.AppTextField
 import top.zxionf.shio.ui.theme.ShioTheme
 import top.zxionf.shio.vault.VaultComponent
-import top.zxionf.shio.vault.VaultPaths
+import top.zxionf.shio.vault.VaultLibrary
+import top.zxionf.shio.vault.VaultLibraryEntry
 import top.zxionf.shio.vault.VaultRepository
 import top.zxionf.shio.vault.VaultSession
 
@@ -74,21 +75,34 @@ fun LockScreen(
     onBack: (() -> Unit)?,
     onSuccess: (VaultSession) -> Unit,
     modifier: Modifier = Modifier,
+    vaultId: String? = null,
     repository: VaultRepository = VaultComponent.repository,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var password by rememberSaveable(mode) { mutableStateOf("") }
     var confirm by rememberSaveable(mode) { mutableStateOf("") }
+    var vaultName by rememberSaveable(mode) { mutableStateOf(VaultLibrary.DEFAULT_NAME) }
     var revealed by rememberSaveable(mode) { mutableStateOf(false) }
     var error by rememberSaveable(mode) { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
 
+    // 解锁模式：解析要解锁哪个库；参数缺失时回退到索引第一条。
+    val targetEntry = remember(vaultId, mode) {
+        if (mode == LockMode.Unlock) {
+            VaultLibrary.find(context, vaultId) ?: VaultLibrary.list(context).firstOrNull()
+        } else {
+            null
+        }
+    }
+
     fun submit() {
         if (busy) return
         val localError = when {
+            mode == LockMode.Create && vaultName.isBlank() -> "库名不能为空"
             password.length < MIN_PASSWORD_LENGTH -> "主口令至少 $MIN_PASSWORD_LENGTH 个字符"
             mode == LockMode.Create && confirm != password -> "两次输入的主口令不一致"
+            mode == LockMode.Unlock && targetEntry == null -> "找不到要解锁的密码库"
             else -> null
         }
         if (localError != null) {
@@ -97,20 +111,29 @@ fun LockScreen(
         }
         error = null
         busy = true
-        val databasePath = VaultPaths.databasePath(context)
         scope.launch {
+            var registered: VaultLibraryEntry? = null
             try {
-                val session = if (mode == LockMode.Create) {
-                    repository.create(databasePath, password)
+                val entry = if (mode == LockMode.Create) {
+                    VaultLibrary.register(context, vaultName).also { registered = it }
                 } else {
-                    repository.unlock(databasePath, password)
+                    targetEntry!!
                 }
+                val path = VaultLibrary.prepareFile(context, entry).absolutePath
+                val session = if (mode == LockMode.Create) {
+                    repository.create(path, password)
+                } else {
+                    repository.unlock(path, password)
+                }
+                VaultLibrary.rememberLast(context, entry.id)
                 // 口令用完后立即从界面状态里清掉（JVM 字符串本身无法擦除，已在设计中接受）。
                 password = ""
                 confirm = ""
                 revealed = false
                 onSuccess(session)
             } catch (failure: Throwable) {
+                // 创建失败要把刚登记的空壳库回滚，避免列表里出现打不开的库。
+                registered?.let { VaultLibrary.remove(context, it.id) }
                 error = describeFailure(failure)
             } finally {
                 busy = false
@@ -155,11 +178,22 @@ fun LockScreen(
                 text = if (mode == LockMode.Create) {
                     "设置一个主口令。忘记主口令将无法恢复数据，也没有后门。"
                 } else {
-                    "输入主口令继续。"
+                    targetEntry?.let { "即将解锁「${it.name}」" } ?: "输入主口令继续。"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            if (mode == LockMode.Create) {
+                AppTextField(
+                    value = vaultName,
+                    onValueChange = { vaultName = it },
+                    label = "库名",
+                    helperText = "显示在库列表里，可重命名",
+                    singleLine = true,
+                    imeAction = ImeAction.Next,
+                )
+            }
 
             AppTextField(
                 value = password,

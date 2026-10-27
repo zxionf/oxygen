@@ -72,7 +72,7 @@ MVP 覆盖：
 - 记录 ID 使用 UUIDv7：`insert` 由内核生成，`batch` 由客户端按相同布局生成；Kotlin 负责 16 字节与标准 UUID 字符串互转。
 - `list` 只返回元信息，Demo 取回列表后对每项调用 `get` 取正文，单次最多 50 条。
 - 数据库路径为应用私有目录 `filesDir/shio-demo.db`；界面显示完整路径。
-- 密码库目标模型为 `vault/entries`，数据库为 `filesDir/vault.db`；详见「密码库数据层」。
+- 密码库目标模型为 `vault/entries`，库文件位置见「多密码库」（多库时为 `filesDir/vaults/<uuid>.db`）；详见「密码库数据层」。
 
 ## 演示界面（原型 Demo）
 单页 Compose，自上而下：
@@ -276,9 +276,10 @@ ui/components/
 
 | 路由 | 页面 | 说明 |
 |---|---|---|
-| `gate` | 启动分流 | `vault.db` 存在去 `unlock`，否则去 `create` |
-| `create` | 创建密码库 | 主口令 + 确认 |
-| `unlock` | 解锁 | 主口令、错误展示 |
+| `gate` | 启动分流 | 无库去 `create`，一个库直接去 `unlock`，多个库去 `vaults` |
+| `create` | 创建密码库 | 库名 + 主口令 + 确认；成功后注册索引 |
+| `vaults` | 密码库列表 | 选择/新建/重命名/删除库；不需解锁 |
+| `unlock?vaultId={vaultId}` | 解锁 | 指定库的主口令；参数缺省回退索引第一条 |
 | `vault` | 密码库列表 | 搜索、条目列表、FAB、锁定、设置 |
 | `entry/{id}` | 条目详情 | 查看、复制、显隐、外链、编辑、删除 |
 | `editor?entryId={entryId}` | 编辑器 | 无 `entryId` 为新建 |
@@ -286,7 +287,7 @@ ui/components/
 | `appearance` | 外观 | 主题模式与配色 |
 | `demo` | 原型 Demo | 复用现有 `DemoScreen` |
 
-- 解锁/创建成功：`navigate(vault) { popUpTo(unlock|create) { inclusive = true } }`，`vault` 成为新栈底。
+- 解锁/创建成功：`navigate(vault) { popUpTo(graph.id) { inclusive = true } }`，`vault` 成为新栈底（多库下不必区分来自 `unlock` 还是 `create`）。
 - 锁定：`navigate(unlock) { popUpTo(graph.id) { inclusive = true }; launchSingleTop = true }`，**整个回退栈被清空**，解锁页成为唯一目的地；因此系统返回键在解锁页直接退出应用，不能退回已锁定的列表/详情/设置。
 - 创建/解锁页在无上一级时（`previousBackStackEntry == null`）不显示返回箭头：`LockScreen(onBack = null)`，避免出现点了没反应的死按钮。
 - 详情 → 编辑保存后回退一级；删除后 `popBackStack()` 回列表；编辑器有未保存修改时返回先弹「放弃修改？」。
@@ -315,7 +316,7 @@ ui/components/
 - `shio_open` 的 `options_json` 只接受 `create`、`read_only`、`max_value_size`、`cache_size`，未知字段会被拒绝；`create` 与 `read_only` 不能同时为真。
 
 ## 密码库数据层
-- 代码：`vault/VaultPaths.kt`（`filesDir/vault.db` 定位与存在性）、`vault/VaultRepository.kt`（建库/解锁/锁定 + `vault/entries` 读写）、`vault/VaultEntryCodec.kt`（`org.json` 编解码）。
+- 代码：`vault/VaultLibrary.kt`（多库索引与文件定位）、`vault/VaultRepository.kt`（建库/解锁/锁定 + `vault/entries` 读写）、`vault/VaultEntryCodec.kt`（`org.json` 编解码）。
 - 集合：命名空间 `vault`、集合 `entries`（条目）与 `tags`（标签）；记录值只放业务字段，ID 与时间戳取内核 meta；条目通过 `tagIds` 引用标签，详见「标签与收藏」。
 
 ```json
@@ -521,7 +522,6 @@ ui/components/
 - debug 全新安装后首次解锁：库为空，不再自动出现 8 条样例。
 
 ## 标签与收藏
-
 条目此前只有五个业务字段，条目一多只能靠搜索。本能力提供按主题归类（标签）与快速挑出常用项（收藏）；标签采用**独立集合 + 条目内引用**，重命名只改一处，标签列表可独立枚举与统计。
 
 ### 标签存储结构
@@ -583,3 +583,69 @@ ui/components/
 - 收藏后列表筛选「收藏」只剩收藏项；与标签筛选叠加正确。
 - 标签名重复 / 空白 / 超长时给出提示且不创建。
 - 杀进程重开后标签与收藏状态保留。
+
+## 多密码库
+
+之前只有固定的 `filesDir/vault.db`，无法「工作一套、个人一套」分开口令，也没有删除整套库的入口。多密码库提供：多个互相独立的加密库、各自显示名、启动时可选、可重命名与删除。
+
+### 库索引
+
+## 库索引
+- 索引存在 `SharedPreferences`（预置名 `vaults`，键 `entries`），值是一个 JSON 数组，每项：
+  ```json
+  {"id":"<uuid>","name":"工作","fileName":"<uuid>.db","createdAt":1730000000000}
+  ```
+- 索引**只含显示名与文件名**，不含口令、条目或任何敏感内容；库本身仍由内核加密。
+- 索引随每次增删改立即落盘（`SharedPreferences.edit().apply()`）。
+
+### 文件布局
+- 每个库一个文件：`filesDir/vaults/<id>.db`，内核的旁路锁是同目录的 `<id>.db.lock`。
+- 旧版本的 `filesDir/vault.db` **原地保留**，首次启动时自动注册为一条索引记录：
+  `id = "default"`、`name = "默认密码库"`、`fileName = "vault.db"`（不移动文件，避免大文件复制与失败风险）。
+- 新建库时 `id` 用 `UUID.randomUUID()`；文件名即 `<id>.db`。
+
+### 启动分流
+- 索引为空（且没有旧 `vault.db`）→ `create`（创建第一个库）。
+- 索引恰好一条 → 直接进 `unlock?vaultId=<id>`（保持现在的「打开即解锁」体验）。
+- 索引多条 → 进 `vaults`（库列表），由用户选一条进入 `unlock?vaultId=<id>`。
+- 记住上次打开的库（`SharedPreferences` 键 `lastVaultId`）：解锁成功后写入；仅供库列表高亮与「继续上次」提示，不改变上面的分流规则。
+
+### 页面与路由
+| 路由 | 内容 |
+|---|---|
+| `vaults` | 库列表：每行显示名称、条目数（未解锁不显示）、创建时间；行点击进解锁；右上「新建库」；行尾菜单可重命名/删除 |
+| `unlock?vaultId={id}` | 解锁指定库；标题下显示库名；失败时提示该库 |
+| `create` | 创建新库：库名（默认「我的密码库」）+ 主口令 + 确认 |
+| `vault` 及之后 | 不变（进入的是「当前已解锁的库」） |
+
+- 路由参数 `vaultId` 缺失时回退到「索引第一条」，保证旧调用与深链不崩。
+- 库列表页受「无需解锁即可进入」保护：它不读库内容，因此不需要会话；但行尾的条目数需要解锁后才能算，未解锁时该行不显示条目数。
+
+### 库管理
+- **重命名**：只改索引里的 `name`，不动文件。
+- **删除**：`AlertDialog` 二次确认（提示「库内全部条目将被永久删除，且不可恢复」）；删除 `<id>.db`、`<id>.db.lock` 与该索引记录；若删除的是当前已解锁的库，先锁定（`AutoLockController.lockNow()`）再删。
+- **限制**：不允许删除「正在使用且未锁定」的库（先锁定）；允许删到 0 个库，此时下次启动回到创建页。
+
+### 旧库处理
+- 旧安装升级后：`vault.db` 自动成为 `default` 库，用户看到的名称是「默认密码库」，可在库列表里重命名。
+- 备份/恢复（C13）仍作用于**当前已解锁的库**：备份用当前库路径，恢复替换当前库文件；多库下路径由 `VaultLibrary` 提供。
+- 导入导出（C22）与标签（C21）不受影响，都基于当前库。
+
+### 新增文件
+- `vault/VaultLibrary.kt`：索引模型 `VaultLibraryEntry(id, name, fileName, createdAt)` + 读写（`list()`、`register()`、`rename()`、`remove()`、`ensureLegacyRegistered()`）+ `fileFor(context, entry)`。
+- `ui/vault/VaultListPickerScreen.kt`（库列表页，命名避免与 `VaultListScreen` 混淆）。
+- `Routes.Vaults = "vaults"`、`Routes.unlock(vaultId)`、`Routes.VaultIdArg`。
+
+### 不做的事
+- 不做跨库移动条目、不做库导出到另一台设备（备份/恢复逐个库做）。
+- 不做库密码提示、不做库图标/颜色。
+- 不做「同时解锁多个库」：任一时刻只有一个活动会话（内核句柄唯一，`VaultComponent.repository` 单例）。
+- 不做旧 `vault.db` 迁移到 `vaults/` 目录（原地保留，减少失败面）。
+
+### 覆盖场景
+- 全新安装：直接进创建页；创建后库列表只有一条，下次启动直接进该库解锁页。
+- 已有旧 `vault.db` 升级：启动直接进解锁页，库名为「默认密码库」，解锁后条目完整。
+- 新建第二个库：库列表出现两条；分别解锁互不影响（A 库条目不出现在 B 库）。
+- 重命名库：列表名称变化，解锁页标题同步；条目不受影响。
+- 删除库：文件与索引都消失；删除当前库会先锁定并回到库列表/创建页。
+- 杀进程重开：库列表与上次解锁的库仍然正确。

@@ -12,6 +12,7 @@ object Routes {
     const val Gate = "gate"
     const val Create = "create"
     const val Unlock = "unlock"
+    const val Vaults = "vaults"
     const val Vault = "vault"
     const val Settings = "settings"
     const val Appearance = "appearance"
@@ -21,6 +22,15 @@ object Routes {
 
     /** 详情路由参数名。 */
     const val EntryIdArg = "id"
+
+    /** 库 ID 参数名；缺省时回退到索引里的第一条。 */
+    const val VaultIdArg = "vaultId"
+
+    /** 解锁路由模板：`unlock?vaultId={vaultId}`（参数可选）。 */
+    const val UnlockPattern = "unlock?$VaultIdArg={$VaultIdArg}"
+
+    /** 拼接指定库的解锁路由。 */
+    fun unlock(vaultId: String): String = "unlock?$VaultIdArg=${Uri.encode(vaultId)}"
 
     /** 详情路由模板：`entry/{id}`。 */
     const val EntryPattern = "entry/{$EntryIdArg}"

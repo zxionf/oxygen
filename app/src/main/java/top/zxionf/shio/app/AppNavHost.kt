@@ -22,10 +22,11 @@ import top.zxionf.shio.ui.unlock.LockMode
 import top.zxionf.shio.ui.unlock.LockScreen
 import top.zxionf.shio.ui.vault.EntryDetailScreen
 import top.zxionf.shio.ui.vault.EntryEditorScreen
+import top.zxionf.shio.ui.vault.VaultListPickerScreen
 import top.zxionf.shio.ui.vault.VaultListScreen
 import top.zxionf.shio.vault.AutoLockController
 import top.zxionf.shio.vault.VaultComponent
-import top.zxionf.shio.vault.VaultPaths
+import top.zxionf.shio.vault.VaultLibrary
 
 /**
  * 应用的唯一导航图。
@@ -56,10 +57,16 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable(Routes.Gate) {
-            // 按 vault.db 是否存在分流：有库进 unlock，没有进 create；gate 自身立即移出回退栈。
+            // 多库分流：先把旧 vault.db 注册进索引，再按库数量决定去哪。
             val context = LocalContext.current
             LaunchedEffect(navController) {
-                val destination = if (VaultPaths.exists(context)) Routes.Unlock else Routes.Create
+                VaultLibrary.ensureLegacyRegistered(context)
+                val entries = VaultLibrary.list(context)
+                val destination = when {
+                    entries.isEmpty() -> Routes.Create
+                    entries.size == 1 -> Routes.unlock(entries.first().id)
+                    else -> Routes.Vaults
+                }
                 navController.navigate(destination) {
                     popUpTo(Routes.Gate) { inclusive = true }
                 }
@@ -67,7 +74,7 @@ fun AppNavHost(
             PlaceholderScreen(
                 title = "启动分流",
                 route = Routes.Gate,
-                description = "检查 vault.db 是否存在：存在进解锁页，否则进创建页。",
+                description = "没有库进创建页，一个库直接解锁，多个库先进库列表。",
             )
         }
 
@@ -82,16 +89,39 @@ fun AppNavHost(
                 },
                 onSuccess = {
                     navController.navigate(Routes.Vault) {
-                        popUpTo(Routes.Create) { inclusive = true }
+                        popUpTo(navController.graph.id) { inclusive = true }
                     }
                 },
             )
         }
 
-        composable(Routes.Unlock) {
+        composable(Routes.Vaults) {
+            VaultListPickerScreen(
+                onBack = if (navController.previousBackStackEntry != null) {
+                    { navController.popBackStack() }
+                } else {
+                    null
+                },
+                onUnlock = { vaultId -> navController.navigate(Routes.unlock(vaultId)) },
+                onCreate = { navController.navigate(Routes.Create) },
+            )
+        }
+
+        composable(
+            route = Routes.UnlockPattern,
+            arguments = listOf(
+                navArgument(Routes.VaultIdArg) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) { backStackEntry ->
+            val vaultId = backStackEntry.arguments?.getString(Routes.VaultIdArg)
             // 解锁页永远是栈底：返回退出应用，不能退回密码库。
             LockScreen(
                 mode = LockMode.Unlock,
+                vaultId = vaultId,
                 onBack = if (navController.previousBackStackEntry != null) {
                     { navController.popBackStack() }
                 } else {
@@ -99,7 +129,7 @@ fun AppNavHost(
                 },
                 onSuccess = {
                     navController.navigate(Routes.Vault) {
-                        popUpTo(Routes.Unlock) { inclusive = true }
+                        popUpTo(navController.graph.id) { inclusive = true }
                     }
                 },
             )
@@ -157,6 +187,12 @@ fun AppNavHost(
                     onAppearance = { navController.navigate(Routes.Appearance) },
                     onChangePassword = { navController.navigate(Routes.ChangePassword) },
                     onManageTags = { navController.navigate(Routes.Tags) },
+                    // 切换库：回库列表。旧会话的句柄会在下次 open 时被销毁，不必先手动锁定。
+                    onSwitchVault = {
+                        navController.navigate(Routes.Vaults) {
+                            popUpTo(navController.graph.id) { inclusive = true }
+                        }
+                    },
                     // 恢复后旧会话作废：清栈回解锁页，用备份时的主口令重新解锁。
                     onRestored = {
                         navController.navigate(Routes.Unlock) {
@@ -216,7 +252,16 @@ private fun RequireUnlocked(
         return
     }
     LaunchedEffect(navController) {
-        val destination = if (VaultPaths.exists(context)) Routes.Unlock else Routes.Create
+        // 会话丢失时回到「上次的库」或库列表：与 gate 的分流规则保持一致。
+        VaultLibrary.ensureLegacyRegistered(context)
+        val entries = VaultLibrary.list(context)
+        val lastId = VaultLibrary.lastVaultId(context)
+        val destination = when {
+            entries.isEmpty() -> Routes.Create
+            entries.any { it.id == lastId } -> Routes.unlock(lastId!!)
+            entries.size == 1 -> Routes.unlock(entries.first().id)
+            else -> Routes.Vaults
+        }
         navController.navigate(destination) {
             popUpTo(navController.graph.id) { inclusive = true }
         }

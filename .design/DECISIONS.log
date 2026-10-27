@@ -354,3 +354,13 @@ Change: 20261027-tags-and-favorites
 Context: 收藏既可以是条目上的布尔字段，也可以是一个特殊标签（如 __favorite）。
 Decision: 收藏实现为条目 JSON 里的 favorite 布尔字段，不占用标签命名空间；列表筛选里「收藏」与标签 chips 并列但语义独立，筛选可叠加。
 Consequences: 用户不能重命名或删除「收藏」，语义稳定；标签列表保持干净；代价是多一个字段与一套独立的筛选开关。
+## [72] 2026-10-27 14:03:18 UTC
+Change: 20261027-multi-vault
+Context: 多库需要一个「库列表」，但库自身的口令在解锁前读不出来，所以索引必须放在库外；同时已有用户的 filesDir/vault.db 不能丢。
+Decision: 索引存 SharedPreferences（vaults/entries，JSON 数组：id/name/fileName/createdAt），只含显示名与文件名、不含任何敏感内容；新库文件放 filesDir/vaults/<uuid>.db；旧 filesDir/vault.db 首次启动自动注册为 default 条目且原地保留不移动。
+Consequences: 升级用户无感（库名显示为「默认密码库」，可重命名）；索引与文件可能短暂不一致，靠「删除时先删索引」把风险限制在「文件残留」而不是「指向不存在文件的孤儿索引」；新建库前必须 mkdirs 父目录，否则内核报 IO(-14)（已由 prepareFile 统一处理）。
+## [73] 2026-10-27 14:03:18 UTC
+Change: 20261027-multi-vault
+Context: 内核句柄与会话（VaultComponent.repository）是进程级单例，无法同时解锁多个库；而多库下用户会频繁在两库间切换。
+Decision: 同一时刻只允许一个活动会话；「切换密码库」= 回库列表，旧会话的句柄在下次 open 时由 ShioDatabase.open 销毁（已有的「重复开库先 destroy」逻辑）。删除当前已解锁的库时先 AutoLockController.lockNow() 再删文件。
+Consequences: 不会出现两个库同时持有写句柄（内核 Android <db>.lock 独占）的冲突；切换不需要额外的「显式锁定」流程，减少状态分支；代价是切换后必须重新输入目标库的主口令。
