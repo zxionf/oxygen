@@ -485,8 +485,11 @@ ui/components/
 
 ### 导出
 - 入口：`设置 → 数据 → 导出为 CSV` / `导出为 JSON`，走 SAF `CreateDocument`。
-- 文件内容（两种格式字段一致）：`title`、`username`、`password`、`url`、`notes`。
-- CSV：首行表头 `title,username,password,url,notes`；按 RFC 4180 转义（字段含 `,`、`"`、`\r`、`\n` 时整体加双引号，内部 `"` 变成 `""`）；UTF-8 无 BOM；换行 `\n`。
+- 文件内容（两种格式字段一致）：`title`、`username`、`password`、`url`、`notes`、`tags`、`favorite`。
+- CSV：首行表头 `title,username,password,url,notes,tags,favorite`；按 RFC 4180 转义（字段含 `,`、`"`、`\r`、`\n` 时整体加双引号，内部 `"` 变成 `""`）；UTF-8 无 BOM；换行 `\n`。
+- CSV 的 `tags` 列是标签名列表，用 `;` 连接（例：`工作;财务`）；名称内的 `\` 与 `;` 分别转义为 `\\` 与 `\;`，解码时其余位置的 `\x` 原样保留（即 `\` 只在 `\\` 与 `\;` 两处有转义含义）。空列或全空白表示「无标签」。
+- 标签名在导入时先 trim 再经 `VaultTagCodec.normalizeName` 规范化；规范化失败的名称被单独丢弃，不影响该条其余字段与标签。
+- 旧文件兼容：只有前五列的表头照常导入，缺失的 `tags`/`favorite` 按「无标签 / 未收藏」处理；表头列顺序不作要求，按列名定位。
 - JSON：`[{"title":…,"username":…,"password":…,"url":…,"notes":…}, …]`，`org.json` 生成，缩进 2 空格便于人工查看。
 - 默认文件名：`shio-export-<yyyyMMdd-HHmm>.csv` / `.json`。
 - 导出内容含明文密码，界面文案要提示「导出文件包含明文密码，请妥善保管」。
