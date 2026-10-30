@@ -24,8 +24,6 @@ MVP 覆盖：
 
 不在本次范围：
 
-- 多密码库
-- 分类、标签、收藏（下一阶段）
 - 生物识别、Autofill、TOTP
 
 **多端同步：MVP 不做同步 UI、配对与网络传输，但首次建库按内核要求启用同步**
@@ -42,7 +40,7 @@ MVP 覆盖：
 - ABI 仅 `arm64-v8a`、`x86_64`；NDK `29.0.14206865`；CMake `3.22.1+`（使用系统 4.4.4）。
 - JNI 薄层使用 C++17，静态 C++ 运行时，关闭 C++ 异常与 RTTI。
 - 图标使用 `androidx.compose.material:material-icons-extended`（BOM 管版本），经 `ui/components/Icons.kt` 的 `AppIcons`/`AppIcon` 统一取用；不使用字体图标与自绘路径。
-- 不引入 DI 框架与序列化库；JSON 使用系统 `org.json`；内存/偏好层不引入 Room/DataStore（数据走内核 `vault.db`）。
+- 不引入 DI 框架与序列化库；JSON 使用系统 `org.json`；内存/偏好层不引入 Room/DataStore（数据走内核库文件）。
 - 构建注意：Gradle 9 + JDK 21 需在 `gradle.properties` 的 `org.gradle.jvmargs` 加 `-Djdk.lang.Process.launchMechanism=fork`，否则 CMake 配置阶段报 spawn helper 错误。
 
 ## 约束
@@ -101,11 +99,11 @@ app/src/main/
 │   ├── demo/
 │   │   ├── DemoScreen.kt        # 原型 Demo 单页
 │   │   └── DemoViewModel.kt     # 状态与操作编排
-│   ├── vault/                   # VaultEntry、VaultRepository、VaultViewModel、VaultUrl
+│   ├── vault/                   # VaultEntry/Codec、VaultRepository、VaultViewModel、VaultLibrary、VaultTag、VaultTransfer、VaultUrl、SensitiveClipboard、AutoLock*
 │   ├── ui/
-│   │   ├── vault/               # 列表、详情、编辑器
+│   │   ├── vault/               # 条目列表、库列表（多库）、详情、编辑器
 │   │   ├── unlock/              # 创建 / 解锁
-│   │   ├── settings/            # 设置、外观
+│   │   ├── settings/            # 设置、外观、修改主口令、标签管理、备份/导入导出
 │   │   ├── components/          # StackedList、FieldItem、AppTextField、Icons
 │   │   └── theme/               # Color、Shape、Type、Theme、AppearancePreferences
 ├── cpp/
@@ -344,7 +342,7 @@ ui/components/
 - `LockScreen` 直接接仓库：创建走 `create(path, password)`（内部 `sync_enable` + `format=2` 校验），解锁走 `unlock(path, password)`；成功后清空输入状态并回调 `onSuccess(session)`。
 - 失败文案按 `ShioException.code` 分支并带上常量名与码值，例如口令错误显示 `主口令不正确（INVALID_KEY (-3)）`；`INVALID_ARGUMENT` 表示库已存在、`LOCKED` 表示被其它进程占用、`BUSY` 表示轮换未完成、`CORRUPTED`/`UNSUPPORTED_FORMAT` 单独提示。
 - 锁定：`VaultComponent.repository.lock()` → `destroy` → 清空回退栈 → `unlock`。
-- `AppNavHost` 的 `RequireUnlocked` 守卫：进程被回收后系统恢复导航栈时，受保护页面（`vault`/`entry`/`editor`/`settings`/`appearance`）若发现没有会话，就按 `vault.db` 是否存在重定向到 `unlock`/`create` 并清栈，避免无解锁直接看到内容。
+- `AppNavHost` 的 `RequireUnlocked` 守卫：进程被回收后系统恢复导航栈时，受保护页面（`vault`/`entry`/`editor`/`settings`/`appearance`）若发现没有会话，就按库索引重定向（优先 `lastVaultId`，否则单一库或库列表）并清栈，避免无解锁直接看到内容。
 - 设置 → 关于在 debug 且已解锁时多两行诊断：`存储格式 format=2` 与 `同步身份 <db_id>`；release 不展示。
 
 ### 列表与搜索（真实数据）
@@ -416,12 +414,12 @@ ui/components/
 - 处理：`VaultListScreen` 记录上一次条目数，条目数增加且当前可见位置在前两项内时 `scrollToItem(0)`；用户已向下翻（`firstVisibleItemIndex > 1`）则不打扰当前位置。
 
 ## 兼容与迁移
-- 全新 `vault.db`，无迁移；Demo 的 `shio-demo.db` 与 `demo/` 命名空间不动。
+- 全新库文件，无迁移；Demo 的 `shio-demo.db` 与 `demo/` 命名空间不动。
 - 应用启动入口从 Demo 改为 `gate`；Demo 通过设置进入。
 - 现有 `scripts/smoke.sh` / `acceptance.sh` 继续可用；后续可增加 Vault 专用探针。
 
 ## 备份与恢复
-密码库只有一份 `filesDir/vault.db`，换机、误删应用、刷机都会丢数据；内核提供同设备备份与恢复（`shio_backup` / `shio_restore`，存储维护 S2）。应用侧在设置里提供两个入口，用系统文件选择器（SAF）落到用户选的位置，恢复前必须显式确认并输入备份的主口令。
+单个库文件在设备上只有一份（多库时每个库各自一份），换机、误删应用、刷机都会丢数据；内核提供同设备备份与恢复（`shio_backup` / `shio_restore`，存储维护 S2）。应用侧在设置里提供两个入口，均作用于**当前已解锁的库**，用系统文件选择器（SAF）落到用户选的位置，恢复前必须显式确认并输入备份的主口令。
 
 ### 备份流程
 - 入口：`设置 → 数据 → 备份密码库`。
@@ -440,8 +438,8 @@ ui/components/
   2. 弹确认对话框：说明会**替换当前全部条目**、且必须输入该备份的主口令；输入框用 `AppTextField`；
   3. 把 URI 流式拷贝到 `cacheDir/restore-tmp.db`；
   4. 调用 `shio_restore(tmp, filesDir/vault-restored.db, password)`：目标文件必须不存在（先删陈旧残留），内核校验口令与结构，成功返回**新句柄**；
-  5. 成功后：销毁当前句柄与当前 `vault.db` → 把 `vault-restored.db` 改名为 `vault.db` → 清空 `VaultSession` → 导航回解锁页（用备份的主口令解锁）；
-  6. 任一步失败：删除临时文件与 `vault-restored.db`，**当前 `vault.db` 与句柄保持不变**，用户仍可继续使用。
+  5. 成功后：销毁当前句柄与当前库文件 → 把 `vault-restored.db` 改名为当前库文件名 → 清空 `VaultSession` → 导航回解锁页（用备份的主口令解锁）；
+  6. 任一步失败：删除临时文件与 `vault-restored.db`，**当前库文件与句柄保持不变**，用户仍可继续使用。
 - 失败文案：`INVALID_KEY (-3)` →「备份的主口令不正确」；`CORRUPTED (-10)` →「备份文件损坏」；`INVALID_ARGUMENT (-1)` →「目标文件已存在」（应用内部已规避）；`IO`/`DATABASE` 单独提示。
 
 ### 为什么恢复要「重启会话」
@@ -458,7 +456,7 @@ ui/components/
 - `VaultRepository`：`backup(outPath)` 直接透传；`restoreInPlace(backupPath, password)` 负责「临时目标 → 校验通过 → 换文件 → 清会话」的整个事务性流程。
 - SAF 用 `rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument / OpenDocument)`；流拷贝放 `Dispatchers.IO`。
 - 外部交互豁免：SAF 会让 `MainActivity.onStop`，在「立即」锁定下会当场销毁句柄，导致备份/恢复必然失败。因此启动前 `AutoLockController.beginExternalInteraction()`、回调里 `endExternalInteraction()`；豁免期间 `onStop` 只记时间戳，`onStart` 用 `max(用户偏好, 120 秒)` 判定（决策 #65）。
-- 不改内核、不改存储格式；备份文件与 `vault.db` 同构（含 `format=2`）。
+- 不改内核、不改存储格式；备份文件与当前库文件同构（含 `format=2`）。
 
 ### 边界
 - 不做云盘自动上传、不做定时备份。
@@ -590,7 +588,6 @@ ui/components/
 
 ### 库索引
 
-## 库索引
 - 索引存在 `SharedPreferences`（预置名 `vaults`，键 `entries`），值是一个 JSON 数组，每项：
   ```json
   {"id":"<uuid>","name":"工作","fileName":"<uuid>.db","createdAt":1730000000000}
