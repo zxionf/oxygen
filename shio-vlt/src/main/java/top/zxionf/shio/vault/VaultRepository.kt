@@ -238,6 +238,34 @@ class VaultRepository(
 
     // ---- 标签与收藏 ----
 
+    /** 导入结果：成功写入的条目数与本次新建的标签数。 */
+    data class ImportOutcome(val inserted: Int, val createdTags: Int)
+
+    /**
+     * 批量写入导入结果：先把标签名解析成 ID（缺失的创建），再逐条 `insert`。
+     *
+     * 标签名解析规则见 [VaultTagCodec.planImport]：忽略大小写匹配已有标签，文件内重名只建一条，
+     * 超过 [MAX_TAGS] 上限的名字被忽略（条目仍会导入）。
+     * 与 [insertAll] 一致：不查重、不覆盖，单条失败不影响后续条目。
+     */
+    suspend fun importEntries(items: List<VaultTransfer.Item>): ImportOutcome {
+        requireUnlocked()
+        val plan = VaultTagCodec.planImport(items.flatMap { it.tagNames }, tags(), MAX_TAGS)
+        val created = mutableMapOf<String, String>()
+        for (name in plan.toCreate) {
+            runCatching { insertTag(name) }
+                .getOrNull()
+                ?.let { tag -> created[tag.name.lowercase()] = tag.id }
+        }
+        var inserted = 0
+        for (item in items) {
+            val tagIds = item.tagNames.mapNotNull { name -> plan.idOf(name, created) }.distinct()
+            runCatching { insert(item.entry.copy(id = "", tagIds = tagIds)) }
+                .onSuccess { inserted += 1 }
+        }
+        return ImportOutcome(inserted = inserted, createdTags = created.size)
+    }
+
     /** 全部标签，按名称（小写）升序。 */
     suspend fun tags(): List<VaultTag> {
         requireUnlocked()

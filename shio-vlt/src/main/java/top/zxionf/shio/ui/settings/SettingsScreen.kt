@@ -188,13 +188,13 @@ fun SettingsScreen(
         scope.launch {
             try {
                 val parsed = VaultTransferFiles.importFrom(context, uri)
-                if (parsed.entries.isEmpty() && parsed.skipped == 0) {
+                if (parsed.items.isEmpty() && parsed.skipped == 0) {
                     notify("文件里没有可识别的条目")
                 } else {
-                    val inserted = VaultComponent.repository.insertAll(parsed.entries)
+                    val outcome = VaultComponent.repository.importEntries(parsed.items)
                     // 内核写入失败的条目也要算进「跳过」。
-                    val skipped = parsed.skipped + (parsed.entries.size - inserted)
-                    notify("新增 $inserted 条，跳过 $skipped 条")
+                    val skipped = parsed.skipped + (parsed.items.size - outcome.inserted)
+                    notify("新增 ${outcome.inserted} 条，跳过 $skipped 条")
                 }
             } catch (failure: Throwable) {
                 notify("导入失败：${failure.message ?: "未知错误"}")

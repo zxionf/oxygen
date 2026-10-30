@@ -47,4 +47,39 @@ object VaultTagCodec {
         if (name.any { it.isISOControl() }) return null
         return name
     }
+
+    /** 导入时按名字解析标签的计划：已存在的直接复用 ID，缺失的按顺序新建。 */
+    data class ImportPlan(
+        /** 小写标签名 → 已有标签 ID（含本次要新建的名字之外的全部已有标签）。 */
+        val resolved: Map<String, String> = emptyMap(),
+        /** 需要新建的标签名，保持首次出现顺序，不重复。 */
+        val toCreate: List<String> = emptyList(),
+    ) {
+        /** 小写名称对应的标签 ID；不在 [resolved] 里时到新建结果里找。 */
+        fun idOf(name: String, created: Map<String, String> = emptyMap()): String? {
+            val key = name.trim().lowercase()
+            return resolved[key] ?: created[key]
+        }
+    }
+
+    /**
+     * 规划导入时的标签名 → ID 映射。
+     *
+     * - 忽略大小写与首尾空白匹配已有标签；
+     * - 文件内同名（忽略大小写）只新建一条；
+     * - 规范化失败或已达 [limit] 上限的名称被丢弃（不阻断导入）。
+     */
+    fun planImport(names: List<String>, existing: List<VaultTag>, limit: Int): ImportPlan {
+        val resolved = existing.associate { it.name.trim().lowercase() to it.id }
+        val toCreate = mutableListOf<String>()
+        names.forEach { raw ->
+            val name = normalizeName(raw) ?: return@forEach
+            val key = name.lowercase()
+            if (key in resolved) return@forEach
+            if (toCreate.any { it.lowercase() == key }) return@forEach
+            if (resolved.size + toCreate.size >= limit) return@forEach
+            toCreate += name
+        }
+        return ImportPlan(resolved = resolved, toCreate = toCreate)
+    }
 }

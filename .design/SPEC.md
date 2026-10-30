@@ -522,9 +522,9 @@ ui/components/
   - `tagNames` 参数是 `标签 ID → 名称` 的映射（来自 `VaultRepository.tags()`），缺省为空映射时导出不带标签
 - 新增 `ui/settings/VaultTransferFiles.kt`：SAF 读写、临时文件、上限检查（与 `VaultBackupFiles` 同构）。
 - `VaultRepository`：
-  - `insertAll(entries): Int`（逐条 insert，返回成功数）；
-  - `ensureTags(names: List<String>): Map<String, String>`（标签名 → 标签 ID，忽略大小写匹配，不存在的创建；受 `MAX_TAGS` 上限约束）；
-  - 导入时先用 `ensureTags` 解析名字，再以得到的 ID 写入 `tagIds`。
+  - `insertAll(entries): Int`（逐条 insert，返回成功数；未带标签的旧路径）；
+  - `importEntries(items): ImportOutcome(inserted, createdTags)`（导入入口：先解析标签名，再逐条 insert）；
+  - 标签名解析用纯函数 `VaultTagCodec.planImport(names, existing, limit): ImportPlan`：忽略大小写匹配已有标签，文件内重名只建一条，超出上限的名字丢弃；ID 回填后写入条目的 `tagIds`。
 - SV 移除：`VaultViewModel.seedSamplesOnce`、`VaultComponent.samplesSeeded`、`BuildConfig` 导入（若不再使用）。
 
 ### 边界

@@ -73,4 +73,38 @@ class VaultTagTest {
         assertFalse(json.contains("tagIds"))
         assertFalse(json.contains("favorite"))
     }
+
+    // ---- 导入时的标签名解析 ----
+
+    private val existing = listOf(
+        VaultTag(id = "t1", name = "工作"),
+        VaultTag(id = "t2", name = "Finance"),
+    )
+
+    @Test
+    fun `planImport 命中已有标签忽略大小写与空白`() {
+        val plan = VaultTagCodec.planImport(listOf(" 工作 ", "finance"), existing, limit = 10)
+        assertTrue(plan.toCreate.isEmpty())
+        assertEquals("t1", plan.idOf("工作"))
+        assertEquals("t2", plan.idOf("FINANCE"))
+    }
+
+    @Test
+    fun `planImport 缺失的名字按顺序新建且去重`() {
+        val plan = VaultTagCodec.planImport(
+            listOf("财务", "工作", "财务", " 财务 ", "个人"),
+            existing,
+            limit = 10,
+        )
+        assertEquals(listOf("财务", "个人"), plan.toCreate)
+        assertEquals("t1", plan.idOf("工作"))
+        assertNull(plan.idOf("财务")) // 尚未创建，ID 由调用方插入后回填
+    }
+
+    @Test
+    fun `planImport 丢弃非法名字并受上限约束`() {
+        assertTrue(VaultTagCodec.planImport(listOf("  ", "a".repeat(99)), existing, 10).toCreate.isEmpty())
+        val capped = VaultTagCodec.planImport(listOf("a", "b", "c"), existing, limit = 3)
+        assertEquals(listOf("a"), capped.toCreate)
+    }
 }
