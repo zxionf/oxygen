@@ -13,7 +13,7 @@
   "archived_git_head": null,
   "checkpoint_strategy": "per-step",
   "created_at": "2026-10-30T15:47:34Z",
-  "current_step": null,
+  "current_step": "S3",
   "depends": [],
   "finished_at": null,
   "goal": "隐私说明",
@@ -29,7 +29,7 @@
   "plan": "closeout",
   "review_policy": "lenient",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "in_progress",
   "steps": [
     {
       "checkpoint": null,
@@ -40,7 +40,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "核查 manifest 无网络权限、无统计 SDK"
     },
     {
@@ -52,7 +52,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "起草隐私说明文本"
     },
     {
@@ -64,7 +64,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "in_progress",
       "title": "与实现逐条复核"
     }
   ],

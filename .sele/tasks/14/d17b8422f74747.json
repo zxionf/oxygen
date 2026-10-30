@@ -31,11 +31,26 @@
     "shio-vlt",
     "docs"
   ],
-  "pause_context": null,
+  "pause_context": {
+    "at": "2026-10-30T16:07:36Z",
+    "current_step": "S3",
+    "git_snapshot": {
+      "branch": "main",
+      "dirty_files": [
+        ".sele/cache/git-fingerprint.json",
+        ".sele/log.jsonl",
+        ".sele/tasks/14/d17b8422f74747.json",
+        ".sele/checkpoints/2026-10/ck-20261030-011.json"
+      ],
+      "head": "f2e28478a510d7168a9bb1a499af0b52017cd4b9"
+    },
+    "reason": "等待真机导入导出回归（S3）",
+    "resume_hint": "adb devices 无设备；接上 vivo V2359A 后执行"
+  },
   "plan": "closeout",
   "review_policy": "mixed",
-  "skipped_count": 0,
-  "status": "in_progress",
+  "skipped_count": 1,
+  "status": "paused",
   "steps": [
     {
       "checkpoint": null,
@@ -62,7 +77,7 @@
       "title": "assembleDebug + lintDebug"
     },
     {
-      "checkpoint": null,
+      "checkpoint": "ck-20261030-011",
       "desc": "",
       "id": "S3",
       "jump_meta": null,
