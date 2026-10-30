@@ -514,19 +514,25 @@ ui/components/
 - 操作提交期间禁用入口并显示「正在读取…/正在导出…」。
 
 ### 实现要点
-- 新增 `vault/VaultTransfer.kt`（纯 Kotlin，无 Android 依赖，便于单测）：
-  - `encodeCsv(entries): String` / `decodeCsv(text): ParseResult`
-  - `encodeJson(entries): String` / `decodeJson(text): ParseResult`
+- `vault/VaultTransfer.kt`（纯 Kotlin，无 Android 依赖，便于单测）：
+  - `encodeCsv(entries, tagNames: Map<String, String>): String` / `decodeCsv(text): ParseResult`
+  - `encodeJson(entries, tagNames: Map<String, String>): String` / `decodeJson(text): ParseResult`
   - `detectAndDecode(text): ParseResult`（按首字符分流）
-  - `ParseResult(entries: List<VaultEntry>, skipped: Int)`
+  - `ParseResult(items: List<Item>, skipped: Int)`，`Item(entry: VaultEntry, tagNames: List<String>)`：导入侧只知道标签名字，ID 由仓储层在写入时解析
+  - `tagNames` 参数是 `标签 ID → 名称` 的映射（来自 `VaultRepository.tags()`），缺省为空映射时导出不带标签
 - 新增 `ui/settings/VaultTransferFiles.kt`：SAF 读写、临时文件、上限检查（与 `VaultBackupFiles` 同构）。
-- `VaultRepository` 增加 `insertAll(entries): Int`（逐条 insert，返回成功数）。
+- `VaultRepository`：
+  - `insertAll(entries): Int`（逐条 insert，返回成功数）；
+  - `ensureTags(names: List<String>): Map<String, String>`（标签名 → 标签 ID，忽略大小写匹配，不存在的创建；受 `MAX_TAGS` 上限约束）；
+  - 导入时先用 `ensureTags` 解析名字，再以得到的 ID 写入 `tagIds`。
 - SV 移除：`VaultViewModel.seedSamplesOnce`、`VaultComponent.samplesSeeded`、`BuildConfig` 导入（若不再使用）。
 
 ### 边界
 - 不导出 `id`、时间戳、`type`（导入时一律新建、`type` 固定 `login`）。
 - 不解析第三方密码管理器专有格式（1Password/Bitwarden 的 CSV 需要用户先转换列名）。
 - 不做导入预览/逐条勾选；不做去重与合并。
+- 标签只按名称迁移，不迁移标签的创建时间等元数据；同名标签视为同一个（忽略大小写）。
+- 目标库已达 `MAX_TAGS` 时，超出的新标签名被忽略，该条仍会导入（只是少了这个标签）。
 - 导出文件不带任何加密，属于用户自行保管的明文副本。
 
 ### 验证
@@ -534,6 +540,9 @@ ui/components/
 - 清空库（新建库）→ 导入刚导出的 JSON → 条目数量与内容一致。
 - 导入含缺 `password` 的行 → 该行跳过，其余正常导入，结果提示跳过数。
 - CSV 中含逗号、双引号、换行的备注 → 导出后再导入，内容完全一致（转义正确）。
+- 条目带标签与收藏 → 导出后再导入到空库 → 标签自动创建、名称与顺序一致、收藏保留。
+- 条目带标签 → 导入到已有同名标签的库 → 不新建重复标签，直接引用已有 ID。
+- 只有五列（无 `tags`/`favorite`）的旧 CSV → 导入成功，条目无标签、未收藏。
 - debug 全新安装后首次解锁：库为空，不再自动出现 8 条样例。
 
 ## 标签与收藏
@@ -589,7 +598,7 @@ ui/components/
 - 不做标签颜色、排序、嵌套（层级标签）。
 - 不做「按标签批量操作」（批量打标签/删除）。
 - 不做标签的同步语义（第三波同步要单独考虑 `tags` 集合的冲突合并）。
-- 导入导出暂不含标签：CSV/JSON 仍是五个业务字段；标签随条目迁移留到后续变更。
+- 导入导出含标签与收藏（CSV 追加 `tags`/`favorite` 列，JSON 追加 `tags`/`favorite` 字段），按标签名匹配或创建。
 
 ### 检查清单
 - 新建标签 → 编辑器里勾选 → 详情显示 → 列表出现标签名。
