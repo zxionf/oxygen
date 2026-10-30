@@ -194,7 +194,8 @@ fun SettingsScreen(
                     val outcome = VaultComponent.repository.importEntries(parsed.items)
                     // 内核写入失败的条目也要算进「跳过」。
                     val skipped = parsed.skipped + (parsed.items.size - outcome.inserted)
-                    notify("新增 ${outcome.inserted} 条，跳过 $skipped 条")
+                    val created = if (outcome.createdTags > 0) "（新建标签 ${outcome.createdTags} 个）" else ""
+                    notify("新增 ${outcome.inserted} 条$created，跳过 $skipped 条")
                 }
             } catch (failure: Throwable) {
                 notify("导入失败：${failure.message ?: "未知错误"}")

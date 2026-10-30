@@ -1,6 +1,6 @@
 # 待办事项
 
-最后更新：2026-10-27。勾选状态以本文件为准；设计层面的取舍见 `.design/DECISIONS.log`。
+最后更新：2026-10-30。勾选状态以本文件为准；设计层面的取舍见 `.design/DECISIONS.log`。
 
 ## A. 真机验证（代码已完成，仅差验收）
 
@@ -20,9 +20,10 @@
   - 前置：先写一份「同步传输与信任模型」讨论稿，明确 ①传输层（局域网直连 vs 自建服务）②TLS 责任 ③配对密钥的展示/存储/撤销 ④冲突呈现（静默 LWW vs 提示）⑤后台拉取策略
   - 待接入：`sync_changes` / `sync_apply` / `sync_offers` / `sync_snapshot_*` / `sync_rotation*` / `sync_create_pairing` / `open_with_pairing` 等 18 个符号
   - 待做：同步设置页、配对文本与二维码、冲突提示
-- [ ] **B2 导入导出支持标签与收藏**
-  - 扩展 CSV 列（如 `tags` 用分隔符、`favorite` 用 0/1）与 JSON 字段
-  - 导入时按标签名匹配已有标签，不存在则创建
+- [x] **B2 导入导出支持标签与收藏**
+  - [x] 扩展 CSV 列（`tags` 用 `;` 分隔并转义、`favorite` 用 0/1）与 JSON 字段（`tags` 数组、`favorite` 布尔）
+  - [x] 导入时按标签名匹配已有标签（忽略大小写），不存在则创建
+  - [ ] 真机回归：带标签/收藏的导出 → 导入往返（`sele task status T4 --line transfer-tags`）
 - [ ] **B3 生物识别解锁**（之后才是 Autofill、TOTP）
 - [ ] **B4 密钥轮换**：映射 `shio_rotate_data_key`，在设置里提供入口（内核已支持）
 - [ ] **B5 条目跨库移动 / 库导入到另一台设备**（当前靠「导出 → 另库导入」手工代替）

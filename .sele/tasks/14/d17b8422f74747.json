@@ -13,7 +13,7 @@
   "archived_git_head": null,
   "checkpoint_strategy": "per-task",
   "created_at": "2026-10-30T15:47:17Z",
-  "current_step": null,
+  "current_step": "S3",
   "depends": [
     {
       "type": "task",
@@ -35,7 +35,7 @@
   "plan": "closeout",
   "review_policy": "mixed",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "in_progress",
   "steps": [
     {
       "checkpoint": null,
@@ -46,7 +46,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "导入结果提示「新建标签 n 个 / 跳过 m 条」"
     },
     {
@@ -58,7 +58,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "assembleDebug + lintDebug"
     },
     {
@@ -70,7 +70,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "in_progress",
       "title": "真机导入导出回归"
     },
     {
@@ -82,7 +82,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "更新 docs/todo.md 与 docs/vault.md"
     }
   ],

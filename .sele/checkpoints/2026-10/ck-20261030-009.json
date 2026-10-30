@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "line": "transfer-tags",
+    "plan": "closeout",
+    "step": "S4",
+    "task": "T3",
+    "task_uid": "tsk_01M66QWX6DJPQSE3ZVKMSCRKCG",
+    "type": "step"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "c213bceb8886e35743d09ae2694fb8c002496017",
+    "diff_stat": " .design/SPEC.md                                    |  6 +-\n .sele/cache/git-fingerprint.json                   |  2 +-\n .sele/checkpoints/2026-10/ck-20261030-007.json     | 93 ++++++++++++++++++++++\n .sele/checkpoints/2026-10/ck-20261030-008.json     | 92 +++++++++++++++++++++\n .sele/log.jsonl                                    | 16 ++++\n .sele/tasks/1c/b35d3c31acd1bc.json                 | 22 +++--\n .sele/tasks/df/4cc51ea356628c.json                 | 16 ++--\n .../top/zxionf/shio/ui/settings/SettingsScreen.kt  |  8 +-\n .../java/top/zxionf/shio/vault/VaultRepository.kt  | 28 +++++++\n .../main/java/top/zxionf/shio/vault/VaultTag.kt    | 35 ++++++++\n .../java/top/zxionf/shio/vault/VaultTagTest.kt     | 34 ++++++++\n 11 files changed, 331 insertions(+), 21 deletions(-)",
+    "dirty": false,
+    "files_changed": [
+      ".design/SPEC.md",
+      ".sele/cache/git-fingerprint.json",
+      ".sele/checkpoints/2026-10/ck-20261030-007.json",
+      ".sele/checkpoints/2026-10/ck-20261030-008.json",
+      ".sele/log.jsonl",
+      ".sele/tasks/1c/b35d3c31acd1bc.json",
+      ".sele/tasks/df/4cc51ea356628c.json",
+      "shio-vlt/src/main/java/top/zxionf/shio/ui/settings/SettingsScreen.kt",
+      "shio-vlt/src/main/java/top/zxionf/shio/vault/VaultRepository.kt",
+      "shio-vlt/src/main/java/top/zxionf/shio/vault/VaultTag.kt",
+      "shio-vlt/src/test/java/top/zxionf/shio/vault/VaultTagTest.kt"
+    ],
+    "source": "sele",
+    "tree": "573c568241f80325d0ad96f831edca35869a9fb6"
+  },
+  "id": "ck-20261030-009",
+  "status": "valid",
+  "ts": "2026-10-30T16:04:48Z"
+}
