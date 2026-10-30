@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": 1,
+  "version": 2,
   "id": "20261030-multi-module-split",
   "type": "refactor",
   "goal": "把单体 app 拆成 shio-vlt / shared / shio-todo 三模块，为待办应用与内核复用铺路",
@@ -40,10 +40,14 @@
   ],
   "created_at": "2026-10-30T08:54:06Z",
   "created_by": "zxionf",
-  "status": "draft",
-  "frozen": null,
+  "status": "active",
+  "frozen": {
+    "goal_sha256": "255539d201b14c629d63d9bdaaa0556ce0c96da21ef16d2faf3ca63c5c8c7a36",
+    "acceptance_sha256": "23dadffc3200c9eaaf74ff6fdd78cadde858973a2743a66c24bf2d2e5565583d",
+    "at": "2026-10-30T08:54:15Z"
+  },
   "blocked": null,
   "closed": null,
-  "base_commit": null,
+  "base_commit": "d63e064",
   "merged": null
 }
