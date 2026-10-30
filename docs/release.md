@@ -21,6 +21,22 @@
 签名材料与口令见 [`signing.md`](signing.md)：`keystore.properties` 存在时自动签名，
 不存在时退回未签名产物（产物名带 `unsigned`），因此新克隆仓库不会构建失败。
 
+## `.aab` 校验
+
+`apksigner` 只认 APK，AAB 要用 `jarsigner` 与证书导出：
+
+```bash
+unzip -p shio-vlt/build/outputs/bundle/release/shio-vlt-release.aab META-INF/ZXIONF.RSA > /tmp/aab-cert.rsa
+keytool -printcert -file /tmp/aab-cert.rsa | grep -E 'Owner|SHA256'   # 应为 O=zxionf 与 signing.md 的指纹
+jarsigner -verify shio-vlt/build/outputs/bundle/release/shio-vlt-release.aab   # “jar 已验证”（自签名 + 无时间戳的警告属正常）
+```
+
+AAB 内的清单是二进制形式，版本号用构建产出的已打包清单核对（同一 `defaultConfig`，与 APK 同源）：
+
+```bash
+grep -o 'android:versionCode="[^"]*"' shio-vlt/build/intermediates/packaged_manifests/release/*/AndroidManifest.xml
+```
+
 ## 发布前自检
 
 ```bash

@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "line": "release",
+    "plan": "closeout",
+    "step": "S3",
+    "task": "T1",
+    "task_uid": "tsk_01M66QXEDGE3Q9ABBKYW6N59VC",
+    "type": "step"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "3c6e93bda3e735a819a74209717b67d6f4b19bd1",
+    "diff_stat": " .sele/cache/git-fingerprint.json               |  2 +-\n .sele/checkpoints/2026-10/ck-20261030-012.json | 30 +++++++++++++++++++\n .sele/log.jsonl                                | 12 ++++++++\n .sele/tasks/00/d05f78084680bf.json             | 16 +++++-----\n .sele/tasks/14/d17b8422f74747.json             |  2 +-\n .sele/tasks/82/42e3bb3236e609.json             | 10 +++----\n check.sh                                       | 26 ++++++++++++++--\n docs/index.md                                  |  1 +\n docs/release.md                                | 41 ++++++++++++++++++++++++++\n gradle/version.properties                      |  6 ++++\n shio-vlt/build.gradle.kts                      | 12 ++++++--\n 11 files changed, 139 insertions(+), 19 deletions(-)",
+    "dirty": false,
+    "files_changed": [
+      ".sele/cache/git-fingerprint.json",
+      ".sele/checkpoints/2026-10/ck-20261030-012.json",
+      ".sele/log.jsonl",
+      ".sele/tasks/00/d05f78084680bf.json",
+      ".sele/tasks/14/d17b8422f74747.json",
+      ".sele/tasks/82/42e3bb3236e609.json",
+      "check.sh",
+      "docs/index.md",
+      "docs/release.md",
+      "gradle/version.properties",
+      "shio-vlt/build.gradle.kts"
+    ],
+    "source": "sele",
+    "tree": "808f661624f71b437a045c940784397c706c5e2a"
+  },
+  "id": "ck-20261030-013",
+  "status": "valid",
+  "ts": "2026-10-30T16:11:13Z"
+}
