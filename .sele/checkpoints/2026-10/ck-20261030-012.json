@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "line": "release",
+    "plan": "closeout",
+    "step": "S3",
+    "task": "T3",
+    "task_uid": "tsk_01M66QXEE1RASTPPSSFPCFH67G",
+    "type": "step"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "7f23c3004651750765addbb26316273c3bf3d63d",
+    "diff_stat": " .sele/cache/git-fingerprint.json               |  2 +-\n .sele/checkpoints/2026-10/ck-20261030-011.json | 32 ++++++++++++++++\n .sele/log.jsonl                                | 10 +++++\n .sele/tasks/00/d05f78084680bf.json             | 10 ++---\n .sele/tasks/14/d17b8422f74747.json             | 23 ++++++++++--\n docs/index.md                                  |  2 +\n docs/privacy.md                                | 52 ++++++++++++++++++++++++++\n 7 files changed, 121 insertions(+), 10 deletions(-)",
+    "dirty": false,
+    "files_changed": [
+      ".sele/cache/git-fingerprint.json",
+      ".sele/checkpoints/2026-10/ck-20261030-011.json",
+      ".sele/log.jsonl",
+      ".sele/tasks/00/d05f78084680bf.json",
+      ".sele/tasks/14/d17b8422f74747.json",
+      "docs/index.md",
+      "docs/privacy.md"
+    ],
+    "source": "sele",
+    "tree": "e715e455c5a5e51faf501df3dfdca5dafcfd80ed"
+  },
+  "id": "ck-20261030-012",
+  "status": "valid",
+  "ts": "2026-10-30T16:09:00Z"
+}

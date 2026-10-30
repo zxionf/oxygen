@@ -4,18 +4,18 @@
       "desc": "每条声明都能在代码中找到依据",
       "id": "A1",
       "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
+      "status": "pass",
+      "verified_at": "2026-10-30T16:09:05Z",
+      "verified_by": "agent:pi"
     }
   ],
   "archived_at": null,
   "archived_git_head": null,
   "checkpoint_strategy": "per-step",
   "created_at": "2026-10-30T15:47:34Z",
-  "current_step": "S3",
+  "current_step": null,
   "depends": [],
-  "finished_at": null,
+  "finished_at": "2026-10-30T16:09:05Z",
   "goal": "隐私说明",
   "id": "T3",
   "line": "release",
@@ -29,7 +29,7 @@
   "plan": "closeout",
   "review_policy": "lenient",
   "skipped_count": 0,
-  "status": "in_progress",
+  "status": "done",
   "steps": [
     {
       "checkpoint": null,
@@ -56,7 +56,7 @@
       "title": "起草隐私说明文本"
     },
     {
-      "checkpoint": null,
+      "checkpoint": "ck-20261030-012",
       "desc": "",
       "id": "S3",
       "jump_meta": null,
@@ -64,7 +64,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "in_progress",
+      "status": "done",
       "title": "与实现逐条复核"
     }
   ],

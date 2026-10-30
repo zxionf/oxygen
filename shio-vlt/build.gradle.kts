@@ -17,6 +17,14 @@ val keystoreProperties = Properties().apply {
 val releaseKeystorePath = keystoreProperties.getProperty("storeFile")?.takeIf { it.isNotBlank() }
 val hasReleaseKeystore = releaseKeystorePath != null && rootProject.file(releaseKeystorePath).exists()
 
+// 版本号唯一来源：gradle/version.properties（与 keystore.properties 分开，这个要入库）。
+// 规则：每次对外发包把 versionCode +1，只在该文件里改。
+val versionProperties = Properties().apply {
+    rootProject.file("gradle/version.properties").inputStream().use { load(it) }
+}
+val appVersionCode = versionProperties.getProperty("versionCode").trim().toInt()
+val appVersionName = versionProperties.getProperty("versionName").trim()
+
 android {
     namespace = "top.zxionf.shio"
     compileSdk = 37
@@ -36,8 +44,8 @@ android {
         applicationId = "top.zxionf.shio"
         minSdk = 29
         targetSdk = 37
-        versionCode = 6
-        versionName = "0.2.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     buildTypes {

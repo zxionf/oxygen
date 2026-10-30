@@ -13,7 +13,7 @@
   "archived_git_head": null,
   "checkpoint_strategy": "per-step",
   "created_at": "2026-10-30T15:47:34Z",
-  "current_step": null,
+  "current_step": "S3",
   "depends": [],
   "finished_at": null,
   "goal": "版本策略与 versionCode 单一来源",
@@ -30,7 +30,7 @@
   "plan": "closeout",
   "review_policy": "mixed",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "in_progress",
   "steps": [
     {
       "checkpoint": null,
@@ -41,7 +41,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "定 versionCode / versionName 单一来源"
     },
     {
@@ -53,7 +53,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "落到 gradle 配置"
     },
     {
@@ -65,7 +65,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "in_progress",
       "title": "规则写入 docs/ 并由 check.sh 校验"
     }
   ],
