@@ -1,0 +1,73 @@
+{
+  "acceptance": [
+    {
+      "desc": "冲突处理与拉取触发频率明确",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:47:58Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": null,
+  "goal": "冲突呈现与后台拉取策略",
+  "id": "T4",
+  "line": "sync-design",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "sync",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "对比静默 LWW 与冲突提示"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "定后台拉取触发与频率"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "人工评审"
+    }
+  ],
+  "title": "冲突呈现与后台拉取策略",
+  "uid": "tsk_01M66QY4Z7SYGWVKCS1CSYDFX0"
+}

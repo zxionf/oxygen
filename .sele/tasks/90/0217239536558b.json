@@ -1,0 +1,74 @@
+{
+  "acceptance": [
+    {
+      "desc": "alias 与证书指纹已记录，仓库无口令",
+      "id": "A1",
+      "requires_human": false,
+      "status": "pass",
+      "verified_at": "2026-10-30T15:55:02Z",
+      "verified_by": "agent:pi"
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:47:03Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": "2026-10-30T15:55:02Z",
+  "goal": "盘点当前签名材料",
+  "id": "T1",
+  "line": "keystore",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "build",
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "mixed",
+  "skipped_count": 0,
+  "status": "done",
+  "steps": [
+    {
+      "checkpoint": "ck-20261030-001",
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "keytool -list 记录 alias / 指纹 / 有效期"
+    },
+    {
+      "checkpoint": "ck-20261030-002",
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "核对 keystore.properties 与 check.sh 的签名校验"
+    },
+    {
+      "checkpoint": "ck-20261030-003",
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "确认口令保管位置（不落仓库）"
+    }
+  ],
+  "title": "盘点当前签名材料",
+  "uid": "tsk_01M66QWF8SVVZQM39JQCR8S32M"
+}

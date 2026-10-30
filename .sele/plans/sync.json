@@ -1,0 +1,56 @@
+{
+  "acceptance": [
+    {
+      "desc": "「同步传输与信任模型」讨论稿定稿，5 项取舍各留一条 decision",
+      "id": "PA1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "18 个同步符号全部映射并通过冒烟",
+      "id": "PA2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "同步设置页、配对文本与二维码、冲突提示可用",
+      "id": "PA3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "两台设备完成一次同步往返",
+      "id": "PA4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "approved_at": "2026-10-30T15:47:48Z",
+  "approved_by": "human:zxionf",
+  "created_at": "2026-10-30T15:47:48Z",
+  "goal": "接入多端同步：先定传输与信任模型，再映射内核 18 个同步符号，最后交付配对与冲突提示",
+  "id": "sync",
+  "lines": [
+    {
+      "depends": [],
+      "id": "sync-design"
+    },
+    {
+      "depends": [],
+      "id": "sync-kernel"
+    },
+    {
+      "depends": [],
+      "id": "sync-ui"
+    }
+  ],
+  "status": "active"
+}

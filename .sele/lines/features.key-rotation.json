@@ -1,0 +1,39 @@
+{
+  "acceptance": [
+    {
+      "desc": "shio_rotate_data_key 已在 JNI 与 Kotlin 封装中映射",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "设置页可触发轮换，失败有明确提示且数据不受损",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "轮换后条目可读，旧备份不可解",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:49:06Z",
+  "depends": [],
+  "goal": "映射 shio_rotate_data_key 并在设置里提供密钥轮换入口（B4）",
+  "id": "key-rotation",
+  "modules": [
+    "shared",
+    "shio-vlt",
+    "docs"
+  ],
+  "plan": "features",
+  "status": "active"
+}

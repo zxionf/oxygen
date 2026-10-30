@@ -1,0 +1,74 @@
+{
+  "acceptance": [
+    {
+      "desc": "tags 分隔符与转义、favorite 取值域无歧义且向后兼容",
+      "id": "A1",
+      "requires_human": false,
+      "status": "pass",
+      "verified_at": "2026-10-30T15:58:16Z",
+      "verified_by": "agent:pi"
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:47:17Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": "2026-10-30T15:58:16Z",
+  "goal": "定义传输格式扩展",
+  "id": "T1",
+  "line": "transfer-tags",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs",
+    "design"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "done",
+  "steps": [
+    {
+      "checkpoint": "ck-20261030-004",
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "定 tags 分隔符、转义规则与空值语义"
+    },
+    {
+      "checkpoint": "ck-20261030-005",
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "定 favorite 取值域（0/1）与缺省值"
+    },
+    {
+      "checkpoint": "ck-20261030-006",
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "写入 SPEC 的导入导出小节"
+    }
+  ],
+  "title": "定义传输格式扩展",
+  "uid": "tsk_01M66QWX5WCV3ZAKYXSXX2AX3Q"
+}

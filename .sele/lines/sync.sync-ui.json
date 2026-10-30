@@ -1,0 +1,50 @@
+{
+  "acceptance": [
+    {
+      "desc": "同步设置页可查看状态与错误",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "配对文本可生成与解析，二维码可展示",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "冲突可逐条提示并处理",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "两台设备完成一次同步往返",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:48:28Z",
+  "depends": [
+    {
+      "id": "sync-kernel",
+      "type": "line"
+    }
+  ],
+  "goal": "交付同步设置页、配对文本与二维码、冲突提示，并完成端到端验收",
+  "id": "sync-ui",
+  "modules": [
+    "shio-vlt"
+  ],
+  "plan": "sync",
+  "status": "active"
+}

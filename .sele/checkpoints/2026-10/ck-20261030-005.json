@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "line": "transfer-tags",
+    "plan": "closeout",
+    "step": "S2",
+    "task": "T1",
+    "task_uid": "tsk_01M66QWX5WCV3ZAKYXSXX2AX3Q",
+    "type": "step"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "2fb7a0345ec30973af48c37b90afb9f9f46fc4e5",
+    "diff_stat": " .design/SPEC.md | 5 ++++-\n 1 file changed, 4 insertions(+), 1 deletion(-)",
+    "dirty": false,
+    "files_changed": [
+      ".design/SPEC.md"
+    ],
+    "source": "sele",
+    "tree": "4a26f120311a17fa40a7dd0f10098d031dd372e5"
+  },
+  "id": "ck-20261030-005",
+  "status": "valid",
+  "ts": "2026-10-30T15:57:04Z"
+}

@@ -1,0 +1,78 @@
+{
+  "acceptance": [
+    {
+      "desc": "两处副本存在且口令与 keystore 分离",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:47:03Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QWF8SVVZQM39JQCR8S32M"
+    }
+  ],
+  "finished_at": null,
+  "goal": "执行两处离线备份",
+  "id": "T2",
+  "line": "keystore",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "build"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "选定两处离线介质与责任人"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "keystore 与口令分开存放"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "记录介质位置与校验时间（不入库）"
+    }
+  ],
+  "title": "执行两处离线备份",
+  "uid": "tsk_01M66QWF91B826M1A8NS2BQJN8"
+}

@@ -44,7 +44,7 @@ class VaultTransferTest {
     @Test
     fun `CSV 表头固定且以换行分隔`() {
         val csv = VaultTransfer.encodeCsv(entries)
-        assertTrue(csv.startsWith("title,username,password,url,notes\n"))
+        assertTrue(csv.startsWith("title,username,password,url,notes,tags,favorite\n"))
         assertTrue(csv.endsWith("\n"))
     }
 
@@ -110,8 +110,100 @@ class VaultTransferTest {
     fun `CSV 缺列按空处理`() {
         val csv = "title,password\n只有两列,pass\n"
         val parsed = VaultTransfer.decodeCsv(csv)
-        assertEquals(1, parsed.entries.size)
-        assertEquals("", parsed.entries.first().url)
-        assertEquals("", parsed.entries.first().notes)
+        assertEquals(1, parsed.items.size)
+        assertEquals("", parsed.items.first().entry.url)
+        assertEquals("", parsed.items.first().entry.notes)
+        assertTrue(parsed.items.first().tagNames.isEmpty())
+        assertEquals(false, parsed.items.first().entry.favorite)
+    }
+
+    // ---- 标签与收藏 ----
+
+    private val taggedEntries = listOf(
+        VaultEntry(
+            id = "entry-1",
+            title = "GitHub",
+            password = "secret",
+            tagIds = listOf("tag-a", "tag-gone", "tag-b"),
+            favorite = true,
+        ),
+        VaultEntry(id = "entry-2", title = "路由器", password = "pw"),
+    )
+
+    private val tagNames = mapOf("tag-a" to "工作", "tag-b" to "财务;重要", "tag-c" to "备份")
+
+    @Test
+    fun `CSV 导出带标签与收藏，往返一致`() {
+        val csv = VaultTransfer.encodeCsv(taggedEntries, tagNames)
+        assertTrue(csv.lines()[1].endsWith(",工作;财务\\;重要,1"))
+        val parsed = VaultTransfer.decodeCsv(csv)
+        assertEquals(0, parsed.skipped)
+        // 悬空 ID 被跳过，名字顺序跟随 tagIds
+        assertEquals(listOf("工作", "财务;重要"), parsed.items[0].tagNames)
+        assertEquals(true, parsed.items[0].entry.favorite)
+        assertTrue(parsed.items[1].tagNames.isEmpty())
+        assertEquals(false, parsed.items[1].entry.favorite)
+    }
+
+    @Test
+    fun `JSON 导出带标签数组与布尔收藏`() {
+        val json = VaultTransfer.encodeJson(taggedEntries, tagNames)
+        assertTrue(json.contains("\"tags\""))
+        assertTrue(json.contains("\"favorite\": true"))
+        val parsed = VaultTransfer.decodeJson(json)
+        assertEquals(listOf("工作", "财务;重要"), parsed.items[0].tagNames)
+        assertEquals(true, parsed.items[0].entry.favorite)
+    }
+
+    @Test
+    fun `标签名中的反斜杠与分号双向转义`() {
+        val names = listOf("a;b", "c\\d", "e\\;f")
+        val entry = VaultEntry(id = "x", title = "t", password = "p", tagIds = listOf("1", "2", "3"))
+        val map = mapOf("1" to names[0], "2" to names[1], "3" to names[2])
+        assertEquals(names, VaultTransfer.decodeCsv(VaultTransfer.encodeCsv(listOf(entry), map)).items[0].tagNames)
+        assertEquals(names, VaultTransfer.decodeJson(VaultTransfer.encodeJson(listOf(entry), map)).items[0].tagNames)
+    }
+
+    @Test
+    fun `标签名去空白且空片断被丢弃`() {
+        val csv = "title,password,tags\n只有标签,pass, 工作 ;; 个人 ;\n"
+        val parsed = VaultTransfer.decodeCsv(csv)
+        assertEquals(listOf("工作", "个人"), parsed.items.first().tagNames)
+    }
+
+    @Test
+    fun `favorite 兼容 0 1 布尔与文字`() {
+        val csv = "title,password,favorite\na,pass,1\nb,pass,0\nc,pass,true\nd,pass,FALSE\ne,pass,\n"
+        assertEquals(
+            listOf(true, false, true, false, false),
+            VaultTransfer.decodeCsv(csv).items.map { it.entry.favorite },
+        )
+        val json = """[{"title":"a","password":"p","favorite":1},{"title":"b","password":"p","favorite":"yes"},{"title":"c","password":"p"}]"""
+        assertEquals(
+            listOf(true, true, false),
+            VaultTransfer.decodeJson(json).items.map { it.entry.favorite },
+        )
+    }
+
+    @Test
+    fun `JSON 的 tags 也接受分号字符串`() {
+        val json = """{"title":"t","password":"p","tags":"工作; 个人"}"""
+        assertEquals(listOf("工作", "个人"), VaultTransfer.decodeJson(json).items.first().tagNames)
+    }
+
+    @Test
+    fun `旧格式（五列 CSV 与无新字段 JSON）仍可导入`() {
+        val oldCsv = "title,username,password,url,notes\n旧条目,user,pass,https://a,备注\n"
+        val fromCsv = VaultTransfer.decodeCsv(oldCsv)
+        assertEquals(1, fromCsv.items.size)
+        assertEquals(0, fromCsv.skipped)
+        assertTrue(fromCsv.items.first().tagNames.isEmpty())
+        assertEquals(false, fromCsv.items.first().entry.favorite)
+
+        val oldJson = """[{"title":"旧条目","username":"user","password":"pass","url":"","notes":""}]"""
+        val fromJson = VaultTransfer.decodeJson(oldJson)
+        assertEquals(1, fromJson.items.size)
+        assertTrue(fromJson.items.first().tagNames.isEmpty())
+        assertEquals(false, fromJson.items.first().entry.favorite)
     }
 }

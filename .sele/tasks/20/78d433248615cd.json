@@ -1,0 +1,61 @@
+{
+  "acceptance": [
+    {
+      "desc": "文档可用现有导出/导入能力完成迁移",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:49:21Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": null,
+  "goal": "库迁移步骤文档化",
+  "id": "T3",
+  "line": "vault-ops",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "写迁移步骤（导出 → 另库导入）"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "交叉核对步骤可执行"
+    }
+  ],
+  "title": "库迁移步骤文档化",
+  "uid": "tsk_01M66R0PPDKEF3VT9417H7FWCW"
+}

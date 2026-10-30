@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "line": "keystore",
+    "plan": "closeout",
+    "step": "S2",
+    "task": "T1",
+    "task_uid": "tsk_01M66QWF8SVVZQM39JQCR8S32M",
+    "type": "step"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "d6602291887cc62fa40faff97839a46919fe1c40",
+    "diff_stat": " docs/signing.md | 3 +++\n 1 file changed, 3 insertions(+)",
+    "dirty": false,
+    "files_changed": [
+      "docs/signing.md"
+    ],
+    "source": "sele",
+    "tree": "92c40d7aa147cdff78d8f8375424ca4f33c53134"
+  },
+  "id": "ck-20261030-002",
+  "status": "valid",
+  "ts": "2026-10-30T15:54:25Z"
+}

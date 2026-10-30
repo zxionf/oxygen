@@ -1,0 +1,73 @@
+{
+  "acceptance": [
+    {
+      "desc": "配对流程与密钥生命周期明确",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:47:58Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": null,
+  "goal": "配对密钥的展示 / 存储 / 撤销",
+  "id": "T3",
+  "line": "sync-design",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "sync",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "描述配对流程与密钥生命周期"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "定展示形式（文本 / 二维码 / 短码）"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "人工评审"
+    }
+  ],
+  "title": "配对密钥的展示 / 存储 / 撤销",
+  "uid": "tsk_01M66QY4YYEDE7TZAMX6TF1SXT"
+}

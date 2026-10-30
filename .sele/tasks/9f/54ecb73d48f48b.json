@@ -1,0 +1,78 @@
+{
+  "acceptance": [
+    {
+      "desc": "A7 通过且不残留旧库测试文件",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:46:47Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23"
+    }
+  ],
+  "finished_at": null,
+  "goal": "验证旧库兼容",
+  "id": "T4",
+  "line": "dev-verify",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "用 adb 将 format=1 旧 vault.db 放入 files/"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "冷启动观察自动注册「默认密码库」与条目完整性"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "记录结果并清理旧库测试文件"
+    }
+  ],
+  "title": "验证旧库兼容",
+  "uid": "tsk_01M66QW03TQDMH2T0XYT91KQ1K"
+}

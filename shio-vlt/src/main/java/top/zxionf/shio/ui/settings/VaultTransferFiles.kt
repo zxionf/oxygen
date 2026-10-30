@@ -30,16 +30,17 @@ object VaultTransferFiles {
         return "shio-export-$stamp.${format.extension}"
     }
 
-    /** 把条目写成文本并交给用户选定的 URI。 */
+    /** 把条目写成文本并交给用户选定的 URI（`tagNames` 是 `标签 ID → 名称`）。 */
     suspend fun exportTo(
         context: Context,
         entries: List<VaultEntry>,
+        tagNames: Map<String, String>,
         target: Uri,
         format: Format,
     ): Int = withContext(Dispatchers.IO) {
         val text = when (format) {
-            Format.CSV -> VaultTransfer.encodeCsv(entries)
-            Format.JSON -> VaultTransfer.encodeJson(entries)
+            Format.CSV -> VaultTransfer.encodeCsv(entries, tagNames)
+            Format.JSON -> VaultTransfer.encodeJson(entries, tagNames)
         }
         val output = context.contentResolver.openOutputStream(target)
             ?: error("无法写入所选位置")

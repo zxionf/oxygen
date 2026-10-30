@@ -1,0 +1,73 @@
+{
+  "acceptance": [
+    {
+      "desc": "方案文档记录密钥别名、包裹方式与失效策略",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:48:52Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": null,
+  "goal": "方案设计：Keystore 包裹主口令 + BiometricPrompt",
+  "id": "T1",
+  "line": "biometric",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "定 Keystore 别名与包裹流程"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "定失效检测（登记变更 / 锁定 / 复位）"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "写方案文档"
+    }
+  ],
+  "title": "方案设计：Keystore 包裹主口令 + BiometricPrompt",
+  "uid": "tsk_01M66QZT1NCYD8CCHVEV4YWFXQ"
+}

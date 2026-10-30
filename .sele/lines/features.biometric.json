@@ -1,0 +1,46 @@
+{
+  "acceptance": [
+    {
+      "desc": "生物识别可解锁已有库",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "生物识别失效或取消时回落主口令解锁",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "生物识别登记变更后本地包裹凭据失效",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "真机验收通过",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:48:52Z",
+  "depends": [],
+  "goal": "用 Android Keystore 包裹主口令，接入 BiometricPrompt 解锁并在失效时回落（B3）",
+  "id": "biometric",
+  "modules": [
+    "shio-vlt",
+    "shared"
+  ],
+  "plan": "features",
+  "status": "active"
+}

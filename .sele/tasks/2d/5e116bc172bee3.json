@@ -1,0 +1,66 @@
+{
+  "acceptance": [
+    {
+      "desc": "轮换前后状态一致，失败可回滚",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:49:06Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66R07BJ5GZD8Z9NCHWPAYK0"
+    }
+  ],
+  "finished_at": null,
+  "goal": "设置入口与失败处理",
+  "id": "T2",
+  "line": "key-rotation",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "设置页轮换入口与二次确认"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "失败提示与状态回滚"
+    }
+  ],
+  "title": "设置入口与失败处理",
+  "uid": "tsk_01M66R07BV6VGGSKEKVSZRPT2M"
+}

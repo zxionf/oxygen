@@ -1,0 +1,54 @@
+{
+  "acceptance": [
+    {
+      "desc": "导出的 CSV 含 tags 与 favorite，自身导入可还原",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "导出的 JSON 同理",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "导入时按标签名匹配已有标签，不存在则创建",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "旧格式（5 列 CSV、无 tags/favorite 字段的 JSON）仍可导入",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "单测覆盖 encode / decode / 匹配创建 / 旧格式降级",
+      "id": "A5",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:47:17Z",
+  "depends": [],
+  "goal": "导入导出覆盖标签与收藏：CSV 增列、JSON 增字段，导入按标签名匹配或创建（B2）",
+  "id": "transfer-tags",
+  "modules": [
+    "shio-vlt",
+    "docs"
+  ],
+  "plan": "closeout",
+  "status": "active"
+}

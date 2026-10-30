@@ -1,0 +1,38 @@
+{
+  "acceptance": [
+    {
+      "desc": "CI 自动跑 assembleDebug + lintDebug + testDebugUnitTest",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "VaultRepository / VaultViewModel 有单测，关键 Compose 页面有仪器测试",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "VaultLibrary 的 Context 路径（register / remove / legacy）有单测",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:49:36Z",
+  "depends": [],
+  "goal": "建立 CI 与测试基线：自动构建、静态检查、关键单测与仪器测试（D1–D3）",
+  "id": "quality",
+  "modules": [
+    "build",
+    "shio-vlt"
+  ],
+  "plan": "features",
+  "status": "active"
+}

@@ -1,0 +1,67 @@
+{
+  "acceptance": [
+    {
+      "desc": "真机轮换一次并在 SPEC 记录",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:49:06Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66R07BV6VGGSKEKVSZRPT2M"
+    }
+  ],
+  "finished_at": null,
+  "goal": "验收：轮换后数据可读、旧备份不可解",
+  "id": "T3",
+  "line": "key-rotation",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt",
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "mixed",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "真机轮换一次并验证条目可读"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "验证旧备份不可解，更新 SPEC"
+    }
+  ],
+  "title": "验收：轮换后数据可读、旧备份不可解",
+  "uid": "tsk_01M66R07C67YDTZHSSGYB72H4K"
+}

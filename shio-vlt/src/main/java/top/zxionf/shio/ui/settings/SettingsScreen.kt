@@ -153,7 +153,8 @@ fun SettingsScreen(
         scope.launch {
             try {
                 val entries = VaultComponent.repository.entries()
-                val count = VaultTransferFiles.exportTo(context, entries, uri, format)
+                val tagNames = VaultComponent.repository.tags().associate { tag -> tag.id to tag.name }
+                val count = VaultTransferFiles.exportTo(context, entries, tagNames, uri, format)
                 notify("已导出 $count 条到 ${format.label} 文件（含明文密码，请妥善保管）")
             } catch (failure: Throwable) {
                 VaultBackupFiles.discardTarget(context, uri)

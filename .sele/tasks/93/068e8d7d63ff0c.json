@@ -1,0 +1,66 @@
+{
+  "acceptance": [
+    {
+      "desc": "读者可仅按文档完成恢复",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:47:03Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QWF99CX06EBE6K08RT8TF"
+    }
+  ],
+  "finished_at": null,
+  "goal": "文档化恢复步骤",
+  "id": "T4",
+  "line": "keystore",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "在 docs/ 写恢复步骤（不含口令）"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "交叉核对步骤可执行性"
+    }
+  ],
+  "title": "文档化恢复步骤",
+  "uid": "tsk_01M66QWF9JJ8WARP6SH5PWXM00"
+}

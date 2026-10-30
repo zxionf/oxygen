@@ -1,0 +1,47 @@
+{
+  "acceptance": [
+    {
+      "desc": "各页面 + 深色/浅色截图齐备",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "隐私说明成稿（无网络权限、无统计上报）",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": ".aab 可构建并验签",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "versionCode 单一来源，发版 +1 规则成文",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:47:34Z",
+  "depends": [],
+  "goal": "产出可发布的签名产物与商店材料，并确定版本策略（C2–C5）",
+  "id": "release",
+  "modules": [
+    "build",
+    "shio-vlt",
+    "docs"
+  ],
+  "plan": "closeout",
+  "status": "active"
+}

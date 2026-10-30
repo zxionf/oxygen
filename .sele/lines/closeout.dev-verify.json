@@ -1,0 +1,69 @@
+{
+  "acceptance": [
+    {
+      "desc": "A1 标签筛选 + 收藏叠加时只显示同时满足的条目",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "A2 重命名标签后条目上传的标签名同步变化，条目 JSON 不变",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "A3 删除标签后条目不再显示该标签，详情页不报错（悬空 ID 被忽略）",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "A4 重命名库后库列表与解锁页标题同步，条目不受影响",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "A5 删除库后文件与索引消失；删除当前已解锁的库会先锁定",
+      "id": "A5",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "A6 两库条目隔离",
+      "id": "A6",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "A7 旧 vault.db 放入 files/ 后启动，自动出现「默认密码库」且条目完整",
+      "id": "A7",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:46:39Z",
+  "depends": [],
+  "goal": "在多条目、双库场景下验证标签与多库能力的真实行为（A1–A7）",
+  "id": "dev-verify",
+  "modules": [
+    "shio-vlt"
+  ],
+  "plan": "closeout",
+  "status": "active"
+}

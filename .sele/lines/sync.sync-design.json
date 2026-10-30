@@ -1,0 +1,61 @@
+{
+  "acceptance": [
+    {
+      "desc": "① 传输层（局域网直连 vs 自建服务）有结论",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "② TLS 责任边界明确",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "③ 配对密钥的展示/存储/撤销明确",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "④ 冲突呈现（静默 LWW vs 提示）明确",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "⑤ 后台拉取策略明确",
+      "id": "A5",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "5 项取舍各留一条 decision，且经人确认",
+      "id": "A6",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:47:58Z",
+  "depends": [],
+  "goal": "把同步的传输层、TLS 责任、配对密钥、冲突呈现与后台拉取策略定稿为讨论稿",
+  "id": "sync-design",
+  "modules": [
+    "docs"
+  ],
+  "plan": "sync",
+  "status": "active"
+}

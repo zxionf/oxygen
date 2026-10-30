@@ -1,0 +1,73 @@
+{
+  "acceptance": [
+    {
+      "desc": "单测覆盖移动、重复 ID、目标库不存在",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:49:21Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": null,
+  "goal": "仓储层跨库移动",
+  "id": "T1",
+  "line": "vault-ops",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "定移动语义（删除源 / 保留源）"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "实现仓储层移动与批量移动"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "单测：移动 / 重复 ID / 目标库不存在"
+    }
+  ],
+  "title": "仓储层跨库移动",
+  "uid": "tsk_01M66R0PNSN3V81MAEE6C5KS73"
+}

@@ -1,0 +1,78 @@
+{
+  "acceptance": [
+    {
+      "desc": "解锁页可走生物识别路径且口令零日志",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:48:52Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QZT1NCYD8CCHVEV4YWFXQ"
+    }
+  ],
+  "finished_at": null,
+  "goal": "凭据封装与解锁集成",
+  "id": "T2",
+  "line": "biometric",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "实现 KeyStore 包裹与解包"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "解锁页接入 BiometricPrompt"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "单测覆盖包裹与解包失败"
+    }
+  ],
+  "title": "凭据封装与解锁集成",
+  "uid": "tsk_01M66QZT1YQ6620YBX3XHTG2VG"
+}

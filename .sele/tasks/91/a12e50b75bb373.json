@@ -1,0 +1,73 @@
+{
+  "acceptance": [
+    {
+      "desc": "register / remove / legacy 注册路径自动化覆盖",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:49:36Z",
+  "current_step": null,
+  "depends": [],
+  "finished_at": null,
+  "goal": "VaultLibrary Context 路径单测",
+  "id": "T3",
+  "line": "quality",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "Robolectric / 仪器测试选定与接入"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "覆盖 register / remove / legacy 注册"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "在 CI 中执行"
+    }
+  ],
+  "title": "VaultLibrary Context 路径单测",
+  "uid": "tsk_01M66R151DR7KPMF8BB9A6AKCF"
+}

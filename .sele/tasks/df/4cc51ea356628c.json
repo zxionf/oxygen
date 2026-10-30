@@ -1,0 +1,78 @@
+{
+  "acceptance": [
+    {
+      "desc": "新旧格式编解码单测通过",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-task",
+  "created_at": "2026-10-30T15:47:17Z",
+  "current_step": "S3",
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QWX5WCV3ZAKYXSXX2AX3Q"
+    }
+  ],
+  "finished_at": null,
+  "goal": "实现 VaultTransfer 扩展",
+  "id": "T2",
+  "line": "transfer-tags",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "in_progress",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "扩 COLUMNS / CSV_HEADER 与 encodeCsv / encodeJson"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "decode：分隔符转义、空值、未知标签名"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "in_progress",
+      "title": "扩 VaultTransferTest"
+    }
+  ],
+  "title": "实现 VaultTransfer 扩展",
+  "uid": "tsk_01M66QWX65R2QEMS2845PF6YES"
+}

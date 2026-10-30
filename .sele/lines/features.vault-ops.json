@@ -1,0 +1,38 @@
+{
+  "acceptance": [
+    {
+      "desc": "条目可移动到另一个库且语义明确（移动 / 复制）",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "UI 可选择目标库，批量移动可用",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "库迁移到另一台设备有文档化步骤（导出 → 另库导入）",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:49:21Z",
+  "depends": [],
+  "goal": "支持条目跨库移动，并把「库迁移到另一台设备」文档化（B5）",
+  "id": "vault-ops",
+  "modules": [
+    "shio-vlt",
+    "docs"
+  ],
+  "plan": "features",
+  "status": "active"
+}

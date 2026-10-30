@@ -1,0 +1,90 @@
+{
+  "acceptance": [
+    {
+      "desc": "A1–A3 有逐条通过记录",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:46:47Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23"
+    }
+  ],
+  "finished_at": null,
+  "goal": "验证标签：筛选与收藏叠加、重命名、删除",
+  "id": "T2",
+  "line": "dev-verify",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "closeout",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "验 A1：仅筛选 / 仅收藏 / 两者叠加"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "验 A2：重命名标签并比对条目 JSON 不变"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "验 A3：删除标签，条目与详情页无异常"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S4",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "记录 A1–A3 结果"
+    }
+  ],
+  "title": "验证标签：筛选与收藏叠加、重命名、删除",
+  "uid": "tsk_01M66QW03ATPCY1SSGMJFWWQW4"
+}

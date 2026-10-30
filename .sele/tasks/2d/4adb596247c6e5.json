@@ -1,0 +1,78 @@
+{
+  "acceptance": [
+    {
+      "desc": "快照创建/读取路径冒烟通过",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:48:12Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QYK0GBG32QBEB44MNE5TT"
+    }
+  ],
+  "finished_at": null,
+  "goal": "映射 snapshot 族",
+  "id": "T2",
+  "line": "sync-kernel",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shared"
+  ],
+  "pause_context": null,
+  "plan": "sync",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "映射 snapshot 创建 / 读取符号"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "Kotlin 封装"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S3",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "冒烟：生成本地快照"
+    }
+  ],
+  "title": "映射 snapshot 族",
+  "uid": "tsk_01M66QYK0S7SGRDZN0DH7C3EVP"
+}

@@ -1,0 +1,51 @@
+{
+  "acceptance": [
+    {
+      "desc": "changes / apply / offers 族符号已映射并有单测",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "snapshot 族符号已映射",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "rotation 与 pairing 族（含 open_with_pairing）已映射",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "单机自同步往返冒烟通过，SPEC 的 ABI 对齐表已更新",
+      "id": "A4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-30T15:48:12Z",
+  "depends": [
+    {
+      "id": "sync-design",
+      "type": "line"
+    }
+  ],
+  "goal": "把内核剩余的同步符号全部映射到 JNI 与 Kotlin 封装，并通过冒烟",
+  "id": "sync-kernel",
+  "modules": [
+    "shared",
+    "docs"
+  ],
+  "plan": "sync",
+  "status": "active"
+}

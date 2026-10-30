@@ -1,0 +1,66 @@
+{
+  "acceptance": [
+    {
+      "desc": "vivo V2359A 上解锁与回落均通过",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-30T15:48:52Z",
+  "current_step": null,
+  "depends": [
+    {
+      "type": "task",
+      "uid": "tsk_01M66QZT28ST2ED3J2X30SS1PC"
+    }
+  ],
+  "finished_at": null,
+  "goal": "真机验收",
+  "id": "T4",
+  "line": "biometric",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "shio-vlt"
+  ],
+  "pause_context": null,
+  "plan": "features",
+  "review_policy": "strict",
+  "skipped_count": 0,
+  "status": "todo",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "真机生物识别解锁"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "todo",
+      "title": "真机取消 / 锁定 / 登记变更"
+    }
+  ],
+  "title": "真机验收",
+  "uid": "tsk_01M66QZT2J7XDR8TA4S5ANBDGH"
+}
