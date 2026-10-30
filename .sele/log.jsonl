@@ -12,3 +12,4 @@
 {"ts":"2026-10-30T09:14:27Z","actor":"zxionf","op":"acceptance.pass","line":"20261030-multi-module-split","acceptance":"A5","evidence":"用户在真机 10AE4N38SA000LK 验收：覆盖安装 shio-vlt-debug 后原密码库仍可解锁，shio-todo-debug 可启动"}
 {"ts":"2026-10-30T09:14:27Z","actor":"zxionf","op":"line.done","line":"20261030-multi-module-split"}
 {"ts":"2026-10-30T09:14:32Z","actor":"zxionf","op":"line.merge","line":"20261030-multi-module-split","commit":"3bfb0ef","base":"main"}
+{"ts":"2026-10-30T09:14:39Z","actor":"zxionf","op":"line.archive","line":"20261030-multi-module-split"}

@@ -1,7 +1,7 @@
 # Agent State
 
-Active Change: 20261030-multi-module-split（sele line，active）
-Phase: 架构调整为三模块——`shio-vlt`（密码库应用，原 app）、`shared`（JNI 包装 + 内核封装 + 通用 UI 占位）、`shio-todo`（待办应用占位）
+Active Change: 无
+Phase: 架构已拆成三模块并合并回 main——`shio-vlt`（密码库应用）、`shared`（JNI 包装 + 内核封装 + 通用 UI 占位）、`shio-todo`（待办应用占位）
 Blocked: 无
-Next: 待 line 合并后，真机验收「原密码库数据仍在 + todo 可启动」；之后回到 docs/todo.md 的功能清单
-Note: 命令改为 `:shio-vlt:` / `:shared:` / `:shio-todo:`；release 产物 `shio-vlt/build/outputs/apk/release/shio-vlt-release.apk`；shared 的 release 靠 CMake `-s` 去符号表；`.design/DECISIONS.log` 停止维护，新决策走 sele line 描述
+Next: 回到 docs/todo.md 的功能清单：A 组真机验证（标签筛选、库管理）、C1 keystore 备份、B2 导入导出支持标签
+Note: 命令为 `:shio-vlt:` / `:shared:` / `:shio-todo:`；release 产物 `shio-vlt/build/outputs/apk/release/shio-vlt-release.apk`（`bash check.sh` 校验签名与对齐）；变更流程走 `.sele`（`line/task/acceptance`），`.design/DECISIONS.log` 停止维护
