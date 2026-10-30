@@ -44,6 +44,9 @@ bash check.sh
   （与上表 SHA-256 指纹一致）
 - `zipalign -c -P 16` 输出 `Verification successful`（16 KB 页对齐）
 
+2026-10-30 实测：`bash check.sh` 通过，`shio-vlt/build/outputs/apk/release/shio-vlt-release.apk`
+的签名证书 SHA-256 与上表一致；证书 DN 为 `O=zxionf`。
+
 ## 恢复
 
 见本文件的「恢复步骤」一节（`closeout.keystore.T4` 补齐）。
