@@ -1,7 +1,7 @@
 # Agent State
 
-Active Change: 无
-Phase: 第二波全部完成——C21 标签与收藏、C22 导入导出、C23 多密码库均已归档
+Active Change: 20261030-multi-module-split（sele line，active）
+Phase: 架构调整为三模块——`shio-vlt`（密码库应用，原 app）、`shared`（JNI 包装 + 内核封装 + 通用 UI 占位）、`shio-todo`（待办应用占位）
 Blocked: 无
-Next: 第三波多端同步（需先讨论传输层与信任模型）；或发布前收尾（正式签名已就绪、商店素材、隐私说明）
-Note: 多库索引存 SharedPreferences（vaults/entries），库文件在 filesDir/vaults/<uuid>.db；模拟器冒烟已验证建库/分流/切换/两库列表；重命名删除与跨库隔离待真机；单测 7 组 46 例
+Next: 待 line 合并后，真机验收「原密码库数据仍在 + todo 可启动」；之后回到 docs/todo.md 的功能清单
+Note: 命令改为 `:shio-vlt:` / `:shared:` / `:shio-todo:`；release 产物 `shio-vlt/build/outputs/apk/release/shio-vlt-release.apk`；shared 的 release 靠 CMake `-s` 去符号表；`.design/DECISIONS.log` 停止维护，新决策走 sele line 描述
