@@ -14,8 +14,8 @@ fi
 "${adb_cmd[@]}" logcat -c
 
 echo "==> assembleDebug + install"
-./gradlew --console=plain :app:assembleDebug
-"${adb_cmd[@]}" install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null
+./gradlew --console=plain :shio-vlt:assembleDebug
+"${adb_cmd[@]}" install -r shio-vlt/build/outputs/apk/debug/shio-vlt-debug.apk >/dev/null
 
 echo "==> run smoke"
 "${adb_cmd[@]}" shell am start -W -n \

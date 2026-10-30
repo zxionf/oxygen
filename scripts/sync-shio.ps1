@@ -1,12 +1,12 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    用固定提交的 hydrogen 源码重建 shio 内核产物，并同步到 app/src/main/jniLibs。
+    用固定提交的 hydrogen 源码重建 shio 内核产物，并同步到 shared/src/main/jniLibs。
 
 .DESCRIPTION
     1. 校验 hydrogen 当前 HEAD 是否等于脚本内固定的提交（避免产物来源漂移）。
     2. 用 cargo-ndk + 已安装 NDK 交叉编译 shio-ffi（release）。
-    3. 复制 libshio_ffi.so 到 app/src/main/jniLibs/<abi>/。
+    3. 复制 libshio_ffi.so 到 shared/src/main/jniLibs/<abi>/。
     4. 用 NDK 自带 llvm-readelf 校验 ELF 架构与 16 KB page 对齐。
 
     脚本不修改 hydrogen 仓库（不 checkout、不 commit），只在其中执行构建。
@@ -52,7 +52,7 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 if (-not $HydrogenRepo) {
     $HydrogenRepo = Join-Path (Split-Path -Parent $RepoRoot) 'hydrogen'
 }
-$JniLibsRoot = Join-Path $RepoRoot 'app\src\main\jniLibs'
+$JniLibsRoot = Join-Path $RepoRoot 'shared\src\main\jniLibs'
 
 function Write-Step([string]$Text) {
     Write-Host "==> $Text" -ForegroundColor Cyan
@@ -180,7 +180,7 @@ foreach ($abi in $AbiMap.Keys) {
 }
 
 # 同步 BuildConfig 里的内核提交：关于页的「内核提交」读的是它，避免手改遗漏。
-$gradleFile = Join-Path $RepoRoot 'app\build.gradle.kts'
+$gradleFile = Join-Path $RepoRoot 'shared\build.gradle.kts'
 if (Test-Path $gradleFile) {
     $content = Get-Content -LiteralPath $gradleFile -Raw
     $updated = [regex]::Replace(
@@ -190,7 +190,7 @@ if (Test-Path $gradleFile) {
     )
     if ($updated -ne $content) {
         Set-Content -LiteralPath $gradleFile -Value $updated -NoNewline
-        Write-Step "更新 app/build.gradle.kts 的 SHIO_KERNEL_COMMIT -> $PinnedCommit"
+        Write-Step "更新 shared/build.gradle.kts 的 SHIO_KERNEL_COMMIT -> $PinnedCommit"
     } else {
         Write-Step "SHIO_KERNEL_COMMIT 已是 $PinnedCommit"
     }

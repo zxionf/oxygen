@@ -263,7 +263,7 @@ class ShioDatabase {
 }
 
 /** 内核 UUID 是 16 字节原始值，Kotlin 侧用标准 8-4-4-4-12 字符串表示。 */
-internal object UuidCodec {
+object UuidCodec {
 
     private const val HEX = "0123456789abcdef"
 

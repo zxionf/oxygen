@@ -6,7 +6,7 @@ package top.zxionf.shio.kernel
  * 加载顺序：先 `shio_ffi`，再 `shio_jni`，避免依赖解析在类加载阶段隐式发生。
  * 传入/返回的 JSON 与 UUID 都是 UTF-8 / 原始字节，由上层决定如何解释。
  */
-internal object NativeShio {
+object NativeShio {
 
     const val SUPPORTED_ABI_VERSION = 1
 

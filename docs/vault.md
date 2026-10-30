@@ -98,6 +98,7 @@
 
 ## 技术要点
 
+- 模块：`shio-vlt`（本应用）、`shared`（JNI 包装与内核封装，供未来应用复用）、`shio-todo`（待办应用占位）。
 - UI：Kotlin + Jetpack Compose + Material 3 Expressive + Navigation Compose，单 Activity。
 - 内核：Rust 实现的 shio，经 JNI 薄层调用；写入以单条/批量提交，Android 上通过旁路 `<db>.lock` 保证单写。
 - JSON：系统 `org.json`；偏好用 `SharedPreferences`；不引入 DI 框架与序列化库。

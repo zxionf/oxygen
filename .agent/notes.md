@@ -232,3 +232,13 @@ readelf -lW <libshio_jni.so> | awk '/LOAD/ {print $NF}'
 - 删除顺序是「先删索引再删文件」：反过来的话，文件删成功但索引写到一半失败会留下指向不存在文件的幽灵库，用户无法在界面上清理。
 - 旧 `filesDir/vault.db` 不移动，注册为 `default` 条目；`fileFor` 对 legacy 走 `filesDir/`、对新库走 `filesDir/vaults/`。
 - 模拟器上验证多库时的套路：`pm clear` → 建第一个库 → `am force-stop` 再 `am start` 看是否直接进该库解锁页 → 设置里「切换密码库」→ 建第二个库 → 库列表应两条且第二个带「上次打开」标记。
+
+## P17 多模块拆分（shio-vlt / shared / shio-todo）
+
+- 模块改名后所有命令变 `:shio-vlt:...`，APK 变 `shio-vlt/build/outputs/apk/{debug,release}/shio-vlt-{debug,release}.apk`；旧笔记里的 `:app` 命令仅作历史参考。
+- 跨模块后 `internal` 不再可见：`NativeShio`、`UuidCodec` 原本是 `internal object`，移到 `shared` 后 app 模块编译失败（`Cannot access ... it is internal in file`），改为 public。以后往 shared 搬东西先看可见性。
+- **`shio-todo` 不依赖 `shared`**：`shared` 的 AAR 带 `libshio_ffi.so`（每 ABI 约 3.5 MB），依赖就会把内核塞进占位应用。真要用时再拆出纯 UI 的共享模块。
+- **library 的 native 产物不会被 app 的 strip 任务缩小**：单模块时 release APK 8.8 MB，拆模块后变成 16.6 MB（`libshio_jni.so` 每 ABI 3.2 MB）。原因：`externalNativeBuild` 在 library 里编译，app 侧 `stripReleaseDebugSymbols` 对它无效。修法：在 `shared/src/main/cpp/CMakeLists.txt` 加 `target_link_options(shio_jni PRIVATE $<$<CONFIG:RelWithDebInfo>:-s>)`（AGP 的 release 用 RelWithDebInfo），APK 回到 11 MB。
+- `shared` 需显式声明 `kotlinx-coroutines-core`：`ShioDatabase` 的挂起函数依赖它，以前是从 lifecycle/Compose 传递来的，独立模块后就没有了（版本取传递解析到的 1.9.0）。
+- 验证 `.so` 确实进包：`unzip -l shio-vlt/build/outputs/apk/release/shio-vlt-release.apk | grep libshio`，应看到两个 ABI 的 `libshio_ffi.so` 与 `libshio_jni.so`。
+- `namespace` 与 Kotlin 包名可以不一致：`shared` 用 `namespace = top.zxionf.shio.shared`，而 `kernel/` 包名保持 `top.zxionf.shio.kernel`，这样消费方零改动 import，只有 `R` 类落在 shared 的命名空间（`KernelInfo` 读的是 `top.zxionf.shio.shared.BuildConfig`）。

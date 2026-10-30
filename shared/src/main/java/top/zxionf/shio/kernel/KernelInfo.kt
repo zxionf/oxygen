@@ -1,6 +1,6 @@
 package top.zxionf.shio.kernel
 
-import top.zxionf.shio.BuildConfig
+import top.zxionf.shio.shared.BuildConfig
 
 /**
  * 内核与运行环境的只读信息，供「设置 → 关于」展示。

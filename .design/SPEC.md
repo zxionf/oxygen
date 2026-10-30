@@ -85,40 +85,47 @@ MVP 覆盖：
 打开时选项 JSON 固定 `{"create":true}`；关闭后再次操作应显示 `SHIO_CLOSED`；重新打开时 `ShioDatabase.open` 会先销毁旧句柄。
 
 ## 工程结构
-单 `app` 模块，包名 `top.zxionf.shio`，Gradle Kotlin DSL + Version Catalog。
+三个 Gradle 模块：`shio-vlt`（密码库应用，包名 `top.zxionf.shio`）、`shared`（内核包装 + 通用 UI 占位）、`shio-todo`（待办应用占位，包名 `top.zxionf.shio.todo`）。Gradle Kotlin DSL + Version Catalog。
 
 ```
-app/src/main/
-├── java/top/zxionf/shio/
+shio-vlt/                        # 密码库应用（原 app 模块）
+├── src/main/java/top/zxionf/shio/
 │   ├── MainActivity.kt
 │   ├── app/                     # Routes、AppNavHost、占位页
-│   ├── kernel/
-│   │   ├── NativeShio.kt        # external 声明与库加载
-│   │   ├── ShioDatabase.kt      # 句柄、线程与 UUID
-│   │   └── ShioException.kt     # code + message
 │   ├── demo/
 │   │   ├── DemoScreen.kt        # 原型 Demo 单页
 │   │   └── DemoViewModel.kt     # 状态与操作编排
 │   ├── vault/                   # VaultEntry/Codec、VaultRepository、VaultViewModel、VaultLibrary、VaultTag、VaultTransfer、VaultUrl、SensitiveClipboard、AutoLock*
-│   ├── ui/
-│   │   ├── vault/               # 条目列表、库列表（多库）、详情、编辑器
-│   │   ├── unlock/              # 创建 / 解锁
-│   │   ├── settings/            # 设置、外观、修改主口令、标签管理、备份/导入导出
-│   │   ├── components/          # StackedList、FieldItem、AppTextField、Icons
-│   │   └── theme/               # Color、Shape、Type、Theme、AppearancePreferences
-├── cpp/
+│   └── ui/
+│       ├── vault/               # 条目列表、库列表（多库）、详情、编辑器
+│       ├── unlock/              # 创建 / 解锁
+│       ├── settings/            # 设置、外观、修改主口令、标签管理、备份/导入导出
+│       ├── components/          # StackedList、FieldItem、AppTextField、Icons
+│       └── theme/               # Color、Shape、Type、Theme、AppearancePreferences
+└── src/debug/                   # SmokeActivity / AcceptanceActivity，仅 debug 变体
+
+shared/                          # Android Library，namespace top.zxionf.shio.shared
+├── src/main/java/top/zxionf/shio/
+│   ├── kernel/                  # 包名保持 top.zxionf.shio.kernel，消费方零改 import
+│   │   ├── NativeShio.kt        # external 声明与库加载
+│   │   ├── ShioDatabase.kt      # 句柄、线程与 UUID
+│   │   ├── ShioException.kt     # code + message
+│   │   └── KernelInfo.kt        # 内核/ABI 版本与提交溯源
+│   └── shared/ui/               # 通用 UI 占位（暂无内容、不引 Compose）
+├── src/main/cpp/
 │   ├── shio_jni.cpp             # JNI 薄层
 │   ├── CMakeLists.txt
 │   ├── include/shio.h           # hydrogen C ABI 只读副本
 │   └── README.md
-└── jniLibs/<abi>/libshio_ffi.so
-app/src/debug/                   # SmokeActivity / AcceptanceActivity，仅 debug 变体
+└── src/main/jniLibs/<abi>/libshio_ffi.so
+
+shio-todo/                       # 待办应用占位（可编译、可安装、单页说明）
 scripts/smoke.sh                 # 设备冒烟脚本
 scripts/acceptance.sh            # P4 验收入口（LOCKED、进程重启持久化）
-scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件 + 对齐校验）
+scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件 + 对齐校验，落在 shared/）
 ```
 
-不引入 DI 框架，不拆多模块；密码库使用 Navigation Compose（M1 引入），原型 Demo 内部仍是单页。JSON 解析使用系统自带 `org.json`，避免增加序列化依赖。
+不引入 DI 框架；密码库使用 Navigation Compose（M1 引入），原型 Demo 内部仍是单页。JSON 解析使用系统自带 `org.json`，避免增加序列化依赖。`shio-todo` 暂不依赖 `shared`，避免把内核 `.so` 带进占位应用。
 
 ## 目标与范围（内核集成 Demo）
 首个变更只验证一件事：Android 应用能通过 C ABI 与 JNI 薄层完整驱动 shio 内核。
@@ -161,10 +168,14 @@ scripts/sync-shio.sh             # Linux 内核产物同步（构建 + 头文件
 - Compose 只消费 `StateFlow`，不在主线程直接调用 native。
 
 ## 构建与产物
-- `compileSdk` / `targetSdk` 37，`minSdk` 29，ABI 为 `arm64-v8a` 与 `x86_64`，NDK `29.0.14206865`，CMake `3.22.1+`（使用系统 4.4.4）。
+- 三个模块：`shio-vlt`（应用，`applicationId = top.zxionf.shio`）、`shared`（library，内核包装与通用 UI 占位，`namespace = top.zxionf.shio.shared`）、`shio-todo`（占位应用，`top.zxionf.shio.todo`）。任务形如 `:shio-vlt:assembleDebug`、`:shared:assembleDebug`、`:shio-todo:assembleDebug`。
+- 产物路径：`shio-vlt/build/outputs/apk/{debug,release}/shio-vlt-{debug,release}.apk`、`shared/build/outputs/aar/shared-{debug,release}.aar`、`shio-todo/build/outputs/apk/…`。
+- `compileSdk` / `targetSdk` 37，`minSdk` 29，ABI 为 `arm64-v8a` 与 `x86_64`，NDK `29.0.14206865`，CMake `3.22.1+`（使用系统 4.4.4）；原生构建配置在 `shared/build.gradle.kts`。
 - 构建使用 JDK 21（系统 JDK 或 Android Studio JBR）；Gradle 9.8.2、AGP 9.4.1 与 Kotlin 2.4.21 固定到 Version Catalog / wrapper。
-- 首版 `libshio_ffi.so` 直接取自 hydrogen 提交 `5f3e8e3`；Linux 用 `scripts/sync-shio.sh`、Windows 用 `scripts/sync-shio.ps1` 通过 `cargo-ndk` 重建并复制，来源提交与 NDK 版本写入脚本常量；Linux 脚本同时同步 `include/shio.h`。
-- Debug 构建用于日常验证；release 开启 R8（`isMinifyEnabled` + `isShrinkResources`），JNI 入口由 `proguard-rules.pro` 的 keep 规则保留。当前 release 仍使用 debug keystore，没有正式发布签名。
+- 首版 `libshio_ffi.so` 直接取自 hydrogen 提交 `5f3e8e3`；Linux 用 `scripts/sync-shio.sh`、Windows 用 `scripts/sync-shio.ps1` 通过 `cargo-ndk` 重建并复制到 `shared/src/main/jniLibs`，来源提交与 NDK 版本写入脚本常量；Linux 脚本同时同步 `include/shio.h`。
+- Debug 构建用于日常验证；release 开启 R8（`isMinifyEnabled` + `isShrinkResources`），JNI 入口由 `proguard-rules.pro` 的 keep 规则保留。
+- release 签名：`keystore.properties`（仓库根，已 gitignore）配好后 `assembleRelease` 自动签名（证书 `O=zxionf`，v2 签名，16 KB 页对齐）；未配置时退回未签名产物。
+- `shared` 的 release 变体在 CMake 链接阶段加 `-s` 去符号表：`.so` 作为 library 依赖提供时，app 侧的 strip 任务不会缩小它（否则每个 ABI 多出约 2.8 MB）。
 
 ## M3E 目标与原则
 把整个应用对齐 Material 3 Expressive（下称 M3E），并把 M3E 作为长期约束：后续任何界面改动都必须满足本文件定义的基线。范围包含工具链、依赖、设计系统（形状/字体/动效/图标/组件）与全部现有界面。

@@ -28,3 +28,9 @@ target_compile_options(shio_jni PRIVATE -Wall -Wextra)
 # JNI 层不用 C++ 异常与 RTTI，也不需要动态 C++ 运行时外带。
 target_compile_options(shio_jni PRIVATE -fno-exceptions -fno-rtti)
 target_link_libraries(shio_jni PRIVATE shio_ffi)
+
+# release 变体（AGP 用 RelWithDebInfo 配置）在链接时直接丢符号表。
+# 否则带调试信息的 .so 会被原样打进 APK：每个 ABI 多出约 2.8 MB。
+# 用 CMake 自己的 -s 而不是靠 AGP 的 strip 任务——当 .so 来自 library 依赖
+# （:shared 的 externalNativeBuild 产物）时，app 侧的 strip 不会缩小它。
+target_link_options(shio_jni PRIVATE $<$<CONFIG:RelWithDebInfo>:-s>)

@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "shio"
-include(":app")
+include(":shio-vlt")
+include(":shared")
+include(":shio-todo")

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">待办</string>
+    <string name="placeholder_title">待办事项</string>
+    <string name="placeholder_body">占位模块：后续在这里实现待办管理、提醒调度与数据存储。</string>
+</resources>

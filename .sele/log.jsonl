@@ -1,1 +1,13 @@
 {"ts":"2026-10-30T08:54:06Z","actor":"zxionf","op":"line.new","line":"20261030-multi-module-split"}
+{"ts":"2026-10-30T08:54:15Z","actor":"zxionf","op":"line.open","line":"20261030-multi-module-split","frozen":"23dadffc3200c9eaaf74ff6fdd78cadde858973a2743a66c24bf2d2e5565583d"}
+{"ts":"2026-10-30T08:55:10Z","actor":"zxionf","op":"task.done","line":"20261030-multi-module-split","task":"T1","commit":"a0ed22f"}
+{"ts":"2026-10-30T08:58:37Z","actor":"zxionf","op":"task.done","line":"20261030-multi-module-split","task":"T2","commit":"24c2bc0"}
+{"ts":"2026-10-30T08:59:59Z","actor":"zxionf","op":"task.done","line":"20261030-multi-module-split","task":"T3","commit":"ccaf084"}
+{"ts":"2026-10-30T09:03:19Z","actor":"zxionf","op":"task.done","line":"20261030-multi-module-split","task":"T4","commit":"221af56"}
+{"ts":"2026-10-30T09:06:21Z","actor":"zxionf","op":"task.done","line":"20261030-multi-module-split","task":"T5","commit":"466eee4"}
+{"ts":"2026-10-30T09:06:35Z","actor":"zxionf","op":"acceptance.pass","line":"20261030-multi-module-split","acceptance":"A1","evidence":":shio-vlt:assembleDebug/Release/testDebugUnitTest/lintDebug + :shared:assembleDebug + :shio-todo:assembleDebug 全绿（BUILD SUCCESSFUL in 1m 1s）"}
+{"ts":"2026-10-30T09:06:35Z","actor":"zxionf","op":"acceptance.pass","line":"20261030-multi-module-split","acceptance":"A2","evidence":"testDebugUnitTest 汇总 46 tests / 0 failures"}
+{"ts":"2026-10-30T09:06:35Z","actor":"zxionf","op":"acceptance.pass","line":"20261030-multi-module-split","acceptance":"A3","evidence":"bash check.sh：certificate DN O=zxionf、apksigner Verification successful、zipalign -P 16 通过；APK 11,092,269 bytes"}
+{"ts":"2026-10-30T09:06:35Z","actor":"zxionf","op":"acceptance.pass","line":"20261030-multi-module-split","acceptance":"A4","evidence":"grep -rn \":app\\b|app/build\" 在 *.kts/*.sh/*.ps1 中无命中；Markdown 仅历史变更目录与 notes 历史条目保留旧命令"}
+{"ts":"2026-10-30T09:14:27Z","actor":"zxionf","op":"acceptance.pass","line":"20261030-multi-module-split","acceptance":"A5","evidence":"用户在真机 10AE4N38SA000LK 验收：覆盖安装 shio-vlt-debug 后原密码库仍可解锁，shio-todo-debug 可启动"}
+{"ts":"2026-10-30T09:14:27Z","actor":"zxionf","op":"line.done","line":"20261030-multi-module-split"}

@@ -4,7 +4,7 @@
 
 ## 现状一句话
 
-密码库已可用：多库、条目 CRUD、搜索、标签/收藏、密码生成器、导入导出、备份恢复、改主口令、自动锁定、剪贴板自动清除、release 禁止截屏；全部读写内核 `vault.db`（`format=2`）。
+三个 Gradle 模块：`shio-vlt`（密码库应用，`top.zxionf.shio`）、`shared`（JNI 包装与内核封装，通用 UI 占位）、`shio-todo`（待办应用占位）。密码库已可用：多库、条目 CRUD、搜索、标签/收藏、密码生成器、导入导出、备份恢复、改主口令、自动锁定、剪贴板自动清除、release 禁止截屏；全部读写内核 `vault.db`（`format=2`）。
 
 ## 阶段状态
 
@@ -35,22 +35,21 @@
 ## 关键命令
 
 ```bash
-# 构建与检查
-./gradlew :app:assembleDebug :app:assembleRelease :app:lintDebug :app:testDebugUnitTest
+# 构建与检查（三个模块：shio-vlt 应用 / shared 内核包装 / shio-todo 占位）
+./gradlew :shio-vlt:assembleDebug :shio-vlt:assembleRelease :shio-vlt:lintDebug :shio-vlt:testDebugUnitTest
+./gradlew :shared:assembleDebug :shio-todo:assembleDebug
 
 # release 签名（keystore.properties 配好后 assembleRelease 自动签名）
-./gradlew :app:assembleRelease     # → app/build/outputs/apk/release/app-release.apk
+./gradlew :shio-vlt:assembleRelease   # → shio-vlt/build/outputs/apk/release/shio-vlt-release.apk
 
 # 校验签名与对齐
-BT=~/Android/Sdk/build-tools/36.1.0
-$BT/apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
-$BT/zipalign -c -P 16 -v 4 app/build/outputs/apk/release/app-release.apk
+bash check.sh                          # 内部用 build-tools 36.1.0 跑 apksigner + zipalign
 
-# 内核产物同步（升级 hydrogen 时）
-scripts/sync-shio.sh            # 同时改写 BuildConfig.SHIRO_KERNEL_COMMIT
+# 内核产物同步（升级 hydrogen 时，产物落在 shared/）
+scripts/sync-shio.sh            # 同时改写 shared/build.gradle.kts 的 SHIO_KERNEL_COMMIT
 
 # 真机 / 模拟器
-adb -s 10AE4N38SA000LK install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s 10AE4N38SA000LK install -r shio-vlt/build/outputs/apk/debug/shio-vlt-debug.apk
 adb -s emulator-5554 shell uiautomator dump /sdcard/x.xml && adb -s emulator-5554 shell cat /sdcard/x.xml
 ```
 
