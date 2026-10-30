@@ -31,6 +31,9 @@ keytool -list -v -keystore ~/zx.jks
   因此新克隆的仓库不会因为缺口令而构建失败。
 - **口令的离线副本与 keystore 文件分开存放**，载体与位置只记录在离线清单里，不入库。
 
+2026-10-30 核对：`git ls-files | grep keystore` 为空；`git log --all -S "<口令字面值>"`
+无命中，即口令从未进过仓库历史。
+
 ## 校验
 
 ```bash
