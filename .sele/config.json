@@ -1,16 +1,8 @@
 {
-  "schema_version": 1,
-  "actor": "git",
-  "modules": {
-    "allow": []
-  },
-  "checkpoint": {
-    "strategy": "git-commit",
-    "allow_empty": false
-  },
-  "commit": {
-    "language": "zh",
-    "scope": "sele",
-    "task_type": "auto"
-  }
+  "escalate_after_skips": 5,
+  "git_mode": "read",
+  "message_convention": "auto",
+  "module_scope": "warn",
+  "version": 2,
+  "warn_after_skips": 3
 }
