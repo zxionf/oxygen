@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 用固定提交的 hydrogen 源码重建 shio 内核产物，并同步到 app/src/main/jniLibs。
+# 用固定提交的 hydrogen 源码重建 shio 内核产物，并同步到 shared/src/main/jniLibs。
 #
 # 行为与 scripts/sync-shio.ps1 对齐：
 #   1. 校验 hydrogen HEAD 等于脚本内固定的提交；
@@ -81,9 +81,9 @@ if [[ -z "$HYDROGEN_REPO" ]]; then
 fi
 [[ -d "$HYDROGEN_REPO/.git" ]] || die "hydrogen 仓库路径无效：$HYDROGEN_REPO"
 
-jni_libs_root="$repo_root/app/src/main/jniLibs"
+jni_libs_root="$repo_root/shared/src/main/jniLibs"
 header_src="$HYDROGEN_REPO/crates/shio-ffi/include/shio.h"
-header_dst="$repo_root/app/src/main/cpp/include/shio.h"
+header_dst="$repo_root/shared/src/main/cpp/include/shio.h"
 
 sdk_dir="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}}"
 ndk_root="$sdk_dir/ndk/$NDK_VERSION"
@@ -200,7 +200,7 @@ check_abi "x86_64" "x86_64-linux-android" "Advanced Micro Devices X86-64"
 
 # --- 5. 同步 BuildConfig 里的内核提交 -------------------------------------
 # 关于页展示的「内核提交」来自 BuildConfig；与产物同步改写，避免手改遗漏造成溯源失真。
-gradle_file="$repo_root/app/build.gradle.kts"
+gradle_file="$repo_root/shared/build.gradle.kts"
 if [[ -f "$gradle_file" ]]; then
     # 只改 SHIO_KERNEL_COMMIT 下一行里的 40 位提交哈希（源码中是 "\"<hash>\"" 形式）。
     tmp_file="$(mktemp)"
@@ -210,7 +210,7 @@ if [[ -f "$gradle_file" ]]; then
     ' "$gradle_file" > "$tmp_file"
     if ! cmp -s "$tmp_file" "$gradle_file"; then
         install -m 0644 "$tmp_file" "$gradle_file"
-        step "更新 app/build.gradle.kts 的 SHIO_KERNEL_COMMIT -> $PINNED_COMMIT"
+        step "更新 shared/build.gradle.kts 的 SHIO_KERNEL_COMMIT -> $PINNED_COMMIT"
     else
         step "SHIO_KERNEL_COMMIT 已是 $PINNED_COMMIT"
     fi

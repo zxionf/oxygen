@@ -40,12 +40,12 @@ fail() {
 }
 
 echo "==> build + install"
-./gradlew --console=plain :app:assembleDebug
-"${adb_cmd[@]}" install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null
+./gradlew --console=plain :shio-vlt:assembleDebug
+"${adb_cmd[@]}" install -r shio-vlt/build/outputs/apk/debug/shio-vlt-debug.apk >/dev/null
 "${adb_cmd[@]}" shell am force-stop "$pkg" >/dev/null 2>&1 || true
 
 echo "==> APK native libs"
-unzip -l app/build/outputs/apk/debug/app-debug.apk | grep -E 'lib/(arm64-v8a|x86_64)/libshio_(ffi|jni)\.so'
+unzip -l shio-vlt/build/outputs/apk/debug/shio-vlt-debug.apk | grep -E 'lib/(arm64-v8a|x86_64)/libshio_(ffi|jni)\.so'
 
 echo "==> smoke: open/insert/get/list/stats/CLOSED/INVALID_KEY/reopen"
 "${adb_cmd[@]}" logcat -c
