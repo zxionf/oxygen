@@ -20,7 +20,6 @@ val hasReleaseKeystore = releaseKeystorePath != null && rootProject.file(release
 android {
     namespace = "top.zxionf.shio"
     compileSdk = 37
-    ndkVersion = "29.0.14206865"
 
     signingConfigs {
         if (hasReleaseKeystore) {
@@ -37,37 +36,8 @@ android {
         applicationId = "top.zxionf.shio"
         minSdk = 29
         targetSdk = 37
-        versionCode = 5
-        versionName = "0.1.7"
-
-        // 内核溯源信息：入库的 jniLibs/libshio_ffi.so 来自该提交，ABI 版本与 NativeShio 一致。
-        // 由 scripts/sync-shio.sh 在同步产物时自动改写，不要手改。
-        buildConfigField(
-            "String",
-            "SHIO_KERNEL_COMMIT",
-            "\"5f3e8e324cda0bf772e21ad7bcd2036435ebcdd4\"",
-        )
-        buildConfigField("int", "SHIO_ABI_VERSION", "1")
-
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
-
-        externalNativeBuild {
-            cmake {
-                // 静态链接 C++ 运行时，避免额外打包 libc++_shared.so。
-                arguments += "-DANDROID_STL=c++_static"
-            }
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            // 允许使用系统 PATH 中 >= 3.22.1 的 CMake（当前为 4.4.4），
-            // 不再依赖 SDK 内的 cmake 包。
-            version = "3.22.1+"
-        }
+        versionCode = 6
+        versionName = "0.2.0"
     }
 
     buildTypes {
@@ -112,6 +82,9 @@ android {
 }
 
 dependencies {
+    // 内核包装层（JNI 与 ShioDatabase 等封装）统一放在 shared。
+    implementation(project(":shared"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)

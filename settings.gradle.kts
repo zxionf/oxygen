@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "shio"
 include(":shio-vlt")
+include(":shared")
