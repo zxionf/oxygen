@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "line": "dev-verify",
+    "plan": "closeout",
+    "step": "S1",
+    "task": "T1",
+    "task_uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23",
+    "type": "step"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "018356e3407d834bbe115108e46c622b358fa640",
+    "diff_stat": " .sele/cache/git-fingerprint.json               |  2 +-\n .sele/checkpoints/2026-10/ck-20261031-001.json | 39 ++++++++++++++++++++++++\n .sele/log.jsonl                                |  6 ++++\n .sele/tasks/14/d17b8422f74747.json             | 14 ++++-----\n .sele/tasks/9c/a6fc4cf1261d66.json             |  6 ++--\n docs/verify-a-group.md                         | 42 ++++++++++++++++++++++++++\n 6 files changed, 98 insertions(+), 11 deletions(-)",
+    "dirty": false,
+    "files_changed": [
+      ".sele/cache/git-fingerprint.json",
+      ".sele/checkpoints/2026-10/ck-20261031-001.json",
+      ".sele/log.jsonl",
+      ".sele/tasks/14/d17b8422f74747.json",
+      ".sele/tasks/9c/a6fc4cf1261d66.json",
+      "docs/verify-a-group.md"
+    ],
+    "source": "sele",
+    "tree": "fa68ac2b1a909de86f7b6b05098fe45696fa9e0f"
+  },
+  "id": "ck-20261031-002",
+  "status": "valid",
+  "ts": "2026-10-31T04:32:09Z"
+}
