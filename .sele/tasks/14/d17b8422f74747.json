@@ -49,7 +49,7 @@
   },
   "plan": "closeout",
   "review_policy": "mixed",
-  "skipped_count": 3,
+  "skipped_count": 2,
   "status": "paused",
   "steps": [
     {

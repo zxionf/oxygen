@@ -30,7 +30,7 @@
   "plan": "closeout",
   "review_policy": "strict",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "blocked",
   "steps": [
     {
       "checkpoint": null,

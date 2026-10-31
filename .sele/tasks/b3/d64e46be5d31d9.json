@@ -1,0 +1,61 @@
+{
+  "acceptance": [
+    {
+      "desc": "docs 下不再有 privacy/release/signing，索引同步",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "archived_at": null,
+  "archived_git_head": null,
+  "checkpoint_strategy": "per-step",
+  "created_at": "2026-10-31T04:23:04Z",
+  "current_step": "S2",
+  "depends": [],
+  "finished_at": null,
+  "goal": "移除发布相关文档与索引条目",
+  "id": "T1",
+  "line": "shelved-release",
+  "locked": {
+    "locked": false
+  },
+  "modules": [
+    "docs"
+  ],
+  "pause_context": null,
+  "plan": "release-archive",
+  "review_policy": "lenient",
+  "skipped_count": 0,
+  "status": "in_progress",
+  "steps": [
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S1",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "done",
+      "title": "删除三份文档并更新 docs/index.md"
+    },
+    {
+      "checkpoint": null,
+      "desc": "",
+      "id": "S2",
+      "jump_meta": null,
+      "lock_reason": null,
+      "locked": false,
+      "requires_review": false,
+      "skipped_reason": null,
+      "status": "in_progress",
+      "title": "同步 docs/todo.md 的发布项"
+    }
+  ],
+  "title": "移除发布相关文档与索引条目",
+  "uid": "tsk_01M6834SQXPJHHYW43ERCWTXEZ"
+}

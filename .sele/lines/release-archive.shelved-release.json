@@ -1,0 +1,23 @@
+{
+  "acceptance": [
+    {
+      "desc": "release 线任务全部迁入且不再出现在 closeout",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-10-31T04:23:00Z",
+  "depends": [],
+  "goal": "存放 release 线的历史任务与发布文档清理",
+  "id": "shelved-release",
+  "modules": [
+    "build",
+    "shio-vlt",
+    "docs"
+  ],
+  "plan": "release-archive",
+  "status": "active"
+}
