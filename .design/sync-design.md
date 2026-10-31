@@ -205,6 +205,23 @@
 - 将来若一个应用要同时同步多个库，客户端自己管多个 `db_id` 与多个令牌，中继无感；
 - 运维统计可按 `db_id` 标签做（可选，不影响协议）。
 
+### 4.11 与内核帧头对齐（实现前必读）
+
+核对内核 `crates/shio-sync/src/frame.rs` 与 `crates/shio-core/src/sync.rs` 后的修正与补充：
+
+- 帧头固定 **77 字节**，`magic = "SHY2"`、`format = 2`，里面有 `kind`（`0=changes`/`1=offers`/`2=snapshot`/`3=progress`）、
+  `db_id`（16 字节）、`sender`、`after`、`log_start`、`log_end`、`next`、`count`。
+  → 中继能直接读帧头做路由与校验（`db_id`/`sender` 必须与令牌绑定的一致），无需信任客户端额外声明。
+- 上限：`MAX_FRAME_BYTES = 4 MiB`、`MAX_PAGE_ENTRIES = 1000`。
+  → Q4 已答：中继限帧取 **4 MiB + 4 字节**，不再讨论 8 MB。
+- **`progress` 帧也必须经过中继**：内核靠对端上报的游标裁剪变更日志，丢了 progress 帧会导致
+  两端日志永远不裁剪（内核 `.design/同步.md` §10）。
+- 帧不是「发给某个对端」的：`changes_since(after, limit)` 不接收 peer 参数，所以同一帧可广播给所有设备；
+  中继拉取时默认排除自己推的帧即可。
+
+完整传输节点规格（API/存储/GC/限流/部署/测试）已写到内核仓库：**`../shio/docs/relay.md`**。
+本文后续只保留客户端侧的取舍与威胁模型。
+
 ## 5. TLS 与证书（草案，对应 T2）
 
 ### 5.1 威胁模型
@@ -249,23 +266,6 @@
 
 - 证书轮换（Let's Encrypt 90 天）：客户端无感，不需重新配对。
 - **内核密钥轮换**（`sync_begin_rotation` 等）与传输层无关，第一版不接（见 Q8）。
-
-### 4.11 与内核帧头对齐（实现前必读）
-
-核对过内核 `crates/shio-sync/src/frame.rs` 与 `crates/shio-core/src/sync.rs`，几点修正/补充：
-
-- 帧头固定 **77 字节**，`magic = "SHY2"`、`format = 2`，里面有 `kind`（`0=changes`/`1=offers`/`2=snapshot`/`3=progress`）、
-  `db_id`（16 字节）、`sender`、`after`、`log_start`、`log_end`、`next`、`count`。
-  → 中继能直接读帧头做路由与校验（`db_id`/`sender` 必须与令牌绑定的一致），无需信任客户端额外声明。
-- 上限：`MAX_FRAME_BYTES = 4 MiB`、`MAX_PAGE_ENTRIES = 1000`。
-  → Q4 已答：中继限帧取 **4 MiB + 4 字节**，不再讨论 8 MB。
-- **`progress` 帧也必须经过中继**：内核靠对端上报的游标裁剪变更日志，丢了 progress 帧会导致
-  两端日志永远不裁剪（`.design/同步.md` §10）。
-- 帧不是「发给某个对端」的：`changes_since(after, limit)` 不接收 peer 参数，所以同一帧可广播给所有设备；
-  中继拉取时默认排除自己推的帧即可。
-
-完整传输节点规格（API/存储/GC/限流/部署/测试）已写到内核仓库：**`../shio/docs/relay.md`**。
-本文后续只保留客户端侧的取舍与威胁模型。
 
 ## 6. 待决问题
 
