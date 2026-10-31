@@ -50,7 +50,7 @@
   "plan": "closeout",
   "review_policy": "mixed",
   "skipped_count": 2,
-  "status": "paused",
+  "status": "in_progress",
   "steps": [
     {
       "checkpoint": null,

@@ -1,0 +1,204 @@
+{
+  "lines": {
+    "closeout.dev-verify": {
+      "file": "lines/closeout.dev-verify.json"
+    },
+    "closeout.keystore": {
+      "file": "lines/closeout.keystore.json"
+    },
+    "closeout.transfer-tags": {
+      "file": "lines/closeout.transfer-tags.json"
+    },
+    "features.biometric": {
+      "file": "lines/features.biometric.json"
+    },
+    "features.key-rotation": {
+      "file": "lines/features.key-rotation.json"
+    },
+    "features.quality": {
+      "file": "lines/features.quality.json"
+    },
+    "features.vault-ops": {
+      "file": "lines/features.vault-ops.json"
+    },
+    "sync.sync-design": {
+      "file": "lines/sync.sync-design.json"
+    },
+    "sync.sync-kernel": {
+      "file": "lines/sync.sync-kernel.json"
+    },
+    "sync.sync-ui": {
+      "file": "lines/sync.sync-ui.json"
+    }
+  },
+  "plans": {
+    "closeout": {
+      "file": "plans/closeout.json"
+    },
+    "features": {
+      "file": "plans/features.json"
+    },
+    "sync": {
+      "file": "plans/sync.json"
+    }
+  },
+  "tasks": {
+    "closeout.dev-verify.T1": {
+      "file": "tasks/9c/a6fc4cf1261d66.json",
+      "uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23"
+    },
+    "closeout.dev-verify.T2": {
+      "file": "tasks/a8/9e3b73df85f761.json",
+      "uid": "tsk_01M66QW03ATPCY1SSGMJFWWQW4"
+    },
+    "closeout.dev-verify.T3": {
+      "file": "tasks/6a/37c6f35f1c6a5d.json",
+      "uid": "tsk_01M66QW03JRPG5Z948TBEHV84R"
+    },
+    "closeout.dev-verify.T4": {
+      "file": "tasks/9f/54ecb73d48f48b.json",
+      "uid": "tsk_01M66QW03TQDMH2T0XYT91KQ1K"
+    },
+    "closeout.dev-verify.T5": {
+      "file": "tasks/bb/785f913023fd34.json",
+      "uid": "tsk_01M66QW042BP66S70VXAYZ97ET"
+    },
+    "closeout.keystore.T1": {
+      "file": "tasks/90/0217239536558b.json",
+      "uid": "tsk_01M66QWF8SVVZQM39JQCR8S32M"
+    },
+    "closeout.keystore.T2": {
+      "file": "tasks/5a/21017651c08e8d.json",
+      "uid": "tsk_01M66QWF91B826M1A8NS2BQJN8"
+    },
+    "closeout.keystore.T3": {
+      "file": "tasks/d9/a8e6cbc1372194.json",
+      "uid": "tsk_01M66QWF99CX06EBE6K08RT8TF"
+    },
+    "closeout.keystore.T4": {
+      "file": "tasks/93/068e8d7d63ff0c.json",
+      "uid": "tsk_01M66QWF9JJ8WARP6SH5PWXM00"
+    },
+    "closeout.transfer-tags.T1": {
+      "file": "tasks/d2/489a0e3ec91395.json",
+      "uid": "tsk_01M66QWX5WCV3ZAKYXSXX2AX3Q"
+    },
+    "closeout.transfer-tags.T2": {
+      "file": "tasks/df/4cc51ea356628c.json",
+      "uid": "tsk_01M66QWX65R2QEMS2845PF6YES"
+    },
+    "closeout.transfer-tags.T3": {
+      "file": "tasks/1c/b35d3c31acd1bc.json",
+      "uid": "tsk_01M66QWX6DJPQSE3ZVKMSCRKCG"
+    },
+    "closeout.transfer-tags.T4": {
+      "file": "tasks/14/d17b8422f74747.json",
+      "uid": "tsk_01M66QWX6P9HHYJ95PE71N7CBJ"
+    },
+    "features.biometric.T1": {
+      "file": "tasks/8e/6c2df38417d61b.json",
+      "uid": "tsk_01M66QZT1NCYD8CCHVEV4YWFXQ"
+    },
+    "features.biometric.T2": {
+      "file": "tasks/16/060c6872e95e7c.json",
+      "uid": "tsk_01M66QZT1YQ6620YBX3XHTG2VG"
+    },
+    "features.biometric.T3": {
+      "file": "tasks/93/fe9d9b5cd73aff.json",
+      "uid": "tsk_01M66QZT28ST2ED3J2X30SS1PC"
+    },
+    "features.biometric.T4": {
+      "file": "tasks/07/7e46dd6693dfbd.json",
+      "uid": "tsk_01M66QZT2J7XDR8TA4S5ANBDGH"
+    },
+    "features.key-rotation.T1": {
+      "file": "tasks/08/4a09c0710a2e8e.json",
+      "uid": "tsk_01M66R07BJ5GZD8Z9NCHWPAYK0"
+    },
+    "features.key-rotation.T2": {
+      "file": "tasks/2d/5e116bc172bee3.json",
+      "uid": "tsk_01M66R07BV6VGGSKEKVSZRPT2M"
+    },
+    "features.key-rotation.T3": {
+      "file": "tasks/61/0fd9af7f995044.json",
+      "uid": "tsk_01M66R07C67YDTZHSSGYB72H4K"
+    },
+    "features.quality.T1": {
+      "file": "tasks/0a/b8ae9018b356c9.json",
+      "uid": "tsk_01M66R150TGQTPNC0PSBM9H721"
+    },
+    "features.quality.T2": {
+      "file": "tasks/0d/b699320c547161.json",
+      "uid": "tsk_01M66R1513QN6A9Z7YMN21CE2K"
+    },
+    "features.quality.T3": {
+      "file": "tasks/91/a12e50b75bb373.json",
+      "uid": "tsk_01M66R151DR7KPMF8BB9A6AKCF"
+    },
+    "features.vault-ops.T1": {
+      "file": "tasks/0c/5068335272aa1f.json",
+      "uid": "tsk_01M66R0PNSN3V81MAEE6C5KS73"
+    },
+    "features.vault-ops.T2": {
+      "file": "tasks/56/8eb0980364655e.json",
+      "uid": "tsk_01M66R0PP2PXS8CZH61EDZTCE1"
+    },
+    "features.vault-ops.T3": {
+      "file": "tasks/20/78d433248615cd.json",
+      "uid": "tsk_01M66R0PPDKEF3VT9417H7FWCW"
+    },
+    "sync.sync-design.T1": {
+      "file": "tasks/14/f9d61d01159dd7.json",
+      "uid": "tsk_01M66QY4YEDJ5QR14TAC4CNW4M"
+    },
+    "sync.sync-design.T2": {
+      "file": "tasks/d1/3b5037b4323883.json",
+      "uid": "tsk_01M66QY4YPCQ5X2XH2MJ0BM2H2"
+    },
+    "sync.sync-design.T3": {
+      "file": "tasks/4c/198d5cc11bddc2.json",
+      "uid": "tsk_01M66QY4YYEDE7TZAMX6TF1SXT"
+    },
+    "sync.sync-design.T4": {
+      "file": "tasks/a3/8f8130390b6871.json",
+      "uid": "tsk_01M66QY4Z7SYGWVKCS1CSYDFX0"
+    },
+    "sync.sync-design.T5": {
+      "file": "tasks/37/657c15c86100dd.json",
+      "uid": "tsk_01M66QY4ZF2J09X0X98VC7BV1Y"
+    },
+    "sync.sync-kernel.T1": {
+      "file": "tasks/9d/a870c22c8b18d2.json",
+      "uid": "tsk_01M66QYK0GBG32QBEB44MNE5TT"
+    },
+    "sync.sync-kernel.T2": {
+      "file": "tasks/2d/4adb596247c6e5.json",
+      "uid": "tsk_01M66QYK0S7SGRDZN0DH7C3EVP"
+    },
+    "sync.sync-kernel.T3": {
+      "file": "tasks/be/311447f907d040.json",
+      "uid": "tsk_01M66QYK136XYAV5WSENXHEANP"
+    },
+    "sync.sync-kernel.T4": {
+      "file": "tasks/8a/623d9e246898e8.json",
+      "uid": "tsk_01M66QYK1DS3TN5VHDZNBHNBZ8"
+    },
+    "sync.sync-ui.T1": {
+      "file": "tasks/f8/9d8cc410057675.json",
+      "uid": "tsk_01M66QZ2A5QEZNPV5WZB2Y4KTB"
+    },
+    "sync.sync-ui.T2": {
+      "file": "tasks/05/b71017f80ad434.json",
+      "uid": "tsk_01M66QZ2AE6C1MD67AASWKZM5S"
+    },
+    "sync.sync-ui.T3": {
+      "file": "tasks/d9/c64fcecf4971ca.json",
+      "uid": "tsk_01M66QZ2ARYBDDJ4YZ27TE7R5B"
+    },
+    "sync.sync-ui.T4": {
+      "file": "tasks/4c/c2ef4f84f4739c.json",
+      "uid": "tsk_01M66QZ2B2QJKT1FPFT72J4T16"
+    }
+  },
+  "version": 1
+}
