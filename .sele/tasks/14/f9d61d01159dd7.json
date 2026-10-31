@@ -11,9 +11,8 @@
   ],
   "archived_at": null,
   "archived_git_head": null,
-  "checkpoint_strategy": "per-step",
   "created_at": "2026-10-30T15:47:58Z",
-  "current_step": "S4",
+  "current_step": null,
   "depends": [],
   "finished_at": null,
   "goal": "传输层选型：局域网直连 vs 自建服务",
@@ -25,14 +24,28 @@
   "modules": [
     "docs"
   ],
-  "pause_context": null,
+  "pause_context": {
+    "at": "2026-10-31T05:23:07Z",
+    "current_step": null,
+    "git_snapshot": {
+      "branch": "main",
+      "dirty_files": [
+        ".sele/cache/git-fingerprint.json",
+        ".sele/log.jsonl",
+        ".sele/tasks/14/f9d61d01159dd7.json",
+        ".sele/checkpoints/2026-10/ck-20261031-002.json"
+      ],
+      "head": "6e3b78397ca51252a426c5d6bf7cce60287c96ca"
+    },
+    "reason": "switched to T2",
+    "resume_hint": ""
+  },
   "plan": "sync",
   "review_policy": "strict",
-  "skipped_count": 0,
-  "status": "in_progress",
+  "skipped_count": 1,
+  "status": "paused",
   "steps": [
     {
-      "checkpoint": null,
       "desc": "",
       "id": "S1",
       "jump_meta": null,
@@ -44,7 +57,6 @@
       "title": "列候选方案与约束（无网络权限现状、TLS、NAT）"
     },
     {
-      "checkpoint": "ck-20261031-001",
       "desc": "",
       "id": "S2",
       "jump_meta": null,
@@ -56,7 +68,6 @@
       "title": "写对比与推荐"
     },
     {
-      "checkpoint": null,
       "desc": "",
       "id": "S3",
       "jump_meta": null,
@@ -68,7 +79,6 @@
       "title": "人工评审"
     },
     {
-      "checkpoint": null,
       "desc": "",
       "id": "S4",
       "jump_meta": null,
@@ -76,7 +86,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "in_progress",
+      "status": "done",
       "title": "记录传输层决策为自建中继并补中继节点设计"
     }
   ],
