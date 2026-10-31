@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "line": "transfer-tags",
+    "plan": "closeout",
+    "task": "T4",
+    "task_uid": "tsk_01M66QWX6P9HHYJ95PE71N7CBJ",
+    "type": "task"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "9190ac7bd915aaf2eeaac12b50c71a9a1c56c532",
+    "diff_stat": " .sele/cache/git-fingerprint.json               |  2 +-\n .sele/checkpoints/2026-10/ck-20261031-002.json | 29 +++++++++++++++++\n .sele/log.jsonl                                | 11 +++++++\n .sele/tasks/9c/a6fc4cf1261d66.json             | 39 +++++++++++++++++++----\n docs/verify-a-group.md                         | 44 +++++++++++++++++---------\n 5 files changed, 103 insertions(+), 22 deletions(-)",
+    "dirty": false,
+    "files_changed": [
+      ".sele/cache/git-fingerprint.json",
+      ".sele/checkpoints/2026-10/ck-20261031-002.json",
+      ".sele/log.jsonl",
+      ".sele/tasks/9c/a6fc4cf1261d66.json",
+      "docs/verify-a-group.md"
+    ],
+    "source": "sele",
+    "tree": "b95598fb726d0cd112bb3dd738451e4f713373a1"
+  },
+  "id": "ck-20261031-004",
+  "status": "valid",
+  "ts": "2026-10-31T04:51:58Z"
+}

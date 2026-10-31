@@ -1,14 +1,5 @@
 {
   "lines": {
-    "closeout.dev-verify": {
-      "file": "lines/closeout.dev-verify.json"
-    },
-    "closeout.keystore": {
-      "file": "lines/closeout.keystore.json"
-    },
-    "closeout.transfer-tags": {
-      "file": "lines/closeout.transfer-tags.json"
-    },
     "features.biometric": {
       "file": "lines/features.biometric.json"
     },
@@ -32,9 +23,6 @@
     }
   },
   "plans": {
-    "closeout": {
-      "file": "plans/closeout.json"
-    },
     "features": {
       "file": "plans/features.json"
     },
@@ -43,58 +31,6 @@
     }
   },
   "tasks": {
-    "closeout.dev-verify.T1": {
-      "file": "tasks/9c/a6fc4cf1261d66.json",
-      "uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23"
-    },
-    "closeout.dev-verify.T2": {
-      "file": "tasks/a8/9e3b73df85f761.json",
-      "uid": "tsk_01M66QW03ATPCY1SSGMJFWWQW4"
-    },
-    "closeout.dev-verify.T3": {
-      "file": "tasks/6a/37c6f35f1c6a5d.json",
-      "uid": "tsk_01M66QW03JRPG5Z948TBEHV84R"
-    },
-    "closeout.dev-verify.T4": {
-      "file": "tasks/9f/54ecb73d48f48b.json",
-      "uid": "tsk_01M66QW03TQDMH2T0XYT91KQ1K"
-    },
-    "closeout.dev-verify.T5": {
-      "file": "tasks/bb/785f913023fd34.json",
-      "uid": "tsk_01M66QW042BP66S70VXAYZ97ET"
-    },
-    "closeout.keystore.T1": {
-      "file": "tasks/90/0217239536558b.json",
-      "uid": "tsk_01M66QWF8SVVZQM39JQCR8S32M"
-    },
-    "closeout.keystore.T2": {
-      "file": "tasks/5a/21017651c08e8d.json",
-      "uid": "tsk_01M66QWF91B826M1A8NS2BQJN8"
-    },
-    "closeout.keystore.T3": {
-      "file": "tasks/d9/a8e6cbc1372194.json",
-      "uid": "tsk_01M66QWF99CX06EBE6K08RT8TF"
-    },
-    "closeout.keystore.T4": {
-      "file": "tasks/93/068e8d7d63ff0c.json",
-      "uid": "tsk_01M66QWF9JJ8WARP6SH5PWXM00"
-    },
-    "closeout.transfer-tags.T1": {
-      "file": "tasks/d2/489a0e3ec91395.json",
-      "uid": "tsk_01M66QWX5WCV3ZAKYXSXX2AX3Q"
-    },
-    "closeout.transfer-tags.T2": {
-      "file": "tasks/df/4cc51ea356628c.json",
-      "uid": "tsk_01M66QWX65R2QEMS2845PF6YES"
-    },
-    "closeout.transfer-tags.T3": {
-      "file": "tasks/1c/b35d3c31acd1bc.json",
-      "uid": "tsk_01M66QWX6DJPQSE3ZVKMSCRKCG"
-    },
-    "closeout.transfer-tags.T4": {
-      "file": "tasks/14/d17b8422f74747.json",
-      "uid": "tsk_01M66QWX6P9HHYJ95PE71N7CBJ"
-    },
     "features.biometric.T1": {
       "file": "tasks/8e/6c2df38417d61b.json",
       "uid": "tsk_01M66QZT1NCYD8CCHVEV4YWFXQ"

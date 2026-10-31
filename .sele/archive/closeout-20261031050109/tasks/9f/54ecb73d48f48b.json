@@ -1,12 +1,12 @@
 {
   "acceptance": [
     {
-      "desc": "缺陷有最小复现与修复证据，真机复验通过",
+      "desc": "A7 通过且不残留旧库测试文件",
       "id": "A1",
       "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
+      "status": "pass",
+      "verified_at": "2026-10-31T04:55:45Z",
+      "verified_by": "human:zxionf"
     }
   ],
   "archived_at": null,
@@ -17,20 +17,12 @@
   "depends": [
     {
       "type": "task",
-      "uid": "tsk_01M66QW03ATPCY1SSGMJFWWQW4"
-    },
-    {
-      "type": "task",
-      "uid": "tsk_01M66QW03JRPG5Z948TBEHV84R"
-    },
-    {
-      "type": "task",
-      "uid": "tsk_01M66QW03TQDMH2T0XYT91KQ1K"
+      "uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23"
     }
   ],
-  "finished_at": null,
-  "goal": "缺陷修复（仅验证发现缺陷时启用，否则 abandon）",
-  "id": "T5",
+  "finished_at": "2026-10-31T04:55:45Z",
+  "goal": "验证旧库兼容",
+  "id": "T4",
   "line": "dev-verify",
   "locked": {
     "locked": false
@@ -40,9 +32,9 @@
   ],
   "pause_context": null,
   "plan": "closeout",
-  "review_policy": "mixed",
+  "review_policy": "strict",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "done",
   "steps": [
     {
       "checkpoint": null,
@@ -53,8 +45,8 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
-      "title": "记录最小复现与根因"
+      "status": "done",
+      "title": "用 adb 将 format=1 旧 vault.db 放入 files/"
     },
     {
       "checkpoint": null,
@@ -65,8 +57,8 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
-      "title": "修复并通过 assembleDebug + lintDebug"
+      "status": "done",
+      "title": "冷启动观察自动注册「默认密码库」与条目完整性"
     },
     {
       "checkpoint": null,
@@ -77,10 +69,10 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
-      "title": "真机复验"
+      "status": "done",
+      "title": "记录结果并清理旧库测试文件"
     }
   ],
-  "title": "缺陷修复（仅验证发现缺陷时启用，否则 abandon）",
-  "uid": "tsk_01M66QW042BP66S70VXAYZ97ET"
+  "title": "验证旧库兼容",
+  "uid": "tsk_01M66QW03TQDMH2T0XYT91KQ1K"
 }

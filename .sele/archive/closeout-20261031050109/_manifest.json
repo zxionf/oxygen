@@ -1,0 +1,81 @@
+{
+  "files": [
+    {
+      "path": "plans/closeout.json"
+    },
+    {
+      "path": "lines/closeout.dev-verify.json"
+    },
+    {
+      "path": "lines/closeout.transfer-tags.json"
+    },
+    {
+      "path": "tasks/d2/489a0e3ec91395.json"
+    },
+    {
+      "path": "tasks/bb/785f913023fd34.json"
+    },
+    {
+      "path": "tasks/14/d17b8422f74747.json"
+    },
+    {
+      "path": "tasks/a8/9e3b73df85f761.json"
+    },
+    {
+      "path": "tasks/1c/b35d3c31acd1bc.json"
+    },
+    {
+      "path": "tasks/df/4cc51ea356628c.json"
+    },
+    {
+      "path": "tasks/6a/37c6f35f1c6a5d.json"
+    },
+    {
+      "path": "tasks/9f/54ecb73d48f48b.json"
+    },
+    {
+      "path": "tasks/9c/a6fc4cf1261d66.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261031-005.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-008.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-006.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261031-001.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261031-004.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-009.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-005.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-007.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261031-002.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-011.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-010.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261030-004.json"
+    },
+    {
+      "path": "checkpoints/2026-10/ck-20261031-003.json"
+    }
+  ],
+  "plan": "closeout",
+  "ts": "20261031050109"
+}

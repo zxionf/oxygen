@@ -13,7 +13,7 @@
   "archived_git_head": null,
   "checkpoint_strategy": "per-step",
   "created_at": "2026-10-30T15:47:58Z",
-  "current_step": null,
+  "current_step": "S2",
   "depends": [],
   "finished_at": null,
   "goal": "传输层选型：局域网直连 vs 自建服务",
@@ -29,7 +29,7 @@
   "plan": "sync",
   "review_policy": "strict",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "in_progress",
   "steps": [
     {
       "checkpoint": null,
@@ -40,7 +40,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "done",
       "title": "列候选方案与约束（无网络权限现状、TLS、NAT）"
     },
     {
@@ -52,7 +52,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "todo",
+      "status": "in_progress",
       "title": "写对比与推荐"
     },
     {

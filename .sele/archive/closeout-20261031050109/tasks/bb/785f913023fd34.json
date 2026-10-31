@@ -1,7 +1,7 @@
 {
   "acceptance": [
     {
-      "desc": "A4–A6 有逐条通过记录",
+      "desc": "缺陷有最小复现与修复证据，真机复验通过",
       "id": "A1",
       "requires_human": false,
       "status": "unverified",
@@ -17,12 +17,20 @@
   "depends": [
     {
       "type": "task",
-      "uid": "tsk_01M66QW032HN3WNSC2ZS1F2D23"
+      "uid": "tsk_01M66QW03ATPCY1SSGMJFWWQW4"
+    },
+    {
+      "type": "task",
+      "uid": "tsk_01M66QW03JRPG5Z948TBEHV84R"
+    },
+    {
+      "type": "task",
+      "uid": "tsk_01M66QW03TQDMH2T0XYT91KQ1K"
     }
   ],
-  "finished_at": null,
-  "goal": "验证多库：重命名、删除、条目隔离",
-  "id": "T3",
+  "finished_at": "2026-10-31T04:56:04Z",
+  "goal": "缺陷修复（仅验证发现缺陷时启用，否则 abandon）",
+  "id": "T5",
   "line": "dev-verify",
   "locked": {
     "locked": false
@@ -32,9 +40,9 @@
   ],
   "pause_context": null,
   "plan": "closeout",
-  "review_policy": "strict",
+  "review_policy": "mixed",
   "skipped_count": 0,
-  "status": "todo",
+  "status": "done",
   "steps": [
     {
       "checkpoint": null,
@@ -44,9 +52,9 @@
       "lock_reason": null,
       "locked": false,
       "requires_review": false,
-      "skipped_reason": null,
-      "status": "todo",
-      "title": "验 A6：A 库条目不出现在 B 库"
+      "skipped_reason": "A1–A7 未发现缺陷，本任务不启用",
+      "status": "skipped",
+      "title": "记录最小复现与根因"
     },
     {
       "checkpoint": null,
@@ -56,9 +64,9 @@
       "lock_reason": null,
       "locked": false,
       "requires_review": false,
-      "skipped_reason": null,
-      "status": "todo",
-      "title": "验 A4：重命名库后库列表与解锁页标题"
+      "skipped_reason": "A1–A7 未发现缺陷，本任务不启用",
+      "status": "skipped",
+      "title": "修复并通过 assembleDebug + lintDebug"
     },
     {
       "checkpoint": null,
@@ -68,23 +76,11 @@
       "lock_reason": null,
       "locked": false,
       "requires_review": false,
-      "skipped_reason": null,
-      "status": "todo",
-      "title": "验 A5：删除库清理文件与索引，已解锁库先锁定"
-    },
-    {
-      "checkpoint": null,
-      "desc": "",
-      "id": "S4",
-      "jump_meta": null,
-      "lock_reason": null,
-      "locked": false,
-      "requires_review": false,
-      "skipped_reason": null,
-      "status": "todo",
-      "title": "记录 A4–A6 结果"
+      "skipped_reason": "A1–A7 未发现缺陷，本任务不启用",
+      "status": "skipped",
+      "title": "真机复验"
     }
   ],
-  "title": "验证多库：重命名、删除、条目隔离",
-  "uid": "tsk_01M66QW03JRPG5Z948TBEHV84R"
+  "title": "缺陷修复（仅验证发现缺陷时启用，否则 abandon）",
+  "uid": "tsk_01M66QW042BP66S70VXAYZ97ET"
 }

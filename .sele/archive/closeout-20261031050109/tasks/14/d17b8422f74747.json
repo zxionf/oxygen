@@ -4,23 +4,23 @@
       "desc": "真机导入导出往返一次成功，docs 同步",
       "id": "A1",
       "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
+      "status": "pass",
+      "verified_at": "2026-10-31T04:51:57Z",
+      "verified_by": "agent:pi"
     }
   ],
   "archived_at": null,
   "archived_git_head": null,
   "checkpoint_strategy": "per-task",
   "created_at": "2026-10-30T15:47:17Z",
-  "current_step": "S3",
+  "current_step": null,
   "depends": [
     {
       "type": "task",
       "uid": "tsk_01M66QWX6DJPQSE3ZVKMSCRKCG"
     }
   ],
-  "finished_at": null,
+  "finished_at": "2026-10-31T04:51:58Z",
   "goal": "导入结果提示与文档收尾",
   "id": "T4",
   "line": "transfer-tags",
@@ -50,7 +50,7 @@
   "plan": "closeout",
   "review_policy": "mixed",
   "skipped_count": 3,
-  "status": "paused",
+  "status": "done",
   "steps": [
     {
       "checkpoint": null,
@@ -85,7 +85,7 @@
       "locked": false,
       "requires_review": false,
       "skipped_reason": null,
-      "status": "in_progress",
+      "status": "done",
       "title": "真机导入导出回归"
     },
     {
