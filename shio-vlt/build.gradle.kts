@@ -26,7 +26,7 @@ val appVersionCode = versionProperties.getProperty("versionCode").trim().toInt()
 val appVersionName = versionProperties.getProperty("versionName").trim()
 
 android {
-    namespace = "top.zxionf.shio"
+    namespace = "top.zxionf.shio.vlt"
     compileSdk = 37
 
     signingConfigs {
@@ -41,7 +41,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "top.zxionf.shio"
+        applicationId = "top.zxionf.shio.vlt"
         minSdk = 29
         targetSdk = 37
         versionCode = appVersionCode
