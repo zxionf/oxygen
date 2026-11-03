@@ -4,15 +4,16 @@ oxygen: 基于shio内核的android软件仓库
 
 本文档不允许 ai 修改；确需修改必须由用户发起。
 
+本项目的任务体系由 `sele`（0.21.3）管理：**Plan → Line → Task → Step**。
+
 ## 入口
 
-1. **agent 契约：`.sele/CONTRACT.md`（不可违反清单，优先阅读）**。
-2. 实现与命令：`docs/sele-0.20.0.md`。
-3. 接口规范：`docs/sele-f.md`；概念语义：`docs/sele-f-d.md`。
-4. 当前状态：`sele status --output json`、`sele next --output json`。
-5. `.sele/` 是工具私有目录，只通过 `sele` 命令读写；不要用编辑器直接修改。
+1. `.sele/CONTRACT.md`：不可违反清单，优先阅读。
+2. `.sele/` 只通过 `sele` 命令读写；不要手改。
+3. 状态：`sele status`、`sele next`、`sele task`、`sele step`、`sele agent`。
+4. 操作手册：`docs/sele-0.21.3-agent.md`（项目内存在时）。
 
-## 体系最小闭环
+## 最小闭环
 
 ```bash
 sele init
@@ -22,6 +23,7 @@ sele plan submit <plan>
 sele plan approve <plan> --by human:<name>
 
 sele line new <line> --plan <plan> --goal "..." --acceptance "..." --modules a,b
+sele line switch <line> --plan <plan>
 
 sele task add "<title>" --line <line> --acceptance "..."
 sele task start T1 --line <line>
@@ -39,21 +41,25 @@ sele plan done <plan>
 
 ## 规则
 
-1. 状态迁移必须由显式命令驱动；禁止手改 `.sele/` 下的 JSON。
-2. `log.jsonl` 是 append-only 的审计记录，不要修改或删除。
-3. I1：全局至多一个 `in_progress` task；`task start` 会自动暂停当前 task。
-4. I2：单 task 内至多一个 `in_progress` step。
-5. `task done` 要求所有 step 为 `done`/`skipped`；验收未满足 `review_policy` 时转 `pending_review`。
-6. `line done` 要求所有 task 结束且线级验收通过；`plan done` 同理。
-7. 提交代码统一经 `sele git commit --task <id> --step <id> --message "<msg>" [--files ...]`；不要直接 `git commit`。
-8. 验证：`bash tests/sele_v2_tests.sh build/build/sele` 与 `ctest --test-dir build` 必须通过。
+1. 只经 `sele` 读写 `.sele/`；`log.jsonl` 是 append-only。
+2. 显式迁移；I1（全局单 `in_progress` task）、I2（单 task 单 `in_progress` step）。
+3. git 只读（`status`/`diff`/`log`/`show`）；`sele git` 写命令执行前先报命令与影响，获用户授权后才执行。
+4. 提交频率：一个 task 最多一次，在 task 完成时提交；小修合并。
+5. `task done` 前 step 全 `done`/`skipped`；`line done` / `plan done` 有各自前置。
+6. 验收只记账，不伪造 `--by`。
+7. agent 不改 plan/line 定义、不创建 task；需要变更时用 `sele decision record`
+   并请求用户。
+8. 不做回滚；不迁移不支持的 `.sele` 结构。
+9. 禁止 python/nodejs 脚本；改文件用 `edit`/`write`；校验脚本经 stdin 就地执行。
+10. 验证：`sele check` 通过。
 
-## 常用查询
+## 常用
 
 ```bash
-sele next                 # 就绪任务（拓扑序）
-sele status               # 当前计划/线/任务摘要
-sele tree                 # 四层结构
-sele log --limit 20       # 最近事件
-sele check                # 一致性检查
+sele task / step / next / status / tree / log / check
+sele task --all / --global
+sele step --all / --global
+sele agent
+sele git status / diff / log / commit / stash / branch / health / reconcile
+sele cache rebuild
 ```
