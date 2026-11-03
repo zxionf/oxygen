@@ -12,6 +12,9 @@
     "features.vault-ops": {
       "file": "lines/features.vault-ops.json"
     },
+    "refactor.pkg-vlt": {
+      "file": "lines/refactor.pkg-vlt.json"
+    },
     "sync.sync-design": {
       "file": "lines/sync.sync-design.json"
     },
@@ -28,6 +31,9 @@
   "plans": {
     "features": {
       "file": "plans/features.json"
+    },
+    "refactor": {
+      "file": "plans/refactor.json"
     },
     "sync": {
       "file": "plans/sync.json"
@@ -85,6 +91,26 @@
     "features.vault-ops.T3": {
       "file": "lines/features.vault-ops.json",
       "uid": "tsk_01M6G835GVWNPMD2XQCF3RTPPB"
+    },
+    "refactor.pkg-vlt.T1": {
+      "file": "lines/refactor.pkg-vlt.json",
+      "uid": "tsk_01M6G93DJAAN2AJFB8KVWFN6WM"
+    },
+    "refactor.pkg-vlt.T2": {
+      "file": "lines/refactor.pkg-vlt.json",
+      "uid": "tsk_01M6G93DJN758BMDE9X9J5YPZE"
+    },
+    "refactor.pkg-vlt.T3": {
+      "file": "lines/refactor.pkg-vlt.json",
+      "uid": "tsk_01M6G93DKCNQXB0A9G57N4A1GC"
+    },
+    "refactor.pkg-vlt.T4": {
+      "file": "lines/refactor.pkg-vlt.json",
+      "uid": "tsk_01M6G93DKSZE53S2HH7DMSQ7JS"
+    },
+    "refactor.pkg-vlt.T5": {
+      "file": "lines/refactor.pkg-vlt.json",
+      "uid": "tsk_01M6G93DM5MDBTJZPWRBSY71NN"
     },
     "sync.sync-design.T1": {
       "file": "lines/sync.sync-design.json",

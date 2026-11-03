@@ -1,0 +1,455 @@
+{
+  "acceptance": [
+    {
+      "desc": "目录、package、namespace、applicationId 一致为 top.zxionf.shio.vlt",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "构建/单测/lint/真机冒烟通过，shared 与 JNI 不受影响",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "全仓 grep 无旧包名残留，脚本与文档已同步",
+      "id": "A3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-11-03T08:40:42Z",
+  "depends": [],
+  "goal": "把 shio-vlt 的包名与 applicationId 迁到 top.zxionf.shio.vlt",
+  "id": "pkg-vlt",
+  "modules": [
+    "shio-vlt",
+    "shared",
+    "build",
+    "docs"
+  ],
+  "plan": "refactor",
+  "status": "active",
+  "tasks": [
+    {
+      "acceptance": [
+        {
+          "desc": "旧包名出现位置清单齐全，边界（shared/JNI 不动）与数据影响写清",
+          "id": "A1",
+          "requires_human": false,
+          "status": "pass",
+          "verified_at": "2026-11-03T08:48:20Z",
+          "verified_by": "agent:pi"
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:41:06Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": "2026-11-03T08:48:20Z",
+      "goal": "影响面盘点与迁移方案",
+      "id": "T1",
+      "line": "pkg-vlt",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt",
+        "shared",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "refactor",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "done",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "全仓 grep 旧包名：源码/资源/manifest/gradle/proguard/脚本/文档/JNI"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "确认边界：shared 保持 top.zxionf.shio.shared / .kernel，JNI 符号 Java_top_zxionf_shio_kernel_* 不变"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "写明 applicationId 变更的影响：新包=新应用，旧数据不迁移，验收按全新安装"
+        },
+        {
+          "desc": "",
+          "id": "S4",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "列出迁移映射表与验收口径"
+        }
+      ],
+      "title": "影响面盘点与迁移方案",
+      "uid": "tsk_01M6G93DJAAN2AJFB8KVWFN6WM"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "main/test/debug 目录与 68 个文件中的 package/内部 import 全部更新，编译通过",
+          "id": "A1",
+          "requires_human": false,
+          "status": "pass",
+          "verified_at": "2026-11-03T08:53:25Z",
+          "verified_by": "agent:pi"
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:41:06Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G93DJAAN2AJFB8KVWFN6WM"
+        }
+      ],
+      "finished_at": "2026-11-03T08:53:25Z",
+      "goal": "源码目录与 package/import 迁移",
+      "id": "T2",
+      "line": "pkg-vlt",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "refactor",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "done",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "移动 shio-vlt/src/{main,test,debug}/java/top/zxionf/shio → .../shio/vlt"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "重写 package 声明与内部 import（app/ui/vault/demo/debug）"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "保持对 shared 的引用不变（top.zxionf.shio.kernel / .shared）"
+        },
+        {
+          "desc": "",
+          "id": "S4",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "编译验证：:shio-vlt:compileDebugKotlin"
+        }
+      ],
+      "title": "源码目录与 package/import 迁移",
+      "uid": "tsk_01M6G93DJN758BMDE9X9J5YPZE"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "namespace/applicationId 为 top.zxionf.shio.vlt，manifest 与资源引用无遗留",
+          "id": "A1",
+          "requires_human": false,
+          "status": "pass",
+          "verified_at": "2026-11-03T08:53:41Z",
+          "verified_by": "agent:pi"
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:41:06Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G93DJN758BMDE9X9J5YPZE"
+        }
+      ],
+      "finished_at": "2026-11-03T08:53:41Z",
+      "goal": "Gradle、manifest、资源与 proguard 更新",
+      "id": "T3",
+      "line": "pkg-vlt",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt",
+        "build"
+      ],
+      "pause_context": null,
+      "plan": "refactor",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "done",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "shio-vlt/build.gradle.kts：namespace 与 applicationId 改为 top.zxionf.shio.vlt"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "AndroidManifest：activity 全限定名/相对名、authorities 与 intent-filter 复核"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "proguard-rules 与 keep 规则、debug 专用入口（Smoke/Acceptance）复核"
+        },
+        {
+          "desc": "",
+          "id": "S4",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "done",
+          "title": "BuildConfig 引用、theme/资源前缀、strings 中的包名检查"
+        }
+      ],
+      "title": "Gradle、manifest、资源与 proguard 更新",
+      "uid": "tsk_01M6G93DKCNQXB0A9G57N4A1GC"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "四个构建目标全通过，APK package 名正确，真机冒烟通过",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:41:06Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G93DKCNQXB0A9G57N4A1GC"
+        }
+      ],
+      "finished_at": null,
+      "goal": "验证：构建、单测、lint、真机冒烟",
+      "id": "T4",
+      "line": "pkg-vlt",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt",
+        "shared"
+      ],
+      "pause_context": null,
+      "plan": "refactor",
+      "review_policy": "mixed",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "assembleDebug + lintDebug + testDebugUnitTest"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "assembleRelease + bash check.sh（验签/对齐/版本号）"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "aapt2 dump badging 确认 package=top.zxionf.shio.vlt"
+        },
+        {
+          "desc": "",
+          "id": "S4",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "真机安装冒烟：建库 → 条目 → 导入导出"
+        }
+      ],
+      "title": "验证：构建、单测、lint、真机冒烟",
+      "uid": "tsk_01M6G93DKSZE53S2HH7DMSQ7JS"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "scripts/ 与 docs/ 更新完毕，全仓 grep 旧包名清零",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:41:06Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G93DKSZE53S2HH7DMSQ7JS"
+        }
+      ],
+      "finished_at": null,
+      "goal": "脚本与文档同步，残留检查",
+      "id": "T5",
+      "line": "pkg-vlt",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "refactor",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "更新 scripts/ 中的包名引用（acceptance/smoke）"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "删除 .agent/STATE.md，更新 .design/SPEC.md、docs/vault.md、docs/todo.md"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "全仓 grep 旧包名清零（排除 .sele 归档与历史 changelog）"
+        }
+      ],
+      "title": "脚本与文档同步，残留检查",
+      "uid": "tsk_01M6G93DM5MDBTJZPWRBSY71NN"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "acceptance": [
+    {
+      "desc": "源码目录、package 声明、namespace、applicationId 全部为 top.zxionf.shio.vlt（debug 保留 .debug 后缀）",
+      "id": "PA1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "assembleDebug / assembleRelease / lintDebug / testDebugUnitTest 全通过，产物 package 名为 top.zxionf.shio.vlt",
+      "id": "PA2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "shared（top.zxionf.shio.shared / .kernel）与 JNI 符号未受影响，真机冒烟通过",
+      "id": "PA3",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "脚本与文档中的包名同步，全仓无旧包名残留（历史记录除外）",
+      "id": "PA4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "approved_at": "2026-11-03T08:40:42Z",
+  "approved_by": "human:zxionf",
+  "created_at": "2026-11-03T08:40:42Z",
+  "goal": "把密码库应用的包名与 applicationId 从 top.zxionf.shio 重构为 top.zxionf.shio.vlt，与 top.zxionf.shio.todo 对称，并保证构建、签名、JNI、测试、脚本与文档一致",
+  "id": "refactor",
+  "lines": [
+    {
+      "depends": [],
+      "id": "pkg-vlt"
+    }
+  ],
+  "status": "active"
+}
