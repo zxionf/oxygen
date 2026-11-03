@@ -1,0 +1,472 @@
+{
+  "acceptance": [
+    {
+      "desc": "relay serve 可跑，推拉与 ack 打通，幂等与 seq 单调",
+      "id": "A1",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "GC/配额/truncated_from 生效，TLS 部署与日志卫生符合规格",
+      "id": "A2",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    }
+  ],
+  "created_at": "2026-11-03T08:21:40Z",
+  "depends": [],
+  "goal": "在 ../shio 实现中继节点（Rust）：帧校验、推拉、ack/GC、设备令牌入网、TLS 部署（规格见 ../shio/docs/relay.md）",
+  "id": "sync-relay",
+  "modules": [
+    "relay",
+    "docs"
+  ],
+  "plan": "sync",
+  "status": "active",
+  "tasks": [
+    {
+      "acceptance": [
+        {
+          "desc": "cargo run 可起服务，token/stats/gc 子命令可用",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:11Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": null,
+      "goal": "crate 骨架、配置与命令行",
+      "id": "T1",
+      "line": "sync-relay",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "relay",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "新建 crates/shio-relay 骨架（Cargo 配置、模块切分）"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "sqlite 表结构：frames / devices / db_state（WAL）"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "命令行：serve / token issue|revoke / stats / gc"
+        }
+      ],
+      "title": "crate 骨架、配置与命令行",
+      "uid": "tsk_01M6G80RWRZV980TBPDVB45A5P"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "帧头校验与 4 MiB 上限生效，POST/GET 打通，seq 单调且幂等",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:11Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G80RWRZV980TBPDVB45A5P"
+        }
+      ],
+      "finished_at": null,
+      "goal": "帧校验与推拉 API",
+      "id": "T2",
+      "line": "sync-relay",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "relay",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "帧头校验（magic/format/db_id/sender/kind/长度上限）"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "POST /v1/frames 与 GET /v1/frames（排除自己推的帧）"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "幂等键 24h 去重 + per-db 串行 + seq 单调"
+        }
+      ],
+      "title": "帧校验与推拉 API",
+      "uid": "tsk_01M6G80RX2CKN9TM4X039KN67D"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "token issue/revoke 与一次性入网码可用，撤销后 401",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:11Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G80RWRZV980TBPDVB45A5P"
+        }
+      ],
+      "finished_at": null,
+      "goal": "设备令牌与入网流程",
+      "id": "T3",
+      "line": "sync-relay",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "relay",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "令牌签发与撤销（只存 SHA-256）"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "POST /v1/devices 一次性入网码 + /v1/devices/enroll"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "无令牌/撤销/库不匹配的 4xx 路径"
+        }
+      ],
+      "title": "设备令牌与入网流程",
+      "uid": "tsk_01M6G80RXSY4NKHFC6S9FYZNEJ"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "ack 只前进，GC 三类条件生效并推进 truncated_from",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:11Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G80RX2CKN9TM4X039KN67D"
+        }
+      ],
+      "finished_at": null,
+      "goal": "ack、GC 与配额",
+      "id": "T4",
+      "line": "sync-relay",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "relay",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "POST /v1/ack（只前进）与 GET /v1/info"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "GC：全设备 ack / TTL / 配额，推进 truncated_from"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "磁盘满 507 与配额告警"
+        }
+      ],
+      "title": "ack、GC 与配额",
+      "uid": "tsk_01M6G80RY3ST9K3VVS1Q1CS4M7"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "前置反代示例与 HSTS 成文，日志不含令牌与帧内容",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:11Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": null,
+      "goal": "TLS 部署与日志卫生",
+      "id": "T5",
+      "line": "sync-relay",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "relay",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "前置 Caddy/nginx 示例 + HSTS + 禁明文"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "日志卫生：不记令牌与帧内容，IP 只留 7 天"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "systemd 部署文档"
+        }
+      ],
+      "title": "TLS 部署与日志卫生",
+      "uid": "tsk_01M6G80RYEE1141MFGF6M1DSCY"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "单测 + 两模拟客户端推拉 ack 通过，淘汰后行为可验证",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:11Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G80RY3ST9K3VVS1Q1CS4M7"
+        }
+      ],
+      "finished_at": null,
+      "goal": "测试与两客户端联调",
+      "id": "T6",
+      "line": "sync-relay",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "relay",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "单元测试：帧校验 / 幂等 / GC 规则"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "集成：两个模拟客户端推、拉、ack"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "淘汰后 truncated_from 与客户端全量重同步路径"
+        }
+      ],
+      "title": "测试与两客户端联调",
+      "uid": "tsk_01M6G80RYS864BTQW2291750XK"
+    }
+  ]
+}

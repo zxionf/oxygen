@@ -1,7 +1,7 @@
 {
   "acceptance": [
     {
-      "desc": "生物识别可解锁已有库",
+      "desc": "生物识别可解锁已有库，取消/锁定/登记变更后回落主口令",
       "id": "A1",
       "requires_human": false,
       "status": "unverified",
@@ -9,31 +9,15 @@
       "verified_by": null
     },
     {
-      "desc": "生物识别失效或取消时回落主口令解锁",
+      "desc": "包裹凭据在登记变更后失效，且不写日志",
       "id": "A2",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
-    },
-    {
-      "desc": "生物识别登记变更后本地包裹凭据失效",
-      "id": "A3",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
-    },
-    {
-      "desc": "真机验收通过",
-      "id": "A4",
       "requires_human": false,
       "status": "unverified",
       "verified_at": null,
       "verified_by": null
     }
   ],
-  "created_at": "2026-10-30T15:48:52Z",
+  "created_at": "2026-11-03T08:22:56Z",
   "depends": [],
   "goal": "用 Android Keystore 包裹主口令，接入 BiometricPrompt 解锁并在失效时回落（B3）",
   "id": "biometric",
@@ -42,5 +26,287 @@
     "shared"
   ],
   "plan": "features",
-  "status": "active"
+  "status": "active",
+  "tasks": [
+    {
+      "acceptance": [
+        {
+          "desc": "方案记录密钥别名、包裹方式与失效策略",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": null,
+      "goal": "方案设计：Keystore 包裹主口令 + BiometricPrompt",
+      "id": "T1",
+      "line": "biometric",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "strict",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "定 Keystore 别名与包裹流程"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "定失效检测（登记变更 / 锁定 / 复位）"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "写方案文档"
+        }
+      ],
+      "title": "方案设计：Keystore 包裹主口令 + BiometricPrompt",
+      "uid": "tsk_01M6G82N2NEYQABA0TK1RVQ77J"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "解锁页可走生物识别路径，口令零日志",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G82N2NEYQABA0TK1RVQ77J"
+        }
+      ],
+      "finished_at": null,
+      "goal": "凭据封装与解锁集成",
+      "id": "T2",
+      "line": "biometric",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "实现 Keystore 包裹与解包"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "解锁页接入 BiometricPrompt"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "单测覆盖包裹与解包失败"
+        }
+      ],
+      "title": "凭据封装与解锁集成",
+      "uid": "tsk_01M6G82N2YFMVMWWKTDQ1CDZ31"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "登记变更/失败次数/锁定后回落均已覆盖",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G82N2YFMVMWWKTDQ1CDZ31"
+        }
+      ],
+      "finished_at": null,
+      "goal": "失效与锁定策略",
+      "id": "T3",
+      "line": "biometric",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "失效时清除包裹凭据并回落主口令"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "失败次数与锁定交互"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "设置页开关与说明"
+        }
+      ],
+      "title": "失效与锁定策略",
+      "uid": "tsk_01M6G82N38SZE2R4SB4B3NV1AT"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "真机解锁、取消、锁定、登记变更均通过",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G82N38SZE2R4SB4B3NV1AT"
+        }
+      ],
+      "finished_at": null,
+      "goal": "真机验收",
+      "id": "T4",
+      "line": "biometric",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "strict",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "真机生物识别解锁"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "真机取消 / 锁定 / 登记变更"
+        }
+      ],
+      "title": "真机验收",
+      "uid": "tsk_01M6G82N3J5XERR6J6D4Y7FAYC"
+    }
+  ]
 }

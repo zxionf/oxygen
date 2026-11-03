@@ -1,7 +1,7 @@
 {
   "acceptance": [
     {
-      "desc": "同步设置页可查看状态与错误",
+      "desc": "设置页可显示中继地址、同步状态与错误，并可手动触发同步",
       "id": "A1",
       "requires_human": false,
       "status": "unverified",
@@ -9,42 +9,314 @@
       "verified_by": null
     },
     {
-      "desc": "配对文本可生成与解析，二维码可展示",
+      "desc": "配对文本/二维码可生成与解析，冲突与需全量重同步有明确提示",
       "id": "A2",
       "requires_human": false,
       "status": "unverified",
       "verified_at": null,
       "verified_by": null
-    },
-    {
-      "desc": "冲突可逐条提示并处理",
-      "id": "A3",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
-    },
-    {
-      "desc": "两台设备完成一次同步往返",
-      "id": "A4",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
     }
   ],
-  "created_at": "2026-10-30T15:48:28Z",
-  "depends": [
-    {
-      "id": "sync-kernel",
-      "type": "line"
-    }
-  ],
-  "goal": "交付同步设置页、配对文本与二维码、冲突提示，并完成端到端验收",
+  "created_at": "2026-11-03T08:21:40Z",
+  "depends": [],
+  "goal": "交付同步设置页、配对与二维码、冲突与进度提示，并完成端到端验收",
   "id": "sync-ui",
   "modules": [
     "shio-vlt"
   ],
   "plan": "sync",
-  "status": "active"
+  "status": "active",
+  "tasks": [
+    {
+      "acceptance": [
+        {
+          "desc": "页面符合 M3E 基线，状态与错误文案齐全",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": null,
+      "goal": "同步设置页",
+      "id": "T1",
+      "line": "sync-ui",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "mixed",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "页面骨架（复用 StackedList / FieldItem）"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "中继地址、同步状态与错误文案"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "手动「立即同步」入口（不做后台自动拉取）"
+        }
+      ],
+      "title": "同步设置页",
+      "uid": "tsk_01M6G81EJP42N71MAXF71QQ58Z"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "配对生成/扫描/撤销路径可用",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81EJP42N71MAXF71QQ58Z"
+        }
+      ],
+      "finished_at": null,
+      "goal": "配对文本与二维码",
+      "id": "T2",
+      "line": "sync-ui",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "mixed",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "生成与解析配对文本/二维码"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "渲染二维码并处理扫描结果"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "失败与撤销路径"
+        }
+      ],
+      "title": "配对文本与二维码",
+      "uid": "tsk_01M6G81EJZV56ACDFXRZGEKWGE"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "apply 报告统计可见，需全量重同步时有明确提示",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81EJZV56ACDFXRZGEKWGE"
+        }
+      ],
+      "finished_at": null,
+      "goal": "冲突与进度提示",
+      "id": "T3",
+      "line": "sync-ui",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "mixed",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "apply 报告统计展示（应用 N / 冲突 M）"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "truncated/resync 时的全量重同步提示"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "单测覆盖映射与决策"
+        }
+      ],
+      "title": "冲突与进度提示",
+      "uid": "tsk_01M6G81EK8W3F0CHW0JGEG7A26"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "两机经中继配对、双向合并、冲突与丢帧恢复均通过",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81EK8W3F0CHW0JGEG7A26"
+        }
+      ],
+      "finished_at": null,
+      "goal": "端到端同步验收",
+      "id": "T4",
+      "line": "sync-ui",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "strict",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "两机经中继配对"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "双向变更合并"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "冲突与丢帧恢复场景"
+        }
+      ],
+      "title": "端到端同步验收",
+      "uid": "tsk_01M6G81EKJ31HQ2T3RBSMHH941"
+    }
+  ]
 }

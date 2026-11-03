@@ -18,6 +18,9 @@
     "sync.sync-kernel": {
       "file": "lines/sync.sync-kernel.json"
     },
+    "sync.sync-relay": {
+      "file": "lines/sync.sync-relay.json"
+    },
     "sync.sync-ui": {
       "file": "lines/sync.sync-ui.json"
     }
@@ -32,108 +35,124 @@
   },
   "tasks": {
     "features.biometric.T1": {
-      "file": "tasks/8e/6c2df38417d61b.json",
-      "uid": "tsk_01M66QZT1NCYD8CCHVEV4YWFXQ"
+      "file": "lines/features.biometric.json",
+      "uid": "tsk_01M6G82N2NEYQABA0TK1RVQ77J"
     },
     "features.biometric.T2": {
-      "file": "tasks/16/060c6872e95e7c.json",
-      "uid": "tsk_01M66QZT1YQ6620YBX3XHTG2VG"
+      "file": "lines/features.biometric.json",
+      "uid": "tsk_01M6G82N2YFMVMWWKTDQ1CDZ31"
     },
     "features.biometric.T3": {
-      "file": "tasks/93/fe9d9b5cd73aff.json",
-      "uid": "tsk_01M66QZT28ST2ED3J2X30SS1PC"
+      "file": "lines/features.biometric.json",
+      "uid": "tsk_01M6G82N38SZE2R4SB4B3NV1AT"
     },
     "features.biometric.T4": {
-      "file": "tasks/07/7e46dd6693dfbd.json",
-      "uid": "tsk_01M66QZT2J7XDR8TA4S5ANBDGH"
+      "file": "lines/features.biometric.json",
+      "uid": "tsk_01M6G82N3J5XERR6J6D4Y7FAYC"
     },
     "features.key-rotation.T1": {
-      "file": "tasks/08/4a09c0710a2e8e.json",
-      "uid": "tsk_01M66R07BJ5GZD8Z9NCHWPAYK0"
+      "file": "lines/features.key-rotation.json",
+      "uid": "tsk_01M6G82N6XGXVZ5EZ9W8T2WGWY"
     },
     "features.key-rotation.T2": {
-      "file": "tasks/2d/5e116bc172bee3.json",
-      "uid": "tsk_01M66R07BV6VGGSKEKVSZRPT2M"
+      "file": "lines/features.key-rotation.json",
+      "uid": "tsk_01M6G82N76WJGCW7Z6NAKKSJCF"
     },
     "features.key-rotation.T3": {
-      "file": "tasks/61/0fd9af7f995044.json",
-      "uid": "tsk_01M66R07C67YDTZHSSGYB72H4K"
+      "file": "lines/features.key-rotation.json",
+      "uid": "tsk_01M6G82N7HZ0D3B9N1AMSKFS8G"
     },
     "features.quality.T1": {
-      "file": "tasks/0a/b8ae9018b356c9.json",
-      "uid": "tsk_01M66R150TGQTPNC0PSBM9H721"
+      "file": "lines/features.quality.json",
+      "uid": "tsk_01M6G835KW62GBZM1PQEK7KCJ7"
     },
     "features.quality.T2": {
-      "file": "tasks/0d/b699320c547161.json",
-      "uid": "tsk_01M66R1513QN6A9Z7YMN21CE2K"
+      "file": "lines/features.quality.json",
+      "uid": "tsk_01M6G835M7WTCRH1C7FCDCATT6"
     },
     "features.quality.T3": {
-      "file": "tasks/91/a12e50b75bb373.json",
-      "uid": "tsk_01M66R151DR7KPMF8BB9A6AKCF"
+      "file": "lines/features.quality.json",
+      "uid": "tsk_01M6G835MMAZ7CZGFXTEF4PAHD"
     },
     "features.vault-ops.T1": {
-      "file": "tasks/0c/5068335272aa1f.json",
-      "uid": "tsk_01M66R0PNSN3V81MAEE6C5KS73"
+      "file": "lines/features.vault-ops.json",
+      "uid": "tsk_01M6G835FTFMFRBTCNC0DFGNN9"
     },
     "features.vault-ops.T2": {
-      "file": "tasks/56/8eb0980364655e.json",
-      "uid": "tsk_01M66R0PP2PXS8CZH61EDZTCE1"
+      "file": "lines/features.vault-ops.json",
+      "uid": "tsk_01M6G835G5EJWSF57WEK0SAHW7"
     },
     "features.vault-ops.T3": {
-      "file": "tasks/20/78d433248615cd.json",
-      "uid": "tsk_01M66R0PPDKEF3VT9417H7FWCW"
+      "file": "lines/features.vault-ops.json",
+      "uid": "tsk_01M6G835GVWNPMD2XQCF3RTPPB"
     },
     "sync.sync-design.T1": {
-      "file": "tasks/14/f9d61d01159dd7.json",
-      "uid": "tsk_01M66QY4YEDJ5QR14TAC4CNW4M"
+      "file": "lines/sync.sync-design.json",
+      "uid": "tsk_01M6G806V4226JZ9RH25C5ADYX"
     },
     "sync.sync-design.T2": {
-      "file": "tasks/d1/3b5037b4323883.json",
-      "uid": "tsk_01M66QY4YPCQ5X2XH2MJ0BM2H2"
+      "file": "lines/sync.sync-design.json",
+      "uid": "tsk_01M6G806VDKK34T865AJ1KE0DA"
     },
     "sync.sync-design.T3": {
-      "file": "tasks/4c/198d5cc11bddc2.json",
-      "uid": "tsk_01M66QY4YYEDE7TZAMX6TF1SXT"
-    },
-    "sync.sync-design.T4": {
-      "file": "tasks/a3/8f8130390b6871.json",
-      "uid": "tsk_01M66QY4Z7SYGWVKCS1CSYDFX0"
-    },
-    "sync.sync-design.T5": {
-      "file": "tasks/37/657c15c86100dd.json",
-      "uid": "tsk_01M66QY4ZF2J09X0X98VC7BV1Y"
+      "file": "lines/sync.sync-design.json",
+      "uid": "tsk_01M6G806W4KPP3PNJ7M03SFADA"
     },
     "sync.sync-kernel.T1": {
-      "file": "tasks/9d/a870c22c8b18d2.json",
-      "uid": "tsk_01M66QYK0GBG32QBEB44MNE5TT"
+      "file": "lines/sync.sync-kernel.json",
+      "uid": "tsk_01M6G81ED2A9AFXHY6SVMM983Z"
     },
     "sync.sync-kernel.T2": {
-      "file": "tasks/2d/4adb596247c6e5.json",
-      "uid": "tsk_01M66QYK0S7SGRDZN0DH7C3EVP"
+      "file": "lines/sync.sync-kernel.json",
+      "uid": "tsk_01M6G81EDCS1K5BSQG3NPVN41W"
     },
     "sync.sync-kernel.T3": {
-      "file": "tasks/be/311447f907d040.json",
-      "uid": "tsk_01M66QYK136XYAV5WSENXHEANP"
+      "file": "lines/sync.sync-kernel.json",
+      "uid": "tsk_01M6G81EE4172KZS1J7KVJCQKS"
     },
     "sync.sync-kernel.T4": {
-      "file": "tasks/8a/623d9e246898e8.json",
-      "uid": "tsk_01M66QYK1DS3TN5VHDZNBHNBZ8"
+      "file": "lines/sync.sync-kernel.json",
+      "uid": "tsk_01M6G81EEHME010Q806VRC1F4Q"
+    },
+    "sync.sync-relay.T1": {
+      "file": "lines/sync.sync-relay.json",
+      "uid": "tsk_01M6G80RWRZV980TBPDVB45A5P"
+    },
+    "sync.sync-relay.T2": {
+      "file": "lines/sync.sync-relay.json",
+      "uid": "tsk_01M6G80RX2CKN9TM4X039KN67D"
+    },
+    "sync.sync-relay.T3": {
+      "file": "lines/sync.sync-relay.json",
+      "uid": "tsk_01M6G80RXSY4NKHFC6S9FYZNEJ"
+    },
+    "sync.sync-relay.T4": {
+      "file": "lines/sync.sync-relay.json",
+      "uid": "tsk_01M6G80RY3ST9K3VVS1Q1CS4M7"
+    },
+    "sync.sync-relay.T5": {
+      "file": "lines/sync.sync-relay.json",
+      "uid": "tsk_01M6G80RYEE1141MFGF6M1DSCY"
+    },
+    "sync.sync-relay.T6": {
+      "file": "lines/sync.sync-relay.json",
+      "uid": "tsk_01M6G80RYS864BTQW2291750XK"
     },
     "sync.sync-ui.T1": {
-      "file": "tasks/f8/9d8cc410057675.json",
-      "uid": "tsk_01M66QZ2A5QEZNPV5WZB2Y4KTB"
+      "file": "lines/sync.sync-ui.json",
+      "uid": "tsk_01M6G81EJP42N71MAXF71QQ58Z"
     },
     "sync.sync-ui.T2": {
-      "file": "tasks/05/b71017f80ad434.json",
-      "uid": "tsk_01M66QZ2AE6C1MD67AASWKZM5S"
+      "file": "lines/sync.sync-ui.json",
+      "uid": "tsk_01M6G81EJZV56ACDFXRZGEKWGE"
     },
     "sync.sync-ui.T3": {
-      "file": "tasks/d9/c64fcecf4971ca.json",
-      "uid": "tsk_01M66QZ2ARYBDDJ4YZ27TE7R5B"
+      "file": "lines/sync.sync-ui.json",
+      "uid": "tsk_01M6G81EK8W3F0CHW0JGEG7A26"
     },
     "sync.sync-ui.T4": {
-      "file": "tasks/4c/c2ef4f84f4739c.json",
-      "uid": "tsk_01M66QZ2B2QJKT1FPFT72J4T16"
+      "file": "lines/sync.sync-ui.json",
+      "uid": "tsk_01M6G81EKJ31HQ2T3RBSMHH941"
     }
   },
   "version": 1

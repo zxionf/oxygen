@@ -1,7 +1,7 @@
 {
   "acceptance": [
     {
-      "desc": "changes / apply / offers 族符号已映射并有单测",
+      "desc": "changes/apply/offers/progress 与 snapshot 族映射完整、错误码有单测",
       "id": "A1",
       "requires_human": false,
       "status": "unverified",
@@ -9,43 +9,320 @@
       "verified_by": null
     },
     {
-      "desc": "snapshot 族符号已映射",
+      "desc": "pairing 族（create_pairing/open_with_pairing）可用，单机自同步往返通过",
       "id": "A2",
       "requires_human": false,
       "status": "unverified",
       "verified_at": null,
       "verified_by": null
-    },
-    {
-      "desc": "rotation 与 pairing 族（含 open_with_pairing）已映射",
-      "id": "A3",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
-    },
-    {
-      "desc": "单机自同步往返冒烟通过，SPEC 的 ABI 对齐表已更新",
-      "id": "A4",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
     }
   ],
-  "created_at": "2026-10-30T15:48:12Z",
-  "depends": [
-    {
-      "id": "sync-design",
-      "type": "line"
-    }
-  ],
-  "goal": "把内核剩余的同步符号全部映射到 JNI 与 Kotlin 封装，并通过冒烟",
+  "created_at": "2026-11-03T08:21:40Z",
+  "depends": [],
+  "goal": "把第一版同步符号映射到 JNI 与 Kotlin 封装并通过冒烟（rotation 族留第二版）",
   "id": "sync-kernel",
   "modules": [
     "shared",
     "docs"
   ],
   "plan": "sync",
-  "status": "active"
+  "status": "active",
+  "tasks": [
+    {
+      "acceptance": [
+        {
+          "desc": "符号映射完整，错误码映射有单测",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": null,
+      "goal": "映射 changes / apply / offers / progress",
+      "id": "T1",
+      "line": "sync-kernel",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shared"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "shio_jni.cpp 与 NativeShio 增加符号"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "ShioDatabase 封装与错误码映射"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "补单测"
+        }
+      ],
+      "title": "映射 changes / apply / offers / progress",
+      "uid": "tsk_01M6G81ED2A9AFXHY6SVMM983Z"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "快照创建/读取/应用路径冒烟通过",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81ED2A9AFXHY6SVMM983Z"
+        }
+      ],
+      "finished_at": null,
+      "goal": "映射 snapshot 族",
+      "id": "T2",
+      "line": "sync-kernel",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shared"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "snapshot_start / snapshot_page / apply_snapshot 封装"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "Kotlin 侧迭代器封装"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "冒烟：生成本地快照并应用"
+        }
+      ],
+      "title": "映射 snapshot 族",
+      "uid": "tsk_01M6G81EDCS1K5BSQG3NPVN41W"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "配对包生成与配对建库可用，失败路径有覆盖",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81ED2A9AFXHY6SVMM983Z"
+        }
+      ],
+      "finished_at": null,
+      "goal": "映射 pairing 族（create_pairing / open_with_pairing）",
+      "id": "T3",
+      "line": "sync-kernel",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shared"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "create_pairing 与 open_with_pairing 封装"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "配对包（base URL + 入网码 + 帧 + secret）编解码"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "失败路径与错误码覆盖"
+        }
+      ],
+      "title": "映射 pairing 族（create_pairing / open_with_pairing）",
+      "uid": "tsk_01M6G81EE4172KZS1J7KVJCQKS"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "两类并发变更合并往返成功，SPEC 的 ABI 清单无遗漏",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:22:33Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81EDCS1K5BSQG3NPVN41W"
+        },
+        {
+          "type": "task",
+          "uid": "tsk_01M6G81EE4172KZS1J7KVJCQKS"
+        }
+      ],
+      "finished_at": null,
+      "goal": "单机自同步冒烟与 SPEC 更新",
+      "id": "T4",
+      "line": "sync-kernel",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shared",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "sync",
+      "review_policy": "mixed",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "构造两类并发变更"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "执行合并往返（含 progress 帧）"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "更新 SPEC 的 ABI 对齐清单"
+        }
+      ],
+      "title": "单机自同步冒烟与 SPEC 更新",
+      "uid": "tsk_01M6G81EEHME010Q806VRC1F4Q"
+    }
+  ]
 }

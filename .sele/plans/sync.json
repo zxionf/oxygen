@@ -1,7 +1,7 @@
 {
   "acceptance": [
     {
-      "desc": "「同步传输与信任模型」讨论稿定稿，5 项取舍各留一条 decision",
+      "desc": "设计定稿：传输层（自建中继）、TLS、配对入网、冲突与后台策略、符号范围，并各留一条 decision",
       "id": "PA1",
       "requires_human": false,
       "status": "unverified",
@@ -9,7 +9,7 @@
       "verified_by": null
     },
     {
-      "desc": "18 个同步符号全部映射并通过冒烟",
+      "desc": "中继节点在 ../shio 可跑：帧校验、推拉、ack/GC、设备令牌入网、TLS 部署",
       "id": "PA2",
       "requires_human": false,
       "status": "unverified",
@@ -17,7 +17,7 @@
       "verified_by": null
     },
     {
-      "desc": "同步设置页、配对文本与二维码、冲突提示可用",
+      "desc": "客户端映射第一版符号（changes/apply/snapshot/pairing/progress）并更新 SPEC",
       "id": "PA3",
       "requires_human": false,
       "status": "unverified",
@@ -25,23 +25,35 @@
       "verified_by": null
     },
     {
-      "desc": "两台设备完成一次同步往返",
+      "desc": "同步设置页、配对文本与二维码、冲突提示可用",
       "id": "PA4",
+      "requires_human": false,
+      "status": "unverified",
+      "verified_at": null,
+      "verified_by": null
+    },
+    {
+      "desc": "两台设备经中继完成一次双向同步往返",
+      "id": "PA5",
       "requires_human": false,
       "status": "unverified",
       "verified_at": null,
       "verified_by": null
     }
   ],
-  "approved_at": "2026-10-30T15:47:48Z",
+  "approved_at": "2026-11-03T08:21:29Z",
   "approved_by": "human:zxionf",
-  "created_at": "2026-10-30T15:47:48Z",
-  "goal": "接入多端同步：先定传输与信任模型，再映射内核 18 个同步符号，最后交付配对与冲突提示",
+  "created_at": "2026-11-03T08:21:29Z",
+  "goal": "接入多端同步（第一版）：自建中继节点 + 客户端符号映射 + 配对与冲突 UI",
   "id": "sync",
   "lines": [
     {
       "depends": [],
       "id": "sync-design"
+    },
+    {
+      "depends": [],
+      "id": "sync-relay"
     },
     {
       "depends": [],

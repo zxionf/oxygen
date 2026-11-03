@@ -1,7 +1,7 @@
 {
   "acceptance": [
     {
-      "desc": "shio_rotate_data_key 已在 JNI 与 Kotlin 封装中映射",
+      "desc": "轮换后条目可读，旧备份不可解",
       "id": "A1",
       "requires_human": false,
       "status": "unverified",
@@ -9,23 +9,15 @@
       "verified_by": null
     },
     {
-      "desc": "设置页可触发轮换，失败有明确提示且数据不受损",
+      "desc": "失败有明确提示且数据不受损",
       "id": "A2",
-      "requires_human": false,
-      "status": "unverified",
-      "verified_at": null,
-      "verified_by": null
-    },
-    {
-      "desc": "轮换后条目可读，旧备份不可解",
-      "id": "A3",
       "requires_human": false,
       "status": "unverified",
       "verified_at": null,
       "verified_by": null
     }
   ],
-  "created_at": "2026-10-30T15:49:06Z",
+  "created_at": "2026-11-03T08:22:56Z",
   "depends": [],
   "goal": "映射 shio_rotate_data_key 并在设置里提供密钥轮换入口（B4）",
   "id": "key-rotation",
@@ -35,5 +27,203 @@
     "docs"
   ],
   "plan": "features",
-  "status": "active"
+  "status": "active",
+  "tasks": [
+    {
+      "acceptance": [
+        {
+          "desc": "符号映射与错误码单测通过",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [],
+      "finished_at": null,
+      "goal": "映射 shio_rotate_data_key",
+      "id": "T1",
+      "line": "key-rotation",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shared"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "shio_jni.cpp 与 NativeShio 增加符号"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "ShioDatabase 封装与错误码映射"
+        },
+        {
+          "desc": "",
+          "id": "S3",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "补单测"
+        }
+      ],
+      "title": "映射 shio_rotate_data_key",
+      "uid": "tsk_01M6G82N6XGXVZ5EZ9W8T2WGWY"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "轮换前后状态一致，失败可回滚",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G82N6XGXVZ5EZ9W8T2WGWY"
+        }
+      ],
+      "finished_at": null,
+      "goal": "设置入口与失败处理",
+      "id": "T2",
+      "line": "key-rotation",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "lenient",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "设置页轮换入口与二次确认"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "失败提示与状态回滚"
+        }
+      ],
+      "title": "设置入口与失败处理",
+      "uid": "tsk_01M6G82N76WJGCW7Z6NAKKSJCF"
+    },
+    {
+      "acceptance": [
+        {
+          "desc": "真机轮换一次并更新 SPEC",
+          "id": "A1",
+          "requires_human": false,
+          "status": "unverified",
+          "verified_at": null,
+          "verified_by": null
+        }
+      ],
+      "archived_at": null,
+      "archived_git_head": null,
+      "created_at": "2026-11-03T08:23:12Z",
+      "current_step": null,
+      "depends": [
+        {
+          "type": "task",
+          "uid": "tsk_01M6G82N76WJGCW7Z6NAKKSJCF"
+        }
+      ],
+      "finished_at": null,
+      "goal": "验收：轮换后数据可读、旧备份不可解",
+      "id": "T3",
+      "line": "key-rotation",
+      "locked": {
+        "locked": false
+      },
+      "modules": [
+        "shio-vlt",
+        "docs"
+      ],
+      "pause_context": null,
+      "plan": "features",
+      "review_policy": "mixed",
+      "skipped_count": 0,
+      "status": "todo",
+      "steps": [
+        {
+          "desc": "",
+          "id": "S1",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "真机轮换一次并验证条目可读"
+        },
+        {
+          "desc": "",
+          "id": "S2",
+          "jump_meta": null,
+          "lock_reason": null,
+          "locked": false,
+          "requires_review": false,
+          "skipped_reason": null,
+          "status": "todo",
+          "title": "验证旧备份不可解，更新 SPEC"
+        }
+      ],
+      "title": "验收：轮换后数据可读、旧备份不可解",
+      "uid": "tsk_01M6G82N7HZ0D3B9N1AMSKFS8G"
+    }
+  ]
 }

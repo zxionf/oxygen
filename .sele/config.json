@@ -1,4 +1,5 @@
 {
+  "color": "auto",
   "escalate_after_skips": 5,
   "git_mode": "read",
   "message_convention": "auto",
